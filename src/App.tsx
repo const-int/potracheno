@@ -708,13 +708,11 @@ export default function App() {
               )}
               {tab === 'categories' && (
                 <section className="panel categories-panel">
-                  <div className="section-heading">
-                    {!isMobile && <h2>Категории расходов</h2>}
-                    <button className="primary compact" onClick={() => setEditingCategory('new')}>
-                      <Plus size={17} />
-                      Добавить
-                    </button>
-                  </div>
+                  {!isMobile && (
+                    <div className="section-heading">
+                      <h2>Категории расходов</h2>
+                    </div>
+                  )}
                   {!isMobile && (
                     <p className="muted">Архивные категории сохраняются в истории и статистике.</p>
                   )}
@@ -741,6 +739,12 @@ export default function App() {
                   {!data.categories.length && (
                     <SeedButton userId={session!} demo={demo} onSave={() => refresh()} />
                   )}
+                  <div className="categories-actions">
+                    <button className="primary compact" onClick={() => setEditingCategory('new')}>
+                      <Plus size={17} />
+                      Добавить
+                    </button>
+                  </div>
                 </section>
               )}
             </>

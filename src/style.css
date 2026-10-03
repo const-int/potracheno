@@ -901,6 +901,11 @@ fieldset {
   gap: 12px;
   margin-top: 23px;
 }
+.categories-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
 .category-manage {
   border: 1px solid #e8ebe1;
   padding: 14px;
@@ -2080,6 +2085,10 @@ fieldset {
   .mobile-compact .category-list {
     margin-top: 0;
     gap: 9px;
+  }
+  .mobile-compact .categories-actions button {
+    width: 100%;
+    min-height: 42px;
   }
   .mobile-compact .category-manage {
     padding: 10px 12px;
