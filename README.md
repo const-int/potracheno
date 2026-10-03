@@ -21,15 +21,20 @@ On phones, the app opens on the expense tab. Enter an amount using the built-in
 numeric keypad, choose a category, and tap the checkmark key to save. New amounts
 use whole rubles only. The keypad has a backspace key instead of a decimal key;
 there is no separate backspace button next to the amount. The entry
-screen preselects the first available category.
+screen preselects the first available category. The entered amount survives tab switches
+and is cleared after a successful save or when leaving the account.
 It fits the viewport without page scrolling or the phone's native keyboard.
 The expense picker uses two columns and five rows on phones.
 New mobile expenses use today's date and an empty note. More than ten categories
 are displayed on additional pages. Dates and amounts can be edited in History. Expense comments are not used.
 Mobile History shows the month selector, total, and expense list. Summary places
-a horizontal bar for each category, sorted by amount, with its total and percentage.
-Compact expense-count and average-expense cards appear
-below it. CSV export is available in Settings on mobile.
+a treemap of soft rounded blocks sized by category shares, separated by small gaps, followed by horizontal
+bars sorted by amount with totals and percentages. The treemap is a static visualization without hover or click actions.
+Labels use white text directly on the category color, and are hidden on blocks
+narrower than 60px.
+Compact cards below show the operation count, average expense, costliest day, and
+largest expense for the selected month. Daily totals use the expense date; tied
+maximum days use the most recent date. CSV export is available in Settings on mobile.
 
 Categories have separate edit and delete buttons in the category list.
 There is no category archive. Deletion requires confirmation; categories with expenses
@@ -42,6 +47,10 @@ this same order. Changes save automatically and sync through Supabase; new categ
 appear at the end. Mouse, touch, and keyboard (Space, arrows, Space) are supported.
 For an existing project, run `supabase/migrations/20261004_category_order.sql` in SQL Editor.
 The order is updated atomically through an owner-scoped, RLS-protected database function.
+
+Touch zoom is disabled with viewport limits, a pan-only touch policy, and Safari gesture
+handlers. Single-finger scrolling, keypad taps, and category dragging remain available.
+The Safari fallback cancels multi-touch events without canceling ordinary touches.
 
 ## Run locally
 

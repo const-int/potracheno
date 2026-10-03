@@ -181,6 +181,30 @@ export function summarize(expenses: Expense[], categories: Category[]) {
     .filter((c) => c.total > 0)
     .sort((a, b) => b.total - a.total);
 }
+export function expenseHighlights(expenses: Expense[]) {
+  const days = new Map<string, number>();
+  let largestExpense: Expense | null = null;
+  for (const expense of expenses) {
+    days.set(expense.spent_on, (days.get(expense.spent_on) ?? 0) + expense.amount_kopecks);
+    if (
+      !largestExpense ||
+      expense.amount_kopecks > largestExpense.amount_kopecks ||
+      (expense.amount_kopecks === largestExpense.amount_kopecks &&
+        expense.spent_on > largestExpense.spent_on)
+    )
+      largestExpense = expense;
+  }
+  let costliestDay: { date: string; total: number } | null = null;
+  for (const [date, total] of days) {
+    if (
+      !costliestDay ||
+      total > costliestDay.total ||
+      (total === costliestDay.total && date > costliestDay.date)
+    )
+      costliestDay = { date, total };
+  }
+  return { costliestDay, largestExpense };
+}
 export function csv(data: Data) {
   // Prefix formula-like text so opening the export in a spreadsheet is safe.
   const cell = (v: string) => `"${(/^[\s]*[=+@-]/.test(v) ? "'" + v : v).replaceAll('"', '""')}"`;

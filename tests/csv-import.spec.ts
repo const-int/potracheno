@@ -4,7 +4,7 @@ const content =
   'Дата;Сумма;Категория;Комментарий;Автор\n02.01.2026;1500;Путешествия;Поездка;Анна\n2026-01-03;200;путешествия;Билеты;';
 async function openImport(page: Page) {
   await page.getByRole('button', { name: 'Настройки', exact: true }).click();
-  await page.getByRole('button', { name: 'Импортировать расходы из CSV', exact: true }).click();
+  await page.getByRole('button', { name: 'Импорт расходов из CSV', exact: true }).click();
   await page.getByRole('heading', { name: 'Импорт расходов', exact: true }).waitFor();
 }
 async function selectFile(page: Page, text: string) {

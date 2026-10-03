@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   money,
   categoryIconColor,
+  expenseHighlights,
   csv,
   parseAmount,
   shiftMonth,
@@ -87,4 +88,21 @@ it('keeps dark category colors and darkens light icon strokes without changing t
   expect(channels[2]).toBeGreaterThan(channels[0]);
   expect(channels[0]).toBeGreaterThan(channels[1]);
   expect(pale).toBe('#bda7ed');
+});
+
+it('finds the largest daily sum separately from the largest individual expense', () => {
+  const expenses = [
+    { ...expense('food', 100001), spent_on: '2026-02-01' },
+    { ...expense('food', 100000), spent_on: '2026-02-01' },
+    { ...expense('pets', 150000), spent_on: '2026-02-02' },
+  ];
+  const result = expenseHighlights(expenses);
+  expect(result.costliestDay).toEqual({ date: '2026-02-01', total: 200001 });
+  expect(result.largestExpense).toEqual(expenses[2]);
+  expect(expenseHighlights([])).toEqual({ costliestDay: null, largestExpense: null });
+  const tied = expenseHighlights([
+    { ...expense('food', 100), spent_on: '2026-02-01' },
+    { ...expense('food', 100), spent_on: '2026-02-02' },
+  ]);
+  expect(tied.costliestDay?.date).toBe('2026-02-02');
 });

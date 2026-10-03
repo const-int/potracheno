@@ -62,7 +62,7 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
     .click();
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Настройки', exact: true }).click();
-  await page.getByRole('button', { name: 'Экспортировать все расходы в CSV' }).click();
+  await page.getByRole('button', { name: 'Экспорт расходов в CSV' }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^family-expenses-.*\.csv$/);
   const stream = await download.createReadStream();
@@ -298,7 +298,7 @@ test('history and summary keep the mobile interface compact', async ({ page }) =
   await expect(page.getByRole('button', { name: 'Предыдущий месяц' })).toBeVisible();
   await navigation.getByRole('button', { name: 'Сводка' }).click();
   await expect(page.locator('.page-heading')).toHaveCount(0);
-  await expect(page.locator('.compact-summary .stat:visible')).toHaveCount(2);
+  await expect(page.locator('.compact-summary .stat:visible')).toHaveCount(4);
   const order = await page.evaluate(() => ({
     chartBottom: document.querySelector('.summary-panel')!.getBoundingClientRect().bottom,
     statsTop: document.querySelector('.stats-grid')!.getBoundingClientRect().top,
@@ -429,4 +429,26 @@ test('category list actions support editing and confirmed deletion without an ar
   await expect(
     page.getByRole('button', { name: 'Редактировать категорию Продукты', exact: true }),
   ).toBeVisible();
+});
+
+test('expense amount survives tab switches and clears after saving or leaving the account', async ({
+  page,
+}) => {
+  await enterAmount(page, '1234');
+  const nav = page.getByRole('navigation', { name: 'Мобильная навигация' });
+  for (const tab of ['История', 'Сводка', 'Категории']) {
+    await nav.getByRole('button', { name: tab, exact: true }).click();
+    await nav.getByRole('button', { name: 'Расход', exact: true }).click();
+    await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('1,234');
+  }
+  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
+  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
+  await nav.getByRole('button', { name: 'История', exact: true }).click();
+  await nav.getByRole('button', { name: 'Расход', exact: true }).click();
+  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
+  await enterAmount(page, '99');
+  await page.getByRole('button', { name: 'Настройки', exact: true }).click();
+  await page.getByRole('button', { name: 'Выйти из деморежима', exact: true }).click();
+  await page.getByRole('button', { name: 'Открыть деморежим', exact: true }).click();
+  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
 });

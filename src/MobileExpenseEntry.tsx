@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { Check, ChevronLeft, ChevronRight, Delete, LoaderCircle } from 'lucide-react';
 import { type Category, parseAmount, today } from './lib/model';
 import { errorMessage, saveExpense } from './lib/store';
@@ -7,6 +7,8 @@ const categoriesPerPage = 10;
 
 export default function MobileExpenseEntry({
   categories,
+  amount,
+  setAmount,
   userId,
   userName,
   demo,
@@ -14,13 +16,14 @@ export default function MobileExpenseEntry({
   onSave,
 }: {
   categories: Category[];
+  amount: string;
+  setAmount: Dispatch<SetStateAction<string>>;
   userId: string;
   userName: string;
   demo: boolean;
   renderCategoryIcon: (category: Category) => React.ReactNode;
   onSave: () => Promise<void>;
 }) {
-  const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState(() => categories[0]?.id ?? '');
   const [page, setPage] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -68,7 +71,7 @@ export default function MobileExpenseEntry({
         },
         false,
       );
-      setAmount('');
+      setAmount((current) => (current === amount ? '' : current));
       await onSave();
     } catch (e) {
       setError(errorMessage(e));

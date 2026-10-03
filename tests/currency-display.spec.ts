@@ -50,6 +50,6 @@ test('fractional expenses display rounded rubles and retain precision when editi
   });
   await expect(page.locator('.summary-total strong')).toHaveText(expected.total);
   await expect(
-    page.locator('.stat').filter({ hasText: 'Средний расход' }).locator('strong'),
+    page.locator('.stat').filter({ hasText: 'Средняя трата' }).locator('strong'),
   ).toHaveText(expected.average);
 });

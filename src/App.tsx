@@ -1,9 +1,19 @@
+import CategoryTreemap from './CategoryTreemap';
 import SortableCategoryList from './SortableCategoryList';
 import Toast, { type ToastNotice } from './Toast';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import CsvImport from './CsvImport';
 import MobileExpenseEntry from './MobileExpenseEntry';
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 import {
   ArrowDownLeft,
   ArrowLeft,
@@ -60,6 +70,7 @@ import {
   parseAmount,
   shiftMonth,
   summarize,
+  expenseHighlights,
   today,
 } from './lib/model';
 import {
@@ -173,6 +184,7 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [tab, setTab] = useState<Tab>('add');
+  const [expenseDraft, setExpenseDraft] = useState('');
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 650px)').matches);
   useEffect(() => {
     const media = window.matchMedia('(max-width: 650px)');
@@ -269,6 +281,7 @@ export default function App() {
 
   useEffect(() => {
     generation.current += 1;
+    setExpenseDraft('');
     setData(empty);
     setLoaded(false);
     setLoadError('');
@@ -585,6 +598,8 @@ export default function App() {
             <>
               {quickEntry && (
                 <MobileExpenseEntry
+                  amount={expenseDraft}
+                  setAmount={setExpenseDraft}
                   categories={activeCategories}
                   userId={session!}
                   userName={userName}
@@ -606,6 +621,8 @@ export default function App() {
                       <span className="pill">₽ RUB</span>
                     </div>
                     <ExpenseForm
+                      draftAmount={expenseDraft}
+                      onDraftAmountChange={setExpenseDraft}
                       categories={activeCategories}
                       userId={session!}
                       demo={demo}
@@ -1009,28 +1026,27 @@ export default function App() {
             }}
           />
           <div className="settings-separator" />
-          {updateReady && (
-            <button
-              className="primary full-width settings-import-button"
-              onClick={() => void updateServiceWorker(true)}
-            >
-              Обновить приложение
+          <div className="settings-actions">
+            {updateReady && (
+              <button className="primary full-width" onClick={() => void updateServiceWorker(true)}>
+                Обновить приложение
+              </button>
+            )}
+            <button className="secondary full-width" onClick={exportData} disabled={exportBusy}>
+              <Download size={17} />
+              {exportBusy ? 'Экспорт…' : 'Экспорт расходов в CSV'}
             </button>
-          )}
-          <button className="secondary full-width" onClick={exportData} disabled={exportBusy}>
-            <Download size={17} />
-            {exportBusy ? 'Экспорт…' : 'Экспортировать все расходы в CSV'}
-          </button>
-          <button
-            className="secondary full-width settings-import-button"
-            onClick={() => {
-              setSettings(false);
-              setImportOpen(true);
-            }}
-          >
-            <FileUp size={17} />
-            Импортировать расходы из CSV
-          </button>
+            <button
+              className="secondary full-width"
+              onClick={() => {
+                setSettings(false);
+                setImportOpen(true);
+              }}
+            >
+              <FileUp size={17} />
+              Импорт расходов из CSV
+            </button>
+          </div>
           <button className="text-button logout-button" onClick={logout}>
             <LogOut size={17} />
             {demo ? 'Выйти из деморежима' : 'Выйти на этом устройстве'}
@@ -1135,6 +1151,8 @@ function ExpenseForm({
   userName,
   existing,
   onSave,
+  draftAmount,
+  onDraftAmountChange,
 }: {
   categories: Category[];
   userId: string;
@@ -1142,10 +1160,14 @@ function ExpenseForm({
   userName: string;
   existing?: Expense;
   onSave: () => Promise<void>;
+  draftAmount?: string;
+  onDraftAmountChange?: Dispatch<SetStateAction<string>>;
 }) {
-  const [amount, setAmount] = useState(
+  const [localAmount, setLocalAmount] = useState(
     existing ? String(Math.ceil(existing.amount_kopecks / 100)) : '',
   );
+  const amount = existing ? localAmount : (draftAmount ?? localAmount);
+  const setAmount = !existing && onDraftAmountChange ? onDraftAmountChange : setLocalAmount;
   const [amountEdited, setAmountEdited] = useState(false);
   const [categoryId, setCategoryId] = useState(existing?.category_id ?? categories[0]?.id ?? '');
   const [date, setDate] = useState(existing?.spent_on ?? today());
@@ -1157,7 +1179,7 @@ function ExpenseForm({
     if (submitLock.current) return;
     setError('');
     const kopecks = existing && !amountEdited ? existing.amount_kopecks : parseAmount(amount);
-    if (kopecks === null || (amountEdited && kopecks % 100 !== 0)) {
+    if (kopecks === null || ((!existing || amountEdited) && kopecks % 100 !== 0)) {
       setError('Укажите целую сумму в рублях от 1 до 999,999,999 ₽.');
       return;
     }
@@ -1187,7 +1209,7 @@ function ExpenseForm({
         !!existing,
       );
       if (!existing) {
-        setAmount('');
+        setAmount((current) => (current === amount ? '' : current));
         setDate(today());
       }
       await onSave();
@@ -1380,11 +1402,13 @@ function CategoryForm({
 }
 function NamePrompt({ userName, onSave }: { userName: string; onSave: (name: string) => void }) {
   const [name, setName] = useState(userName);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const changed = name !== userName;
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (name.trim()) {
+        if (changed && name.trim()) {
           onSave(name.trim());
           setName(name.trim());
         }
@@ -1393,19 +1417,40 @@ function NamePrompt({ userName, onSave }: { userName: string; onSave: (name: str
       <p className="muted">
         Имя видно рядом с добавленными расходами. Укажите свое имя для подписи расходов.
       </p>
-      <label>
-        Имя пользователя
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          maxLength={40}
-          required
-          placeholder="Например, Анна"
-        />
-      </label>
-      <button className="primary full-width" disabled={!name.trim()}>
-        Сохранить имя
-      </button>
+      <div className="name-save-row">
+        <div className="name-field">
+          <label htmlFor="profile-name">Имя пользователя</label>
+          <div className="name-input">
+            <input
+              id="profile-name"
+              ref={inputRef}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              maxLength={40}
+              required
+              placeholder="Например, Анна"
+            />
+            {name && (
+              <button
+                type="button"
+                className="name-clear-button"
+                aria-label="Очистить имя"
+                onClick={() => {
+                  setName('');
+                  inputRef.current?.focus();
+                }}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+        {changed && (
+          <button className="primary" disabled={!name.trim()}>
+            Сохранить
+          </button>
+        )}
+      </div>
     </form>
   );
 }
@@ -1476,6 +1521,11 @@ function Summary({
   compact?: boolean;
 }) {
   const groups = summarize(expenses, categories);
+  const { costliestDay, largestExpense } = expenseHighlights(expenses);
+  const dayLabel = (date: string) =>
+    new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' }).format(
+      new Date(`${date}T12:00:00`),
+    );
   return (
     <div className={`summary-content ${compact ? 'compact-summary' : ''}`}>
       <div className="stats-grid">
@@ -1485,14 +1535,38 @@ function Summary({
           <small>Все категории · рубли</small>
         </section>
         <section className="panel stat">
-          <span>Операций</span>
+          <span>Всего операций</span>
           <strong>{expenses.length.toLocaleString('en-US')}</strong>
           <small>Записей за выбранный месяц</small>
         </section>
         <section className="panel stat">
-          <span>Средний расход</span>
+          <span>Средняя трата</span>
           <strong>{money(expenses.length ? total / expenses.length : 0)}</strong>
           <small>На одну запись</small>
+        </section>
+        <section className="panel stat stat-insight" aria-label="Самый затратный день">
+          <span>Самый затратный день</span>
+          <strong
+            className={costliestDay && money(costliestDay.total).length > 10 ? 'is-long' : ''}
+          >
+            {costliestDay ? money(costliestDay.total) : '—'}
+          </strong>
+          <small>{costliestDay ? dayLabel(costliestDay.date) : 'Нет расходов'}</small>
+        </section>
+        <section className="panel stat stat-insight" aria-label="Самая крупная трата">
+          <span>Самая крупная трата</span>
+          <strong
+            className={
+              largestExpense && money(largestExpense.amount_kopecks).length > 10 ? 'is-long' : ''
+            }
+          >
+            {largestExpense ? money(largestExpense.amount_kopecks) : '—'}
+          </strong>
+          <small>
+            {largestExpense
+              ? `${categories.find((category) => category.id === largestExpense.category_id)?.name ?? 'Категория'} · ${dayLabel(largestExpense.spent_on)}`
+              : 'Нет расходов'}
+          </small>
         </section>
       </div>
       <section className="panel summary-panel" aria-label="Расходы по категориям">
@@ -1512,6 +1586,7 @@ function Summary({
                 <strong>{money(total)}</strong>
               </div>
             )}
+            <CategoryTreemap groups={groups} />
             <ol className="category-bars" aria-label="Распределение расходов по категориям">
               {groups.map((category) => {
                 const percentage = (category.total / total) * 100;
