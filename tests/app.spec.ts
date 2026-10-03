@@ -61,7 +61,8 @@ test('complete mobile flow: create, edit, archive category, summary, export and 
     .getByRole('button', { name: 'История' })
     .click();
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Экспорт CSV' }).click();
+  await page.getByRole('button', { name: 'Алексей', exact: true }).click();
+  await page.getByRole('button', { name: 'Экспортировать все расходы в CSV' }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^family-expenses-.*\.csv$/);
   const stream = await download.createReadStream();
@@ -71,6 +72,7 @@ test('complete mobile flow: create, edit, archive category, summary, export and 
   expect(contents).toContain('"Автор"');
   expect(contents).toContain('"Алексей"');
   expect(contents).toContain('"1500,01";"Еда"');
+  await page.getByRole('button', { name: 'Закрыть', exact: true }).click();
   await page.getByRole('button', { name: 'Удалить Тестовая покупка', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Удалить', exact: true }).click();
   await expect(page.getByText('Тестовая покупка', { exact: true })).toHaveCount(0);
@@ -210,4 +212,22 @@ test('extra categories are paged without scrolling, and new expenses get today a
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(
     true,
   );
+});
+
+test('history and summary keep the mobile interface compact', async ({ page }) => {
+  const navigation = page.getByRole('navigation', { name: 'Мобильная навигация' });
+  await navigation.getByRole('button', { name: 'История' }).click();
+  await expect(page.locator('.page-heading')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Экспорт CSV', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Расходы за месяц' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Предыдущий месяц' })).toBeVisible();
+  await navigation.getByRole('button', { name: 'Summary' }).click();
+  await expect(page.locator('.page-heading')).toHaveCount(0);
+  await expect(page.locator('.compact-summary .stat:visible')).toHaveCount(2);
+  const order = await page.evaluate(() => ({
+    chartBottom: document.querySelector('.summary-panel')!.getBoundingClientRect().bottom,
+    statsTop: document.querySelector('.stats-grid')!.getBoundingClientRect().top,
+  }));
+  expect(order.chartBottom).toBeLessThan(order.statsTop);
+  await page.screenshot({ path: 'test-results/summary-compact.png', fullPage: true });
 });

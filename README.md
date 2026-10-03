@@ -12,6 +12,9 @@ numeric keypad, choose a category, and tap the checkmark key to save. The entry
 screen fits the viewport without page scrolling or the phone's native keyboard.
 New mobile expenses use today's date and an empty note. More than eight categories
 are displayed on additional pages. Dates and notes can still be edited in History.
+Mobile History shows the month selector, total, and expense list. Summary places
+the category chart first, with compact expense-count and average-expense cards
+below it. CSV export is available in Settings on mobile.
 
 ## Run locally
 

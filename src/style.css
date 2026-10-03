@@ -2000,3 +2000,154 @@ fieldset {
     }
   }
 }
+
+@media (max-width: 650px) {
+  .mobile-compact .content {
+    padding: 16px 17px 90px;
+  }
+  .mobile-compact .period-row {
+    margin-bottom: 14px;
+  }
+  .period-total {
+    color: #47633d;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .mobile-compact .history-panel {
+    padding: 0 14px;
+  }
+  .mobile-compact .expense-row {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: 4px 10px;
+    padding: 12px 0;
+  }
+  .mobile-compact .expense-row:first-child {
+    border-top: 0;
+  }
+  .mobile-compact .expense-row > .category-icon {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 32px;
+    height: 32px;
+    align-self: center;
+  }
+  .mobile-compact .expense-info {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    min-width: 0;
+    align-self: center;
+  }
+  .mobile-compact .expense-info strong {
+    font-size: 11px;
+  }
+  .mobile-compact .expense-info p {
+    font-size: 10px;
+    margin-top: 2px;
+    line-height: 1.5;
+  }
+  .mobile-compact .expense-info > span {
+    margin-top: 3px;
+  }
+  .mobile-compact .expense-row > b {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: end;
+    font-size: 12px;
+  }
+  .mobile-compact .row-actions {
+    grid-column: 3;
+    grid-row: 2;
+    width: auto;
+    margin: 0;
+    gap: 2px;
+  }
+  .mobile-compact .row-actions .icon-button {
+    padding: 5px 7px;
+    height: 28px;
+  }
+  .mobile-compact .categories-panel {
+    padding: 14px;
+  }
+  .mobile-compact .categories-panel .section-heading {
+    justify-content: flex-end;
+    margin-bottom: 12px;
+  }
+  .mobile-compact .category-list {
+    margin-top: 0;
+    gap: 9px;
+  }
+  .mobile-compact .category-manage {
+    padding: 10px 12px;
+  }
+  .compact-summary {
+    display: flex;
+    flex-direction: column;
+  }
+  .compact-summary .summary-panel {
+    order: 0;
+    padding: 14px 16px;
+  }
+  .compact-summary .stats-grid {
+    order: 1;
+    margin: 12px 0 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .compact-summary .stat:first-child {
+    display: none;
+  }
+  .compact-summary .stat {
+    padding: 13px 15px;
+  }
+  .compact-summary .stat > span {
+    font-size: 10px;
+  }
+  .compact-summary .stat strong {
+    font-size: 22px;
+    margin: 6px 0 0;
+  }
+  .compact-summary .stat small {
+    display: none;
+  }
+  .compact-summary .chart-layout {
+    padding: 0;
+    gap: 8px;
+  }
+  .compact-summary .donut-wrap {
+    max-width: 210px;
+  }
+  .compact-summary .donut-center strong {
+    font-size: 21px;
+    margin: 5px 0 0;
+  }
+  .compact-summary .donut-center small {
+    display: none;
+  }
+  .compact-summary .legend {
+    padding: 0;
+  }
+  .compact-summary .legend-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 39px;
+    gap: 8px;
+    align-items: center;
+    padding: 7px 0;
+    margin: 0;
+    border-bottom: 1px solid #eef0e7;
+  }
+  .compact-summary .legend-item:last-child {
+    border-bottom: 0;
+  }
+  .compact-summary .legend-top {
+    font-size: 10px;
+    gap: 7px;
+  }
+  .compact-summary .legend-bottom {
+    margin: 0;
+  }
+  .compact-summary .progress {
+    display: none;
+  }
+}

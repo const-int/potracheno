@@ -355,7 +355,7 @@ export default function App() {
     );
 
   return (
-    <div className={`app-shell ${quickEntry ? 'mobile-entry' : ''}`}>
+    <div className={`app-shell ${quickEntry ? 'mobile-entry' : isMobile ? 'mobile-compact' : ''}`}>
       <aside className="sidebar">
         <Brand />
         <div className="family-badge">
@@ -430,7 +430,7 @@ export default function App() {
           </button>
         </header>
         <div className="content">
-          {demo && (
+          {demo && !isMobile && (
             <div className="demo-banner">
               <span>
                 <strong>Деморежим</strong> · данные только в этом браузере
@@ -449,7 +449,7 @@ export default function App() {
               <button onClick={() => void refresh()}>Повторить</button>
             </div>
           )}
-          {!quickEntry && (
+          {!isMobile && (
             <div className="page-heading">
               <div>
                 <div className="eyebrow">СЕМЕЙНЫЕ ФИНАНСЫ</div>
@@ -606,16 +606,26 @@ export default function App() {
                         <ArrowRight size={17} />
                       </button>
                     </div>
-                    <span className="muted">{monthExpenses.length} записей</span>
+                    {!isMobile && <span className="muted">{monthExpenses.length} записей</span>}
+                    {isMobile && tab === 'history' && (
+                      <strong className="period-total">{money(total)}</strong>
+                    )}
                   </div>
                   {tab === 'summary' ? (
-                    <Summary expenses={monthExpenses} categories={data.categories} total={total} />
+                    <Summary
+                      expenses={monthExpenses}
+                      categories={data.categories}
+                      total={total}
+                      compact={isMobile}
+                    />
                   ) : (
-                    <section className="panel history-panel">
-                      <div className="section-heading">
-                        <h2>Расходы за месяц</h2>
-                        <strong className="history-total">{money(total)}</strong>
-                      </div>
+                    <section className="panel history-panel" aria-label="История расходов">
+                      {!isMobile && (
+                        <div className="section-heading">
+                          <h2>Расходы за месяц</h2>
+                          <strong className="history-total">{money(total)}</strong>
+                        </div>
+                      )}
                       {!monthExpenses.length && <Empty onClick={() => setTab('add')} />}
                       <div className="expense-list">
                         {monthExpenses.map((e) => (
@@ -628,7 +638,7 @@ export default function App() {
                                   <span className="archived-tag">архив</span>
                                 )}
                               </strong>
-                              <p>{e.note || 'Без комментария'}</p>
+                              {e.note ? <p>{e.note}</p> : !isMobile && <p>Без комментария</p>}
                               <span>
                                 {new Intl.DateTimeFormat('ru-RU', {
                                   day: 'numeric',
@@ -667,13 +677,15 @@ export default function App() {
               {tab === 'categories' && (
                 <section className="panel categories-panel">
                   <div className="section-heading">
-                    <h2>Категории расходов</h2>
+                    {!isMobile && <h2>Категории расходов</h2>}
                     <button className="primary compact" onClick={() => setEditingCategory('new')}>
                       <Plus size={17} />
                       Добавить
                     </button>
                   </div>
-                  <p className="muted">Архивные категории сохраняются в истории и статистике.</p>
+                  {!isMobile && (
+                    <p className="muted">Архивные категории сохраняются в истории и статистике.</p>
+                  )}
                   <div className="category-list">
                     {data.categories.map((c) => (
                       <button
@@ -701,7 +713,7 @@ export default function App() {
               )}
             </>
           )}
-          {!quickEntry && (
+          {!isMobile && (
             <footer className="content-footer">
               <Leaf size={14} /> Вместе проще.
             </footer>
@@ -1242,15 +1254,17 @@ function Summary({
   expenses,
   categories,
   total,
+  compact = false,
 }: {
   expenses: Expense[];
   categories: Category[];
   total: number;
+  compact?: boolean;
 }) {
   const groups = summarize(expenses, categories);
   let offset = 0;
   return (
-    <>
+    <div className={`summary-content ${compact ? 'compact-summary' : ''}`}>
       <div className="stats-grid">
         <section className="panel stat">
           <span>Всего за месяц</span>
@@ -1268,11 +1282,13 @@ function Summary({
           <small>На одну запись</small>
         </section>
       </div>
-      <section className="panel summary-panel">
-        <div className="section-heading">
-          <h2>Расходы по категориям</h2>
-          <span className="pill">{groups.length} категорий</span>
-        </div>
+      <section className="panel summary-panel" aria-label="Расходы по категориям">
+        {!compact && (
+          <div className="section-heading">
+            <h2>Расходы по категориям</h2>
+            <span className="pill">{groups.length} категорий</span>
+          </div>
+        )}
         {!total ? (
           <Empty />
         ) : (
@@ -1340,6 +1356,6 @@ function Summary({
           </div>
         )}
       </section>
-    </>
+    </div>
   );
 }
