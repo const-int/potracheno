@@ -6,6 +6,9 @@ Built with React, TypeScript, and Vite. Supabase handles storage and authenticat
 GitHub Pages hosts the frontend. No custom backend is required.
 
 The application interface is in Russian.
+Categories offer 20 colors and 20 icons. For an existing Supabase project, run
+`supabase/migrations/20261003_expand_category_icons.sql` once in SQL Editor
+to allow the expanded icon set. New projects can use the updated `schema.sql`.
 Amounts use commas to group thousands (for example, `1,234 ₽`). Existing fractional
 amounts are preserved and displayed with a decimal point. CSV amounts use a decimal
 point without grouping.
@@ -36,8 +39,9 @@ on the welcome screen. Sample data and changes are saved only in the current
 browser and do not sync between devices. Demo storage is separate from the
 shared database. The third sign-in field asks for your name. Each person enters
 their own name while using the same shared email and password. Your name stays in
-your browser and is recorded as the author of new expenses. To change it, sign out
-and enter a different name when signing in again.
+your browser and is recorded as the author of new expenses. You can change it in
+Settings or enter a different name when signing in again. Existing expense authors
+are preserved.
 
 ## Connect Supabase
 
@@ -110,7 +114,7 @@ Testing real sign-in, authentication, and shared access requires a Supabase proj
 ## Data preservation
 
 CSV export includes **the entire expense history**, not just the selected month,
-along with author names. Save exports periodically. CSV import is not implemented.
+along with author names. Save exports periodically. CSV import is available in Settings.
 User names are stored in localStorage and must be set again after clearing
 browser data. Editing an expense preserves the name of its original author.
 For compatibility, names still use the existing `vmeste.device` storage key and
@@ -122,3 +126,64 @@ The free Supabase plan has limits, and projects may be paused after seven days
 of low activity. Check the current terms:
 https://supabase.com/pricing and
 https://supabase.com/docs/guides/platform/free-project-pausing.
+
+## Import an existing Excel expense sheet
+
+Save a copy of your sheet as CSV UTF-8. Use one header row and one expense per row.
+Required columns: `Дата` / `Date`, `Сумма` / `Amount`, and `Категория` / `Category`.
+Optional columns: `Комментарий` / `Note` and `Автор` / `Author`. Legacy `Устройство`
+and `Device` headers are also supported. Dates can use `YYYY-MM-DD` or `DD.MM.YYYY`.
+Amounts are in rubles; imported fractional values are preserved without rounding.
+An omitted or empty author uses the name you entered at sign-in.
+
+Open Settings → CSV import, choose the file, review the preview, and confirm.
+The app accepts semicolon, comma, and tab delimiters, quoted multiline comments,
+UTF-8, Windows-1251, and UTF-16LE files. Limit: 5 MB and 5,000 expenses per file.
+Unknown categories are created automatically. Archived categories are reused.
+Any invalid row blocks import until the file is corrected. A template is available
+in the import dialog, and the app's own CSV exports can be imported as well.
+
+By default, import skips existing expenses matching the date, amount, category,
+note, and author. Identical rows are counted: two identical purchases in a file
+remain two purchases, and reimporting that file skips both. You can disable
+this comparison if the coinciding rows represent additional expenses.
+Stable row IDs also prevent duplicate writes when retrying an interrupted import
+with the same selected file. Selecting the file again creates a new attempt.
+Expense insertion is one database request; category creation happens beforehand,
+so new categories may remain if expense insertion fails.
+
+## Local review workflow
+
+Keep changes local for review at http://localhost:5173. Push to `main` only when
+publication is requested: the GitHub workflow deploys automatically on every push.
+
+## Install on a phone
+
+The production build includes a web app manifest, 192px and 512px PNG icons,
+an Android maskable icon, and a service worker. Installation opens `potracheno`
+in standalone mode without the browser's address bar. The app scope and launch
+URL stay under `/potracheno/` on GitHub Pages.
+
+After publishing, open https://const-int.github.io/potracheno/ in Chrome on Android
+and use the browser's Install app action (or Add to Home screen → Install).
+Choose installation rather than creating a shortcut. If you previously created
+a browser shortcut, remove it and install the app again.
+
+The service worker caches the interface assets only. Supabase responses are not
+cached; saving and loading shared expenses still require an internet connection.
+New versions do not forcibly reload an open expense form. When an update is ready,
+Settings offers an Update app button. Updates are also checked when returning
+to the app. Local development does not register a service worker, keeping local
+UI changes immediately visible.
+
+To check the production manifest, icon dimensions, Chrome installability, scoped
+service worker, and offline shell loading locally:
+
+```bash
+npm run test:pwa
+```
+
+The check serves the built files at `http://127.0.0.1:4175/potracheno/` to reproduce
+the repository subpath. Physical Android installation must be checked after
+publishing the HTTPS site; an ordinary HTTP address on a local network does not
+provide the required secure context.

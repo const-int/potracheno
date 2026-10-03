@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { categoryKey, planImport, type ImportRow } from './csv-import';
 import {
   type Category,
   type Expense,
@@ -117,6 +118,61 @@ export async function seedCategories(user_id: string) {
     { onConflict: 'user_id,name', ignoreDuplicates: true },
   );
   if (error) throw error;
+}
+export async function importExpenses(
+  demo: boolean,
+  userId: string,
+  rows: ImportRow[],
+  skipDuplicates: boolean,
+) {
+  const data = await loadData(demo);
+  const plan = planImport(rows, data, skipDuplicates);
+  if (!plan.rows.length) return { imported: 0, skipped: plan.skipped };
+  const newCategories: Category[] = plan.newCategories.map((name, index) => ({
+    id: crypto.randomUUID(),
+    user_id: userId,
+    name,
+    color: colors[(data.categories.length + index) % colors.length],
+    icon: 'other',
+    archived: false,
+  }));
+  let categories = [...data.categories, ...newCategories];
+  if (!demo && newCategories.length) {
+    const { error } = await supabase!
+      .from('categories')
+      .upsert(newCategories, { onConflict: 'user_id,name', ignoreDuplicates: true });
+    if (error && error.code !== '23505') throw error;
+    categories = await allRows<Category>('categories');
+  }
+  const byName = new Map(categories.map((category) => [categoryKey(category.name), category.id]));
+  const createdAt = new Date().toISOString();
+  const expenses: Expense[] = plan.rows.map((row) => {
+    const categoryId = byName.get(categoryKey(row.category));
+    if (!categoryId) throw new Error('Не удалось создать категории. Повторите импорт.');
+    return {
+      id: row.id,
+      user_id: userId,
+      category_id: categoryId,
+      amount_kopecks: row.amount,
+      spent_on: row.date,
+      note: row.note,
+      device_name: row.author,
+      created_at: createdAt,
+    };
+  });
+  if (demo) {
+    localStorage.setItem(
+      demoKey,
+      JSON.stringify({ categories, expenses: [...expenses, ...data.expenses] }),
+    );
+  } else {
+    // One request keeps expense insertion transactional. Stable row IDs make retries safe.
+    const { error } = await supabase!
+      .from('expenses')
+      .upsert(expenses, { onConflict: 'id', ignoreDuplicates: true });
+    if (error) throw error;
+  }
+  return { imported: expenses.length, skipped: plan.skipped };
 }
 export function errorMessage(error: unknown) {
   const message =

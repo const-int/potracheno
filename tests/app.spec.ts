@@ -48,7 +48,7 @@ test('complete mobile flow: create, edit, archive category, summary, export and 
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
-    .getByRole('button', { name: 'Summary' })
+    .getByRole('button', { name: 'Сводка' })
     .click();
   await expect(page.getByRole('img', { name: /Распределение/ })).toBeVisible();
   await expect(page.locator('.legend').getByText('Еда', { exact: true })).toBeVisible();
@@ -103,11 +103,22 @@ test('validation, persistence, month navigation and mobile layout', async ({ pag
   expect(await page.evaluate(() => localStorage.getItem('vmeste.device'))).toBe('Алексей');
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
-    .getByRole('button', { name: 'Summary' })
+    .getByRole('button', { name: 'Сводка' })
     .click();
   await expect(page.getByRole('button', { name: 'Следующий месяц' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Предыдущий месяц' }).click();
   await expect(page.getByRole('heading', { name: 'Здесь пока тихо' })).toBeVisible();
+  const navigation = page.getByRole('navigation', { name: 'Мобильная навигация' });
+  await navigation.getByRole('button', { name: 'История', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Следующий месяц' })).toHaveCount(0);
+  await expect(page.locator('.expense-row').filter({ hasText: 'Алексей' })).toContainText(
+    '2,029 ₽',
+  );
+  await page.getByRole('button', { name: 'Предыдущий месяц' }).click();
+  await navigation.getByRole('button', { name: 'Сводка', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Следующий месяц' })).toHaveCount(0);
+  await expect(page.getByRole('img', { name: /Распределение/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Предыдущий месяц' }).click();
   await page.getByRole('button', { name: 'Следующий месяц' }).click();
   await expect(page.getByRole('button', { name: 'Следующий месяц' })).toHaveCount(0);
   await expect(page.getByRole('img', { name: /Распределение/ })).toBeVisible();
@@ -124,10 +135,21 @@ test('custom categories can be created and restored from archive', async ({ page
     .click();
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
   await page.getByLabel('Название', { exact: true }).fill('Путешествия');
+  await expect(page.locator('.icon-picker button')).toHaveCount(20);
+  await expect(page.locator('.swatch-list button')).toHaveCount(20);
+  await page.getByRole('button', { name: 'Значок Путешествия', exact: true }).click();
+  await page.getByRole('button', { name: 'Цвет #3f6f93', exact: true }).click();
   await page.getByRole('button', { name: 'Сохранить категорию' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('button', { name: /^Путешествия/ })).toBeVisible();
   await page.getByRole('button', { name: /^Путешествия/ }).click();
+  await expect(
+    page.getByRole('button', { name: 'Значок Путешествия', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Цвет #3f6f93', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   await page.getByLabel('Убрать категорию в архив').check();
   await page.getByRole('button', { name: 'Сохранить категорию' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -231,7 +253,7 @@ test('history and summary keep the mobile interface compact', async ({ page }) =
   await expect(page.getByRole('button', { name: 'Экспорт CSV', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Расходы за месяц' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Предыдущий месяц' })).toBeVisible();
-  await navigation.getByRole('button', { name: 'Summary' }).click();
+  await navigation.getByRole('button', { name: 'Сводка' }).click();
   await expect(page.locator('.page-heading')).toHaveCount(0);
   await expect(page.locator('.compact-summary .stat:visible')).toHaveCount(2);
   const order = await page.evaluate(() => ({
@@ -265,7 +287,7 @@ test('mobile toolbar height stays fixed across tabs, with titles and no tap high
   const tabs = [
     ['Расход', 'Добавить расход'],
     ['История', 'История расходов'],
-    ['Summary', 'Общая картина'],
+    ['Сводка', 'Общая картина'],
     ['Категории', 'Категории расходов'],
   ] as const;
   for (const [width, height] of [
@@ -290,4 +312,20 @@ test('mobile toolbar height stays fixed across tabs, with titles and no tap high
     }
     expect(new Set(measurements).size).toBe(1);
   }
+});
+
+test('success toasts expire after two seconds and repeat notifications restart their lifetime', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await enterAmount(page, '1');
+  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
+  await expect(page.locator('.app-toast')).toContainText('Расход сохранен');
+  await page.clock.fastForward(1500);
+  await enterAmount(page, '2');
+  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
+  await page.clock.fastForward(600);
+  await expect(page.locator('.app-toast')).toContainText('Расход сохранен');
+  await page.clock.fastForward(1500);
+  await expect(page.locator('.app-toast')).toHaveCount(0);
 });

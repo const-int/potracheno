@@ -14,7 +14,18 @@ test('login keeps the shared credentials and saves a personal name after success
   };
   let attempts = 0;
   let credentials: Record<string, unknown> = {};
-  const expenses: Record<string, unknown>[] = [];
+  const expenses: Record<string, unknown>[] = [
+    {
+      id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      user_id: userId,
+      category_id: category.id,
+      amount_kopecks: 50000,
+      spent_on: '2026-01-01',
+      note: 'Старый расход',
+      device_name: 'Анна',
+      created_at: '2026-01-01T12:00:00Z',
+    },
+  ];
   await page.addInitScript(() => localStorage.setItem('vmeste.device', 'Иван'));
   await page.route('**/auth/v1/token?grant_type=password', async (route) => {
     credentials = route.request().postDataJSON();
@@ -80,16 +91,23 @@ test('login keeps the shared credentials and saves a personal name after success
   expect(credentials).toMatchObject({ email: 'family@example.invalid', password: 'test-password' });
   expect(credentials).not.toHaveProperty('display_name');
   await page.getByRole('button', { name: 'Настройки', exact: true }).click();
-  await expect(page.getByRole('dialog')).toContainText('Анна');
-  await expect(page.getByRole('dialog').getByLabel('Имя пользователя')).toHaveCount(0);
+  const nameField = page.getByRole('dialog').getByLabel('Имя пользователя', { exact: true });
+  await expect(nameField).toHaveValue('Анна');
+  await nameField.fill('   ');
+  await expect(page.getByRole('button', { name: 'Сохранить имя', exact: true })).toBeDisabled();
+  await nameField.fill('  Мария  ');
+  await page.getByRole('button', { name: 'Сохранить имя', exact: true }).click();
+  await expect(nameField).toHaveValue('Мария');
+  expect(await page.evaluate(() => localStorage.getItem('vmeste.device'))).toBe('Мария');
   await page.getByRole('button', { name: 'Закрыть', exact: true }).click();
   const keypad = page.getByRole('group', { name: 'Цифровая клавиатура' });
   await keypad.getByRole('button', { name: '1', exact: true }).click();
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
   await keypad.getByRole('button', { name: 'Сохранить расход' }).click();
   await expect(page.getByText('Расход сохранен', { exact: true })).toBeVisible();
-  expect(expenses).toHaveLength(1);
-  expect(expenses[0]).toMatchObject({ user_id: userId, device_name: 'Анна', amount_kopecks: 100 });
+  expect(expenses).toHaveLength(2);
+  expect(expenses[0].device_name).toBe('Анна');
+  expect(expenses[1]).toMatchObject({ user_id: userId, device_name: 'Мария', amount_kopecks: 100 });
 });
 
 test('a blank personal name cannot start authentication', async ({ page }) => {

@@ -6,7 +6,7 @@ create table public.categories (
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
   name text not null check (length(trim(name)) between 1 and 40),
   color text not null default '#527961' check (color ~ '^#[0-9a-fA-F]{6}$'),
-  icon text not null default 'other' check (icon in ('basket','shop','car','heart','paw','home','coffee','other')),
+  icon text not null default 'other' check (icon in ('basket','shop','car','heart','paw','home','coffee','other','fuel','transport','food','clothes','travel','study','sport','gifts','fun','bills','phone','work')),
   archived boolean not null default false,
   unique (user_id, name),
   unique (id, user_id)

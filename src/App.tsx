@@ -1,3 +1,6 @@
+import Toast, { type ToastNotice } from './Toast';
+import { useRegisterSW } from 'virtual:pwa-register/react';
+import CsvImport from './CsvImport';
 import MobileExpenseEntry from './MobileExpenseEntry';
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
@@ -6,10 +9,23 @@ import {
   ArrowRight,
   BarChart3,
   Car,
+  Fuel,
+  Bus,
+  UtensilsCrossed,
+  Shirt,
+  Plane,
+  GraduationCap,
+  Dumbbell,
+  Gift,
+  Clapperboard,
+  ReceiptText,
+  Smartphone,
+  BriefcaseBusiness,
   Check,
   CircleHelp,
   Coffee,
   Download,
+  FileUp,
   Heart,
   Home,
   LayoutGrid,
@@ -33,6 +49,7 @@ import {
   type Data,
   type Expense,
   colors,
+  categoryIconLabels,
   csv,
   money,
   monthLabel,
@@ -60,6 +77,18 @@ const icons = {
   home: Home,
   coffee: Coffee,
   other: MoreHorizontal,
+  fuel: Fuel,
+  transport: Bus,
+  food: UtensilsCrossed,
+  clothes: Shirt,
+  travel: Plane,
+  study: GraduationCap,
+  sport: Dumbbell,
+  gifts: Gift,
+  fun: Clapperboard,
+  bills: ReceiptText,
+  phone: Smartphone,
+  work: BriefcaseBusiness,
 };
 function CategoryIcon({ category, size = 20 }: { category?: Category; size?: number }) {
   const Icon = icons[category?.icon as keyof typeof icons] ?? MoreHorizontal;
@@ -114,6 +143,23 @@ const empty: Data = { categories: [], expenses: [] };
 type Tab = 'add' | 'history' | 'summary' | 'categories';
 
 export default function App() {
+  const {
+    needRefresh: [updateReady],
+    updateServiceWorker,
+  } = useRegisterSW();
+  useEffect(() => {
+    if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+    const check = () => {
+      if (document.visibilityState === 'visible') {
+        void navigator.serviceWorker
+          .getRegistration()
+          .then((registration) => registration?.update())
+          .catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', check);
+    return () => document.removeEventListener('visibilitychange', check);
+  }, []);
   const [userId, setUserId] = useState<string | null>(null);
   const [demo, setDemo] = useState(false);
   const [authLoading, setAuthLoading] = useState(!!supabase);
@@ -132,7 +178,16 @@ export default function App() {
   const [month, setMonth] = useState(today().slice(0, 7));
   const [userName, setUserName] = useState(() => localStorage.getItem('vmeste.device') ?? '');
   const [settings, setSettings] = useState(false);
-  const [notice, setNotice] = useState('');
+  const [importOpen, setImportOpen] = useState(false);
+  const [importBusy, setImportBusy] = useState(false);
+  const [notice, setNoticeState] = useState<ToastNotice | null>(null);
+  const noticeSequence = useRef(0);
+  function setNotice(message: string, kind: ToastNotice['kind'] = 'success') {
+    setNoticeState(message ? { id: ++noticeSequence.current, message, kind } : null);
+  }
+  const closeNotice = useCallback((id: number) => {
+    setNoticeState((current) => (current?.id === id ? null : current));
+  }, []);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Expense | null>(null);
@@ -154,13 +209,13 @@ export default function App() {
         if (active) {
           setUserId(data.session?.user.id ?? null);
           setAuthLoading(false);
-          if (error) setNotice(errorMessage(error));
+          if (error) setNotice(errorMessage(error), 'error');
         }
       })
       .catch((e) => {
         if (active) {
           setAuthLoading(false);
-          setNotice(errorMessage(e));
+          setNotice(errorMessage(e), 'error');
         }
       });
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -221,11 +276,6 @@ export default function App() {
     };
   }, [refresh, demo]);
 
-  useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => setNotice(''), 4500);
-    return () => clearTimeout(timer);
-  }, [notice]);
   const monthExpenses = data.expenses
     .filter((e) => e.spent_on.startsWith(month))
     .sort(
@@ -251,7 +301,7 @@ export default function App() {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       setNotice('Все расходы экспортированы');
     } catch (e) {
-      setNotice(errorMessage(e));
+      setNotice(errorMessage(e), 'error');
     } finally {
       setExportBusy(false);
     }
@@ -271,7 +321,7 @@ export default function App() {
       setData(empty);
       setTab('add');
     } catch (e) {
-      setNotice(errorMessage(e));
+      setNotice(errorMessage(e), 'error');
     }
   }
 
@@ -279,6 +329,10 @@ export default function App() {
     const value = name.trim();
     localStorage.setItem('vmeste.device', value);
     setUserName(value);
+  }
+  function selectTab(next: Tab) {
+    if (next === 'history' || next === 'summary') setMonth(today().slice(0, 7));
+    setTab(next);
   }
 
   if (session && !userName.trim())
@@ -345,7 +399,7 @@ export default function App() {
                 userName={userName}
                 onNameChange={setUserName}
                 onSignedIn={rememberName}
-                onError={setNotice}
+                onError={(message) => setNotice(message, 'error')}
               />
             ) : (
               <div className="setup-note">
@@ -369,11 +423,7 @@ export default function App() {
             </small>
           </section>
         </div>
-        {notice && (
-          <div role="alert" className="toast">
-            {notice}
-          </div>
-        )}
+        {notice && <Toast key={notice.id} notice={notice} onClose={closeNotice} />}
         <footer className="login-footer">potracheno · учет семейных расходов</footer>
       </div>
     );
@@ -402,7 +452,7 @@ export default function App() {
             <button
               key={id}
               className={`nav-item ${tab === id ? 'active' : ''}`}
-              onClick={() => setTab(id)}
+              onClick={() => selectTab(id)}
               aria-current={tab === id ? 'page' : undefined}
             >
               <Icon size={20} />
@@ -682,21 +732,21 @@ export default function App() {
                             <b>{money(e.amount_kopecks)}</b>
                             <div className="row-actions">
                               <button
-                                className="icon-button"
+                                className="icon-button expense-edit-button"
                                 aria-label={`Редактировать ${e.note || categoryById(e.category_id)?.name}`}
                                 onClick={() => setEditing(e)}
                               >
-                                <Pencil size={16} />
+                                <Pencil size={20} />
                               </button>
                               <button
-                                className="icon-button"
+                                className="icon-button expense-delete-button"
                                 aria-label={`Удалить ${e.note || categoryById(e.category_id)?.name}`}
                                 onClick={() => {
                                   setActionError('');
                                   setDeleting(e);
                                 }}
                               >
-                                <Trash2 size={16} />
+                                <Trash2 size={20} />
                               </button>
                             </div>
                           </div>
@@ -761,7 +811,7 @@ export default function App() {
           [
             ['add', Plus, 'Расход'],
             ['history', List, 'История'],
-            ['summary', BarChart3, 'Summary'],
+            ['summary', BarChart3, 'Сводка'],
             ['categories', LayoutGrid, 'Категории'],
           ] as const
         ).map(([id, Icon, label]) => (
@@ -769,19 +819,14 @@ export default function App() {
             key={id}
             className={tab === id ? 'active' : ''}
             aria-current={tab === id ? 'page' : undefined}
-            onClick={() => setTab(id)}
+            onClick={() => selectTab(id)}
           >
             <Icon size={21} />
             <span>{label}</span>
           </button>
         ))}
       </nav>
-      {notice && (
-        <div className="toast" role="status">
-          <Check size={17} />
-          {notice}
-        </div>
-      )}
+      {notice && <Toast key={notice.id} notice={notice} onClose={closeNotice} />}
       {editing && (
         <Modal title="Редактировать расход" close={() => setEditing(null)}>
           <ExpenseForm
@@ -855,13 +900,59 @@ export default function App() {
           </div>
         </Modal>
       )}
+      {importOpen && (
+        <Modal
+          title="Импорт расходов"
+          close={() => {
+            if (!importBusy) setImportOpen(false);
+          }}
+        >
+          <CsvImport
+            data={data}
+            demo={demo}
+            userId={session!}
+            userName={userName}
+            onBusy={setImportBusy}
+            onComplete={async ({ imported, skipped }) => {
+              setImportOpen(false);
+              await afterSave(
+                `Импортировано расходов: ${imported}. Пропущено совпадений: ${skipped}.`,
+              );
+            }}
+          />
+        </Modal>
+      )}
       {settings && (
         <Modal title="Настройки" close={() => setSettings(false)}>
-          <p className="muted">{userName}</p>
+          <NamePrompt
+            userName={userName}
+            onSave={(name) => {
+              rememberName(name);
+              setNotice('Имя пользователя сохранено');
+            }}
+          />
           <div className="settings-separator" />
+          {updateReady && (
+            <button
+              className="primary full-width settings-import-button"
+              onClick={() => void updateServiceWorker(true)}
+            >
+              Обновить приложение
+            </button>
+          )}
           <button className="secondary full-width" onClick={exportData} disabled={exportBusy}>
             <Download size={17} />
             {exportBusy ? 'Экспорт…' : 'Экспортировать все расходы в CSV'}
+          </button>
+          <button
+            className="secondary full-width settings-import-button"
+            onClick={() => {
+              setSettings(false);
+              setImportOpen(true);
+            }}
+          >
+            <FileUp size={17} />
+            Импортировать расходы из CSV
           </button>
           <button className="text-button logout-button" onClick={logout}>
             <LogOut size={17} />
@@ -1185,7 +1276,8 @@ function CategoryForm({
               key={id}
               type="button"
               onClick={() => setIcon(id)}
-              aria-label={`Значок ${id}`}
+              aria-label={`Значок ${categoryIconLabels[id]}`}
+              title={categoryIconLabels[id]}
               aria-pressed={icon === id}
               className={icon === id ? 'selected' : ''}
             >
@@ -1221,7 +1313,10 @@ function NamePrompt({ userName, onSave }: { userName: string; onSave: (name: str
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (name.trim()) onSave(name.trim());
+        if (name.trim()) {
+          onSave(name.trim());
+          setName(name.trim());
+        }
       }}
     >
       <p className="muted">
@@ -1320,7 +1415,7 @@ function Summary({
           <small>Все категории · рубли</small>
         </section>
         <section className="panel stat">
-          <span>Количество расходов</span>
+          <span>Операций</span>
           <strong>{expenses.length.toLocaleString('en-US')}</strong>
           <small>Записей за выбранный месяц</small>
         </section>

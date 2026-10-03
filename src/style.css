@@ -1070,24 +1070,6 @@ fieldset {
   color: #87967e;
   font-size: 12px;
 }
-.toast {
-  position: fixed;
-  bottom: 26px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 30;
-  border: 1px solid #dbe3d0;
-  background: #fff;
-  color: #436536;
-  border-radius: 12px;
-  padding: 14px 22px;
-  font-size: 12px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  box-shadow: 0 8px 40px #1e382a20;
-  max-width: calc(100vw - 30px);
-}
 .mobile-nav {
   display: none;
 }
@@ -1549,12 +1531,6 @@ fieldset {
     box-shadow: 0 0 0 6px #e9efdf;
     border-radius: 4px;
   }
-  .toast {
-    bottom: 90px;
-    width: max-content;
-    padding: 12px 16px;
-    font-size: 11px;
-  }
   .content-footer {
     margin-top: 22px;
   }
@@ -1775,10 +1751,6 @@ fieldset {
     left: 16px;
     right: 16px;
     z-index: 4;
-  }
-  .mobile-entry .toast {
-    top: 64px;
-    bottom: auto;
   }
   .quick-entry {
     flex: 1;
@@ -2204,11 +2176,14 @@ fieldset {
   .mobile-nav button {
     font-size: 12px;
     line-height: 1.3;
-    gap: 3px;
-    padding: 4px;
+    gap: 10px;
+    padding: 1px 4px;
   }
   .mobile-nav button span {
     white-space: nowrap;
+  }
+  .mobile-nav button svg {
+    flex-shrink: 0;
   }
   .muted,
   .modal .muted {
@@ -2240,7 +2215,6 @@ fieldset {
   }
   .form-error,
   .error-banner,
-  .toast,
   .quick-error {
     font-size: 14px;
   }
@@ -2394,5 +2368,256 @@ fieldset {
   .quick-category .category-icon {
     width: 22px;
     height: 22px;
+  }
+}
+
+.settings-import-button {
+  margin-top: 12px;
+}
+.import-template {
+  margin: 12px 0 20px;
+}
+.csv-file-label input {
+  height: auto !important;
+  padding: 12px !important;
+}
+.csv-file-label input::file-selector-button {
+  border: 0;
+  border-radius: 6px;
+  background: #e9efdf;
+  padding: 8px 10px;
+  margin-right: 8px;
+  color: #436536;
+  font: inherit;
+}
+.csv-filename {
+  font-size: 13px;
+  color: #7c896e;
+  overflow-wrap: anywhere;
+  margin: 10px 0;
+}
+.import-counts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border: 1px solid #e8ecdf;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 16px 0;
+}
+.import-counts > span {
+  font-size: 13px;
+  color: #7c896e;
+}
+.import-counts strong {
+  display: block;
+  font-size: 24px;
+  color: #34533d;
+  margin-top: 5px;
+}
+.csv-import .checkbox-label {
+  align-items: flex-start;
+  line-height: 1.5;
+}
+.csv-import .checkbox-label input {
+  flex-shrink: 0;
+}
+.csv-import .muted {
+  margin-bottom: 12px;
+}
+.csv-import .form-error ul {
+  padding-left: 18px;
+  margin: 8px 0 0;
+}
+.csv-import .form-error li {
+  margin-bottom: 8px;
+}
+.import-preview {
+  padding: 0;
+  margin: 16px 0;
+  list-style: none;
+}
+.import-preview li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eef0e7;
+}
+.import-preview li > div {
+  flex: 1;
+  min-width: 0;
+}
+.import-preview strong {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.import-preview span {
+  display: block;
+  font-size: 12px;
+  color: #7c896e;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.import-preview b {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.app-toast {
+  position: fixed;
+  inset: auto auto 20px 20px;
+  margin: 0;
+  width: min(420px, calc(100vw - 40px));
+  min-height: 76px;
+  padding: 18px 20px;
+  border: 0;
+  border-radius: 16px;
+  background: #36834b;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 12px 38px #1a512e38;
+  z-index: 1000;
+  pointer-events: none;
+  overflow: visible;
+  animation: app-toast-enter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.app-toast-icon {
+  flex: 0 0 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ffffff26;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.app-toast-message {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.app-toast-error {
+  background: #ad493d;
+  box-shadow: 0 12px 38px #71302433;
+}
+.app-toast.is-leaving {
+  animation: app-toast-exit 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+@keyframes app-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(calc(100% + 100px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes app-toast-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(calc(100% + 100px));
+  }
+}
+@media (max-width: 650px) {
+  .app-toast {
+    inset: auto 16px calc(82px + env(safe-area-inset-bottom)) 16px;
+    width: auto;
+    min-height: 76px;
+    padding: 17px 18px;
+  }
+}
+@media (max-width: 650px) and (max-height: 620px) {
+  .app-toast {
+    bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-toast,
+  .app-toast.is-leaving {
+    animation: none;
+  }
+  .app-toast.is-leaving {
+    opacity: 0;
+  }
+}
+
+.topbar,
+.mobile-entry .topbar {
+  height: 64px;
+  min-height: 64px;
+  flex-basis: 64px;
+}
+.screen-title {
+  font-size: 18px;
+}
+.mobile-entry .error-banner {
+  top: 68px;
+}
+.row-actions,
+.mobile-compact .row-actions {
+  gap: 12px;
+}
+.row-actions .icon-button,
+.mobile-compact .row-actions .icon-button {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid #dce5d5;
+  border-radius: 10px;
+  background: #edf3e6;
+  color: #4f6c3e;
+  flex: 0 0 44px;
+}
+.row-actions .expense-delete-button,
+.mobile-compact .row-actions .expense-delete-button {
+  background: #fbefeb;
+  border-color: #eedbd3;
+  color: #a4513b;
+}
+.row-actions .expense-edit-button:hover,
+.row-actions .expense-edit-button:active {
+  background: #dce9d0;
+}
+.row-actions .expense-delete-button:hover,
+.row-actions .expense-delete-button:active {
+  background: #f2d8ce;
+}
+@media (max-width: 650px) and (max-height: 620px) {
+  .quick-categories {
+    flex-basis: 164px;
+  }
+}
+
+@media (max-width: 650px) {
+  .swatch-list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .swatch-list button {
+    width: 38px;
+    height: 38px;
+    justify-self: center;
+  }
+  .icon-picker {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .icon-picker button {
+    width: 100%;
+    height: 44px;
   }
 }
