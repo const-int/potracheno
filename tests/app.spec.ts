@@ -1,9 +1,17 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+async function enterAmount(page: Page, amount: string) {
+  const keypad = page.getByRole('group', { name: 'Цифровая клавиатура' });
+  for (const digit of amount)
+    await keypad
+      .getByRole('button', { name: digit === ',' ? 'Десятичная запятая' : digit, exact: true })
+      .click();
+}
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await page.getByRole('heading', { name: 'Новый расход' }).waitFor();
+  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
   await page.getByRole('button', { name: 'Указать имя' }).click();
   await page.getByLabel('Имя пользователя', { exact: true }).fill('Алексей');
   await page.getByRole('button', { name: 'Сохранить имя' }).click();
@@ -12,17 +20,18 @@ test.beforeEach(async ({ page }) => {
 test('complete mobile flow: create, edit, archive category, summary, export and delete', async ({
   page,
 }) => {
-  await page.getByRole('textbox', { name: 'Сумма расхода' }).fill('1234,56');
+  await enterAmount(page, '1234,56');
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
-  await page.getByLabel('Комментарий').fill('Тестовая покупка');
-  await page.getByRole('button', { name: 'Добавить расход', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('Расход сохранен');
+  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
+  await expect(page.getByText('Расход сохранен', { exact: true })).toBeVisible();
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'История' })
     .click();
-  await expect(page.getByText('Тестовая покупка', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Редактировать Тестовая покупка' }).click();
+  const newRow = page.locator('.expense-row').filter({ hasText: 'Алексей' });
+  await expect(newRow).toContainText('1 234,56 ₽');
+  await newRow.getByRole('button', { name: 'Редактировать Продукты' }).click();
+  await page.getByRole('dialog').getByLabel('Комментарий').fill('Тестовая покупка');
   await page.getByRole('dialog').getByRole('textbox', { name: 'Сумма расхода' }).fill('1500,01');
   await page.getByRole('button', { name: 'Сохранить изменения' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -68,17 +77,26 @@ test('complete mobile flow: create, edit, archive category, summary, export and 
 });
 
 test('validation, persistence, month navigation and mobile layout', async ({ page }) => {
-  await page.getByRole('textbox', { name: 'Сумма расхода' }).fill('0');
+  await enterAmount(page, '0');
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
-  await page.getByRole('button', { name: 'Добавить расход', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('Укажите сумму больше нуля');
-  await page.getByRole('textbox', { name: 'Сумма расхода' }).fill('20,29');
-  await page.getByLabel('Комментарий').fill('Запись для перезагрузки');
-  await page.getByRole('button', { name: 'Добавить расход', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('Расход сохранен');
+  await expect(page.getByRole('button', { name: 'Сохранить расход', exact: true })).toBeDisabled();
+  await enterAmount(page, '20,29');
+  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
+  await expect(page.getByText('Расход сохранен', { exact: true })).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await expect(page.getByText('Запись для перезагрузки', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
+  await page
+    .getByRole('navigation', { name: 'Мобильная навигация' })
+    .getByRole('button', { name: 'Расход', exact: true })
+    .waitFor();
+  await page
+    .getByRole('navigation', { name: 'Мобильная навигация' })
+    .getByRole('button', { name: 'История' })
+    .click();
+  await expect(page.locator('.expense-row').filter({ hasText: 'Алексей' })).toContainText(
+    '20,29 ₽',
+  );
   await expect(page.getByRole('button', { name: 'Алексей' })).toBeVisible();
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
@@ -116,5 +134,80 @@ test('custom categories can be created and restored from archive', async ({ page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'Расход', exact: true })
     .click();
+  await page.getByRole('button', { name: 'Следующие категории' }).click();
   await expect(page.getByRole('button', { name: 'Путешествия', exact: true })).toBeVisible();
+});
+
+test('entry fits small phones and uses only the custom keypad', async ({ page }) => {
+  for (const [width, height] of [
+    [320, 568],
+    [375, 667],
+    [390, 844],
+    [430, 932],
+  ]) {
+    await page.setViewportSize({ width, height });
+    await expect(page.locator('.quick-entry input, .quick-entry textarea')).toHaveCount(0);
+    await expect(page.getByLabel('Дата расхода')).toHaveCount(0);
+    await expect(page.getByLabel('Комментарий')).toHaveCount(0);
+    const bounds = await page.evaluate(() => ({
+      width: document.documentElement.scrollWidth,
+      height: document.documentElement.scrollHeight,
+      viewportWidth: innerWidth,
+      viewportHeight: innerHeight,
+      keypadBottom: document.querySelector('.expense-keypad')!.getBoundingClientRect().bottom,
+      navTop: document.querySelector('.mobile-nav')!.getBoundingClientRect().top,
+    }));
+    expect(bounds.width).toBeLessThanOrEqual(bounds.viewportWidth);
+    expect(bounds.height).toBeLessThanOrEqual(bounds.viewportHeight);
+    expect(bounds.keypadBottom).toBeLessThanOrEqual(bounds.navTop);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await enterAmount(page, '2840,50');
+  await page.getByRole('button', { name: 'Продукты', exact: true }).click();
+  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('2 840,50');
+  await page.screenshot({ path: 'test-results/mobile-entry.png' });
+  await page.getByRole('button', { name: 'Удалить цифру' }).click();
+  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('2 840,5');
+});
+
+test('extra categories are paged without scrolling, and new expenses get today and no note', async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('vmeste.demo.v1')!);
+    for (let i = 0; i < 12; i++)
+      data.categories.push({
+        ...data.categories[0],
+        id: crypto.randomUUID(),
+        name: `Своя категория ${i + 1}`,
+      });
+    localStorage.setItem('vmeste.demo.v1', JSON.stringify(data));
+  });
+  await page.reload();
+  await page.getByRole('button', { name: 'Открыть деморежим' }).click();
+  await page.getByRole('button', { name: 'Следующие категории' }).click();
+  await page.getByRole('button', { name: 'Своя категория 1', exact: true }).click();
+  await enterAmount(page, '0,05');
+  await enterAmount(page, '3');
+  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0,05');
+  const previousCount = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses.length,
+  );
+  await page.getByRole('button', { name: 'Сохранить расход' }).dblclick();
+  await expect(page.getByText('Расход сохранен', { exact: true })).toBeVisible();
+  const result = await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('vmeste.demo.v1')!);
+    const date = new Date();
+    const today = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return { count: data.expenses.length, expense: data.expenses[0], today };
+  });
+  expect(result.count).toBe(previousCount + 1);
+  expect(result.expense.amount_kopecks).toBe(5);
+  expect(result.expense.note).toBe('');
+  expect(result.expense.spent_on).toBe(result.today);
+  expect(result.expense.device_name).toBe('Алексей');
+  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(
+    true,
+  );
 });

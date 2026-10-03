@@ -1,3 +1,4 @@
+import MobileExpenseEntry from './MobileExpenseEntry';
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
   ArrowDownLeft,
@@ -121,6 +122,14 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [tab, setTab] = useState<Tab>('add');
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 650px)').matches);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 650px)');
+    const changed = () => setIsMobile(media.matches);
+    media.addEventListener('change', changed);
+    return () => media.removeEventListener('change', changed);
+  }, []);
+  const quickEntry = isMobile && tab === 'add';
   const [month, setMonth] = useState(today().slice(0, 7));
   const [userName, setUserName] = useState(() => localStorage.getItem('vmeste.device') ?? '');
   const [settings, setSettings] = useState(false);
@@ -346,7 +355,7 @@ export default function App() {
     );
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${quickEntry ? 'mobile-entry' : ''}`}>
       <aside className="sidebar">
         <Brand />
         <div className="family-badge">
@@ -440,48 +449,60 @@ export default function App() {
               <button onClick={() => void refresh()}>Повторить</button>
             </div>
           )}
-          <div className="page-heading">
-            <div>
-              <div className="eyebrow">СЕМЕЙНЫЕ ФИНАНСЫ</div>
-              <h1>
-                {
+          {!quickEntry && (
+            <div className="page-heading">
+              <div>
+                <div className="eyebrow">СЕМЕЙНЫЕ ФИНАНСЫ</div>
+                <h1>
                   {
-                    add: 'Каждый расход на своем месте',
-                    history: 'История расходов',
-                    summary: 'Общая картина',
-                    categories: 'Ваши категории',
-                  }[tab]
-                }
-              </h1>
-              <p>
-                {
+                    {
+                      add: 'Каждый расход на своем месте',
+                      history: 'История расходов',
+                      summary: 'Общая картина',
+                      categories: 'Ваши категории',
+                    }[tab]
+                  }
+                </h1>
+                <p>
                   {
-                    add: 'Запишите сейчас — и не держите цифры в голове.',
-                    history: 'Все ваши покупки и маленькие радости.',
-                    summary: 'Посмотрите, как складывается ваш месяц.',
-                    categories: 'Настройте учет под привычки вашей семьи.',
-                  }[tab]
-                }
-              </p>
+                    {
+                      add: 'Запишите сейчас — и не держите цифры в голове.',
+                      history: 'Все ваши покупки и маленькие радости.',
+                      summary: 'Посмотрите, как складывается ваш месяц.',
+                      categories: 'Настройте учет под привычки вашей семьи.',
+                    }[tab]
+                  }
+                </p>
+              </div>
+              {tab === 'history' && (
+                <button
+                  className="secondary export-button"
+                  onClick={exportData}
+                  disabled={exportBusy}
+                >
+                  <Download size={17} />
+                  {exportBusy ? 'Экспорт…' : 'Экспорт CSV'}
+                </button>
+              )}
             </div>
-            {tab === 'history' && (
-              <button
-                className="secondary export-button"
-                onClick={exportData}
-                disabled={exportBusy}
-              >
-                <Download size={17} />
-                {exportBusy ? 'Экспорт…' : 'Экспорт CSV'}
-              </button>
-            )}
-          </div>
+          )}
           {!loaded ? (
             <div className="panel empty-state" role="status">
               {loadError ? 'Не удалось загрузить расходы.' : 'Загружаем семейные расходы…'}
             </div>
           ) : (
             <>
-              {tab === 'add' && (
+              {quickEntry && (
+                <MobileExpenseEntry
+                  categories={activeCategories}
+                  userId={session!}
+                  userName={userName}
+                  demo={demo}
+                  renderCategoryIcon={(category) => <CategoryIcon category={category} size={19} />}
+                  onSave={() => afterSave('Расход сохранен')}
+                />
+              )}
+              {tab === 'add' && !isMobile && (
                 <div className="entry-layout">
                   <section className="panel entry-panel">
                     <div className="section-heading">
@@ -680,9 +701,11 @@ export default function App() {
               )}
             </>
           )}
-          <footer className="content-footer">
-            <Leaf size={14} /> Вместе проще.
-          </footer>
+          {!quickEntry && (
+            <footer className="content-footer">
+              <Leaf size={14} /> Вместе проще.
+            </footer>
+          )}
         </div>
       </main>
       <nav className="mobile-nav" aria-label="Мобильная навигация">
