@@ -7,6 +7,7 @@ import {
   demoData,
   initialCategories,
   colors,
+  defaultCategoryColors,
 } from './model';
 
 const url = import.meta.env.VITE_SUPABASE_URL;
@@ -16,7 +17,11 @@ const demoKey = 'vmeste.demo.v1';
 export function readDemo(): Data {
   try {
     const saved = localStorage.getItem(demoKey);
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const data = JSON.parse(saved) as Data;
+      data.categories = sortCategories(data.categories);
+      return data;
+    }
   } catch {
     /* Reset invalid demo storage. */
   }
@@ -44,7 +49,33 @@ export async function loadData(demo: boolean): Promise<Data> {
     allRows<Category>('categories'),
     allRows<Expense>('expenses'),
   ]);
-  return { categories, expenses };
+  return { categories: sortCategories(categories), expenses };
+}
+function sortCategories(categories: Category[]): Category[] {
+  return [...categories].sort(
+    (a, b) => (a.sort_order ?? Number.MAX_SAFE_INTEGER) - (b.sort_order ?? Number.MAX_SAFE_INTEGER),
+  );
+}
+export async function reorderCategories(demo: boolean, orderedIds: string[]) {
+  if (demo) {
+    const data = readDemo();
+    if (
+      orderedIds.length !== data.categories.length ||
+      new Set(orderedIds).size !== orderedIds.length ||
+      orderedIds.some((id) => !data.categories.some((category) => category.id === id))
+    )
+      throw new Error('Список категорий изменился. Повторите перемещение.');
+    data.categories = orderedIds.map((id, sort_order) => ({
+      ...data.categories.find((category) => category.id === id)!,
+      sort_order,
+    }));
+    localStorage.setItem(demoKey, JSON.stringify(data));
+    return;
+  }
+  const { error } = await supabase!.rpc('reorder_categories', { ordered_ids: orderedIds });
+  if (error?.code === 'PGRST202')
+    throw new Error('Сохранение порядка пока не включено. Требуется обновить настройки базы.');
+  if (error) throw error;
 }
 export async function saveExpense(demo: boolean, expense: Expense, editing: boolean) {
   if (demo) {
@@ -91,7 +122,7 @@ export async function saveCategory(demo: boolean, category: Category, editing: b
     )
       throw new Error('Категория с таким названием уже есть.');
     data.categories = editing
-      ? data.categories.map((c) => (c.id === category.id ? category : c))
+      ? data.categories.map((c) => (c.id === category.id ? { ...c, ...category } : c))
       : [...data.categories, category];
     localStorage.setItem(demoKey, JSON.stringify(data));
     return;
@@ -111,9 +142,25 @@ export async function saveCategory(demo: boolean, category: Category, editing: b
     : await supabase!.from('categories').insert(category);
   if (error) throw error;
 }
+export async function deleteCategory(demo: boolean, id: string) {
+  const inUse =
+    'В категории есть расходы. Сначала удалите их или выберите для них другую категорию.';
+  if (demo) {
+    const data = readDemo();
+    if (data.expenses.some((expense) => expense.category_id === id)) throw new Error(inUse);
+    data.categories = data.categories.filter((category) => category.id !== id);
+    localStorage.setItem(demoKey, JSON.stringify(data));
+    return;
+  }
+  const { error } = await supabase!.from('categories').delete().eq('id', id).select().single();
+  if (error?.code === '23503') throw new Error(inUse);
+  if (error?.code === '42501')
+    throw new Error('Удаление категорий пока не включено. Требуется обновить настройки базы.');
+  if (error) throw error;
+}
 export async function seedCategories(user_id: string) {
   const { error } = await supabase!.from('categories').upsert(
-    initialCategories.map((c, i) => ({ ...c, user_id, color: colors[i] })),
+    initialCategories.map((c, i) => ({ ...c, user_id, color: defaultCategoryColors[i] })),
     { onConflict: 'user_id,name', ignoreDuplicates: true },
   );
   if (error) throw error;

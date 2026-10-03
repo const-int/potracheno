@@ -5,6 +5,7 @@ export type Category = {
   color: string;
   icon: string;
   archived: boolean;
+  sort_order?: number | null;
 };
 export type Expense = {
   id: string;
@@ -17,28 +18,82 @@ export type Expense = {
   created_at: string;
 };
 export type Data = { categories: Category[]; expenses: Expense[] };
+// A complete spectrum arranged from warm tones through cool tones to neutrals.
 export const colors = [
-  '#527961',
-  '#dba765',
-  '#879bbe',
-  '#c27f70',
-  '#a79bb9',
-  '#87947a',
-  '#6ba4a4',
-  '#c994aa',
-  '#3f6f93',
-  '#75639d',
-  '#b45d80',
-  '#c9803b',
-  '#9caa59',
-  '#437f77',
-  '#6b8aab',
-  '#a77b54',
-  '#ab6d6a',
-  '#767e93',
-  '#b09746',
-  '#5e8e83',
+  '#d94f5c',
+  '#e26754',
+  '#de7040',
+  '#d98636',
+  '#c99a2d',
+  '#b3a52e',
+  '#8ca33c',
+  '#589e52',
+  '#38966b',
+  '#269b83',
+  '#289e9a',
+  '#309bb3',
+  '#388eac',
+  '#3989d4',
+  '#4874d4',
+  '#5b65cc',
+  '#735bd2',
+  '#8c55c6',
+  '#a452bd',
+  '#bc54a6',
+  '#cc568b',
+  '#d25f78',
+  '#da758a',
+  '#c8686d',
+  '#bd765a',
+  '#b48859',
+  '#a98d69',
+  '#87966a',
+  '#a84f66',
+  '#ad6045',
+  '#996f45',
+  '#85715f',
+  '#98877b',
+  '#868480',
+  '#62615f',
 ];
+export const categoryColorOptions = colors;
+export const defaultCategoryColors = [
+  colors[7],
+  colors[3],
+  colors[13],
+  colors[0],
+  colors[16],
+  colors[6],
+  colors[9],
+  colors[24],
+];
+
+export function swatchCheckColor(color: string): string {
+  const rgb = [1, 3, 5].map((index) => parseInt(color.slice(index, index + 2), 16));
+  return rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 > 160 ? '#514164' : '#fff';
+}
+
+export function categoryIconColor(color: string): string {
+  if (!/^#[0-9a-f]{6}$/i.test(color)) return '#806697';
+  const rgb = [1, 3, 5].map((index) => parseInt(color.slice(index, index + 2), 16));
+  const luminance = (values: number[]) =>
+    values.reduce((sum, value, index) => {
+      const channel = value / 255;
+      return (
+        sum +
+        (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4) *
+          [0.2126, 0.7152, 0.0722][index]
+      );
+    }, 0);
+  // Match the translucent category background on the app's lavender surface.
+  const background = rgb.map(
+    (value, index) => value * (24 / 255) + [247, 245, 249][index] * (1 - 24 / 255),
+  );
+  let foreground = [...rgb];
+  while ((luminance(background) + 0.05) / (luminance(foreground) + 0.05) < 4)
+    foreground = foreground.map((value) => Math.floor(value * 0.95));
+  return '#' + foreground.map((value) => value.toString(16).padStart(2, '0')).join('');
+}
 export const categoryIconLabels: Record<string, string> = {
   basket: 'Продукты',
   shop: 'Супермаркет',
@@ -103,9 +158,8 @@ export function parseAmount(value: string): number | null {
 }
 export const money = (kopecks: number) =>
   new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: kopecks % 100 ? 2 : 0,
-    maximumFractionDigits: kopecks % 100 ? 2 : 0,
-  }).format(kopecks / 100) + ' ₽';
+    maximumFractionDigits: 0,
+  }).format(Math.ceil(kopecks / 100)) + ' ₽';
 export function monthLabel(month: string) {
   return new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' })
     .format(new Date(`${month}-01T12:00:00`))
@@ -151,7 +205,7 @@ export function demoData(): Data {
     ...c,
     id: crypto.randomUUID(),
     user_id,
-    color: colors[i],
+    color: defaultCategoryColors[i],
     archived: false,
   }));
   const examples = [

@@ -1,3 +1,4 @@
+import SortableCategoryList from './SortableCategoryList';
 import Toast, { type ToastNotice } from './Toast';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import CsvImport from './CsvImport';
@@ -48,7 +49,9 @@ import {
   type Category,
   type Data,
   type Expense,
-  colors,
+  categoryColorOptions,
+  categoryIconColor,
+  swatchCheckColor,
   categoryIconLabels,
   categoryIconOptions,
   csv,
@@ -61,6 +64,8 @@ import {
 } from './lib/model';
 import {
   deleteExpense,
+  deleteCategory,
+  reorderCategories,
   errorMessage,
   loadData,
   saveCategory,
@@ -97,8 +102,8 @@ function CategoryIcon({ category, size = 20 }: { category?: Category; size?: num
     <span
       className="category-icon"
       style={{
-        color: category?.color ?? '#527961',
-        backgroundColor: `${category?.color ?? '#527961'}18`,
+        color: categoryIconColor(category?.color ?? '#806697'),
+        backgroundColor: `${category?.color ?? '#806697'}18`,
       }}
     >
       <Icon size={size} />
@@ -196,11 +201,13 @@ export default function App() {
   const [editing, setEditing] = useState<Expense | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Expense | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [exportBusy, setExportBusy] = useState(false);
   const generation = useRef(0);
   const inFlight = useRef<Promise<void> | null>(null);
+  const categoryOrderSaving = useRef(false);
   const session = demo ? 'demo' : userId;
   useEffect(() => {
     if (tab !== 'add' || !session)
@@ -246,7 +253,7 @@ export default function App() {
     const task = (async () => {
       try {
         const result = await loadData(demo);
-        if (current === generation.current) {
+        if (current === generation.current && !categoryOrderSaving.current) {
           setData(result);
           setLoaded(true);
           setLoadError('');
@@ -292,7 +299,7 @@ export default function App() {
     );
   const total = monthExpenses.reduce((sum, e) => sum + e.amount_kopecks, 0);
   const categoryById = (id: string) => data.categories.find((c) => c.id === id);
-  const activeCategories = data.categories.filter((c) => !c.archived);
+  const activeCategories = data.categories;
   async function afterSave(text: string, placement?: 'expense') {
     await refresh();
     setNotice(text, 'success', placement);
@@ -725,12 +732,7 @@ export default function App() {
                           <div className="expense-row" key={e.id}>
                             <CategoryIcon category={categoryById(e.category_id)} />
                             <div className="expense-info">
-                              <strong>
-                                {categoryById(e.category_id)?.name ?? 'Категория'}
-                                {categoryById(e.category_id)?.archived && (
-                                  <span className="archived-tag">архив</span>
-                                )}
-                              </strong>
+                              <strong>{categoryById(e.category_id)?.name ?? 'Категория'}</strong>
                               <span>
                                 {new Intl.DateTimeFormat('ru-RU', {
                                   day: 'numeric',
@@ -777,29 +779,37 @@ export default function App() {
                       <h2>Категории расходов</h2>
                     </div>
                   )}
-                  {!isMobile && (
-                    <p className="muted">Архивные категории сохраняются в истории и статистике.</p>
-                  )}
-                  <div className="category-list">
-                    {data.categories.map((c) => (
-                      <button
-                        className="category-manage"
-                        key={c.id}
-                        onClick={() => setEditingCategory(c)}
-                      >
-                        <CategoryIcon category={c} />
-                        <div>
-                          <strong>{c.name}</strong>
-                          <span>
-                            {c.archived
-                              ? 'В архиве'
-                              : `${data.expenses.filter((e) => e.category_id === c.id).length} записей`}
-                          </span>
-                        </div>
-                        <Pencil size={16} />
-                      </button>
-                    ))}
-                  </div>
+                  <SortableCategoryList
+                    categories={data.categories}
+                    expenses={data.expenses}
+                    renderIcon={(category) => <CategoryIcon category={category} />}
+                    onEdit={setEditingCategory}
+                    onDelete={(category) => {
+                      setActionError('');
+                      setDeletingCategory(category);
+                    }}
+                    onReorder={async (categories) => {
+                      const previous = data.categories;
+                      const current = generation.current;
+                      categoryOrderSaving.current = true;
+                      setData((data) => ({ ...data, categories }));
+                      try {
+                        await reorderCategories(
+                          demo,
+                          categories.map((category) => category.id),
+                        );
+                        if (current === generation.current) setNotice('Порядок категорий сохранён');
+                      } catch (error) {
+                        if (current === generation.current) {
+                          setData((data) => ({ ...data, categories: previous }));
+                          setNotice(errorMessage(error), 'error');
+                        }
+                      } finally {
+                        categoryOrderSaving.current = false;
+                        if (current === generation.current) await refresh();
+                      }
+                    }}
+                  />
                   {!data.categories.length && (
                     <SeedButton userId={session!} demo={demo} onSave={() => refresh()} />
                   )}
@@ -846,7 +856,7 @@ export default function App() {
       {editing && (
         <Modal title="Редактировать расход" close={() => setEditing(null)}>
           <ExpenseForm
-            categories={data.categories.filter((c) => !c.archived || c.id === editing.category_id)}
+            categories={data.categories}
             userId={session!}
             demo={demo}
             userName={userName}
@@ -872,6 +882,57 @@ export default function App() {
               await afterSave('Категория сохранена');
             }}
           />
+        </Modal>
+      )}
+      {deletingCategory && (
+        <Modal
+          title="Удалить категорию?"
+          close={() => {
+            if (!deleteBusy) setDeletingCategory(null);
+          }}
+        >
+          <p className="muted">
+            {data.expenses.some((expense) => expense.category_id === deletingCategory.id)
+              ? `В категории «${deletingCategory.name}» есть расходы. Сначала удалите их или выберите для них другую категорию.`
+              : `Удалить категорию «${deletingCategory.name}»? Это действие нельзя отменить.`}
+          </p>
+          {actionError && (
+            <p className="form-error" role="alert">
+              {actionError}
+            </p>
+          )}
+          <div className="modal-actions">
+            <button
+              className="secondary"
+              disabled={deleteBusy}
+              onClick={() => setDeletingCategory(null)}
+            >
+              Отмена
+            </button>
+            <button
+              className="danger"
+              disabled={
+                deleteBusy ||
+                data.expenses.some((expense) => expense.category_id === deletingCategory.id)
+              }
+              onClick={async () => {
+                if (deleteBusy) return;
+                setDeleteBusy(true);
+                setActionError('');
+                try {
+                  await deleteCategory(demo, deletingCategory.id);
+                  setDeletingCategory(null);
+                  await afterSave('Категория удалена');
+                } catch (error) {
+                  setActionError(errorMessage(error));
+                } finally {
+                  setDeleteBusy(false);
+                }
+              }}
+            >
+              {deleteBusy ? 'Удаляем…' : 'Удалить'}
+            </button>
+          </div>
         </Modal>
       )}
       {deleting && (
@@ -1082,7 +1143,10 @@ function ExpenseForm({
   existing?: Expense;
   onSave: () => Promise<void>;
 }) {
-  const [amount, setAmount] = useState(existing ? String(existing.amount_kopecks / 100) : '');
+  const [amount, setAmount] = useState(
+    existing ? String(Math.ceil(existing.amount_kopecks / 100)) : '',
+  );
+  const [amountEdited, setAmountEdited] = useState(false);
   const [categoryId, setCategoryId] = useState(existing?.category_id ?? categories[0]?.id ?? '');
   const [date, setDate] = useState(existing?.spent_on ?? today());
   const [busy, setBusy] = useState(false);
@@ -1092,8 +1156,8 @@ function ExpenseForm({
     e.preventDefault();
     if (submitLock.current) return;
     setError('');
-    const kopecks = parseAmount(amount);
-    if (kopecks === null || (kopecks % 100 !== 0 && kopecks !== existing?.amount_kopecks)) {
+    const kopecks = existing && !amountEdited ? existing.amount_kopecks : parseAmount(amount);
+    if (kopecks === null || (amountEdited && kopecks % 100 !== 0)) {
       setError('Укажите целую сумму в рублях от 1 до 999,999,999 ₽.');
       return;
     }
@@ -1148,7 +1212,10 @@ function ExpenseForm({
             placeholder="0"
             aria-label="Сумма расхода"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => {
+              setAmount(e.target.value);
+              setAmountEdited(true);
+            }}
             required
           />
           <span>₽</span>
@@ -1215,9 +1282,8 @@ function CategoryForm({
   onSave: () => Promise<void>;
 }) {
   const [name, setName] = useState(existing?.name ?? '');
-  const [color, setColor] = useState(existing?.color ?? colors[0]);
+  const [color, setColor] = useState(existing?.color ?? categoryColorOptions[0]);
   const [icon, setIcon] = useState(existing?.icon ?? 'other');
-  const [archived, setArchived] = useState(existing?.archived ?? false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   return (
@@ -1236,7 +1302,7 @@ function CategoryForm({
               name: name.trim(),
               color,
               icon,
-              archived,
+              archived: false,
             },
             !!existing,
           );
@@ -1261,11 +1327,14 @@ function CategoryForm({
         </label>
         <div className="field-heading">Цвет</div>
         <div className="swatch-list">
-          {colors.map((c) => (
+          {(categoryColorOptions.includes(color)
+            ? categoryColorOptions
+            : [color, ...categoryColorOptions]
+          ).map((c) => (
             <button
               type="button"
               key={c}
-              style={{ background: c }}
+              style={{ background: c, color: swatchCheckColor(c) }}
               className={c === color ? 'selected' : ''}
               aria-label={`Цвет ${c}`}
               aria-pressed={c === color}
@@ -1297,16 +1366,6 @@ function CategoryForm({
             );
           })}
         </div>
-        {existing && (
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={archived}
-              onChange={(e) => setArchived(e.target.checked)}
-            />
-            Убрать категорию в архив
-          </label>
-        )}
         {error && (
           <p className="form-error" role="alert">
             {error}
@@ -1417,7 +1476,6 @@ function Summary({
   compact?: boolean;
 }) {
   const groups = summarize(expenses, categories);
-  let offset = 0;
   return (
     <div className={`summary-content ${compact ? 'compact-summary' : ''}`}>
       <div className="stats-grid">
@@ -1433,7 +1491,7 @@ function Summary({
         </section>
         <section className="panel stat">
           <span>Средний расход</span>
-          <strong>{money(expenses.length ? Math.round(total / expenses.length) : 0)}</strong>
+          <strong>{money(expenses.length ? total / expenses.length : 0)}</strong>
           <small>На одну запись</small>
         </section>
       </div>
@@ -1447,67 +1505,46 @@ function Summary({
         {!total ? (
           <Empty />
         ) : (
-          <div className="chart-layout">
-            <div className="donut-wrap">
-              <svg
-                viewBox="0 0 240 240"
-                role="img"
-                aria-label="Распределение расходов по категориям. Суммы и доли приведены в списке рядом."
-              >
-                <circle cx="120" cy="120" r="88" fill="none" stroke="#eceee8" strokeWidth="27" />
-                {groups.map((c) => {
-                  const percentage = (c.total / total) * 100;
-                  const start = offset;
-                  offset += percentage;
-                  return (
-                    <circle
-                      key={c.id}
-                      cx="120"
-                      cy="120"
-                      r="88"
-                      fill="none"
-                      stroke={c.color}
-                      strokeWidth="27"
-                      pathLength="100"
-                      strokeDasharray={`${percentage} ${100 - percentage}`}
-                      strokeDashoffset={-start}
-                      transform="rotate(-90 120 120)"
-                    >
-                      <title>
-                        {c.name}: {money(c.total)} ({percentage.toFixed(1)}%)
-                      </title>
-                    </circle>
-                  );
-                })}
-              </svg>
-              <div className="donut-center">
+          <div className="category-breakdown">
+            {compact && (
+              <div className="summary-total">
                 <span>Расходы месяца</span>
                 <strong>{money(total)}</strong>
-                <small>Всё под контролем</small>
               </div>
-            </div>
-            <div className="legend">
-              {groups.map((c) => (
-                <div className="legend-item" key={c.id}>
-                  <div className="legend-top">
-                    <span className="legend-dot" style={{ background: c.color }} />
-                    <strong>{c.name}</strong>
-                    <b>{money(c.total)}</b>
-                  </div>
-                  <div className="legend-bottom">
-                    <div className="progress">
-                      <span style={{ width: `${(c.total / total) * 100}%`, background: c.color }} />
+            )}
+            <ol className="category-bars" aria-label="Распределение расходов по категориям">
+              {groups.map((category) => {
+                const percentage = (category.total / total) * 100;
+                const percentageText =
+                  percentage.toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%';
+                return (
+                  <li className="category-bar-item" key={category.id}>
+                    <div className="category-bar-heading">
+                      <CategoryIcon category={category} size={20} />
+                      <strong className="category-bar-name">{category.name}</strong>
+                      <div className="category-bar-values">
+                        <b>{money(category.total)}</b>
+                        <span>{percentageText}</span>
+                      </div>
                     </div>
-                    <span>
-                      {((c.total / total) * 100).toLocaleString('en-US', {
-                        maximumFractionDigits: 1,
-                      })}
-                      %
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    <div
+                      className="category-bar-track"
+                      role="meter"
+                      aria-label={`${category.name}: ${money(category.total)}`}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={percentage}
+                      aria-valuetext={percentageText}
+                    >
+                      <span
+                        className="category-bar-fill"
+                        style={{ width: `${percentage}%`, background: category.color }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
           </div>
         )}
       </section>

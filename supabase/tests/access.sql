@@ -60,12 +60,43 @@ begin
     raise exception 'FAIL: zero amount allowed';
   exception when check_violation then null; end;
 
+  perform public.reorder_categories(array['aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa']::uuid[]);
+  if (select sort_order from public.categories where id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')<>0 then raise exception 'FAIL: order not saved'; end if;
+  begin
+    perform public.reorder_categories(array['bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb']::uuid[]);
+    raise exception 'FAIL: foreign category order changed';
+  exception when raise_exception then
+    if sqlerrm = 'FAIL: foreign category order changed' then raise; end if;
+  end;
+  begin
+    perform public.reorder_categories(array[]::uuid[]);
+    raise exception 'FAIL: incomplete order accepted';
+  exception when raise_exception then
+    if sqlerrm = 'FAIL: incomplete order accepted' then raise; end if;
+  end;
   update public.categories set archived=true where id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
   if not exists (select 1 from public.expenses where id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee') then raise exception 'FAIL: archive removed expense'; end if;
   delete from public.expenses where id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
   get diagnostics affected = row_count;
   if affected<>1 then raise exception 'FAIL: owner delete denied'; end if;
-  begin delete from public.categories where id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'; raise exception 'FAIL: category deletion allowed'; exception when insufficient_privilege then null; end;
+  begin delete from public.categories where id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'; raise exception 'FAIL: category with expenses deleted'; exception when foreign_key_violation then null; end;
+  delete from public.categories where id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  get diagnostics affected = row_count;
+  if affected<>0 then raise exception 'FAIL: foreign category deletion allowed'; end if;
+  insert into public.categories(id,name) values ('ffffffff-ffff-4fff-8fff-ffffffffffff','Empty category');
+  perform public.reorder_categories(array['ffffffff-ffff-4fff-8fff-ffffffffffff', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa']::uuid[]);
+  if (select sort_order from public.categories where id='ffffffff-ffff-4fff-8fff-ffffffffffff')<>0 or
+    (select sort_order from public.categories where id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')<>1 then raise exception 'FAIL: multi-category order not saved'; end if;
+  begin
+    perform public.reorder_categories(array['aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa']::uuid[]);
+    raise exception 'FAIL: duplicate order accepted';
+  exception when raise_exception then
+    if sqlerrm = 'FAIL: duplicate order accepted' then raise; end if;
+  end;
+  if (select sort_order from public.categories where id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')<>1 then raise exception 'FAIL: rejected reorder changed data'; end if;
+  delete from public.categories where id='ffffffff-ffff-4fff-8fff-ffffffffffff';
+  get diagnostics affected = row_count;
+  if affected<>1 then raise exception 'FAIL: owner empty category deletion denied'; end if;
 end $$;
 reset role;
 rollback;

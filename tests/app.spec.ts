@@ -18,7 +18,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
 });
 
-test('complete mobile flow: create, edit, archive category, summary, export and delete', async ({
+test('complete mobile flow: create, edit category, summary, export and delete', async ({
   page,
 }) => {
   await enterAmount(page, '1234');
@@ -41,22 +41,21 @@ test('complete mobile flow: create, edit, archive category, summary, export and 
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'Категории' })
     .click();
-  await page.getByRole('button', { name: /^Продукты/ }).click();
+  await page.getByRole('button', { name: 'Редактировать категорию Продукты', exact: true }).click();
   await page.getByLabel('Название', { exact: true }).fill('Еда');
-  await page.getByLabel('Убрать категорию в архив').check();
   await page.getByRole('button', { name: 'Сохранить категорию' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'Сводка' })
     .click();
-  await expect(page.getByRole('img', { name: /Распределение/ })).toBeVisible();
-  await expect(page.locator('.legend').getByText('Еда', { exact: true })).toBeVisible();
+  await expect(page.getByRole('list', { name: /Распределение/ })).toBeVisible();
+  await expect(page.locator('.category-bars').getByText('Еда', { exact: true })).toBeVisible();
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'Расход', exact: true })
     .click();
-  await expect(page.getByRole('button', { name: 'Еда', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Еда', exact: true })).toBeVisible();
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'История' })
@@ -117,18 +116,18 @@ test('validation, persistence, month navigation and mobile layout', async ({ pag
   await page.getByRole('button', { name: 'Предыдущий месяц' }).click();
   await navigation.getByRole('button', { name: 'Сводка', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Следующий месяц' })).toHaveCount(0);
-  await expect(page.getByRole('img', { name: /Распределение/ })).toBeVisible();
+  await expect(page.getByRole('list', { name: /Распределение/ })).toBeVisible();
   await page.getByRole('button', { name: 'Предыдущий месяц' }).click();
   await page.getByRole('button', { name: 'Следующий месяц' }).click();
   await expect(page.getByRole('button', { name: 'Следующий месяц' })).toHaveCount(0);
-  await expect(page.getByRole('img', { name: /Распределение/ })).toBeVisible();
+  await expect(page.getByRole('list', { name: /Распределение/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
   await page.screenshot({ path: 'test-results/summary-mobile.png', fullPage: true });
 });
 
-test('custom categories can be created and restored from archive', async ({ page }) => {
+test('custom categories can be created and edited', async ({ page }) => {
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'Категории' })
@@ -150,44 +149,71 @@ test('custom categories can be created and restored from archive', async ({ page
   ]) {
     await expect(page.getByRole('button', { name: `Значок ${name}`, exact: true })).toBeVisible();
   }
-  await expect(page.locator('.swatch-list button')).toHaveCount(20);
+  await expect(page.locator('.swatch-list button')).toHaveCount(35);
   await page.getByRole('button', { name: 'Значок Путешествия', exact: true }).click();
-  await page.getByRole('button', { name: 'Цвет #3f6f93', exact: true }).click();
+  await page.getByRole('button', { name: 'Цвет #3989d4', exact: true }).click();
   await page.getByRole('button', { name: 'Сохранить категорию' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /^Путешествия/ })).toBeVisible();
-  await page.getByRole('button', { name: /^Путешествия/ }).click();
+  await expect(
+    page.getByRole('button', { name: 'Редактировать категорию Путешествия', exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Редактировать категорию Путешествия', exact: true })
+    .click();
   await expect(
     page.getByRole('button', { name: 'Значок Путешествия', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('button', { name: 'Цвет #3f6f93', exact: true })).toHaveAttribute(
+  await expect(page.getByRole('button', { name: 'Цвет #3989d4', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
-  await page.getByLabel('Убрать категорию в архив').check();
-  await page.getByRole('button', { name: 'Сохранить категорию' }).click();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page.getByRole('button', { name: /^Путешествия/ }).click();
-  await page.getByLabel('Убрать категорию в архив').uncheck();
+  await expect(page.getByLabel('Убрать категорию в архив')).toHaveCount(0);
   await page.getByRole('button', { name: 'Сохранить категорию' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'Расход', exact: true })
     .click();
-  await page.getByRole('button', { name: 'Следующие категории' }).click();
   await expect(page.getByRole('button', { name: 'Путешествия', exact: true })).toBeVisible();
 });
 
 test('entry fits small phones and uses only the custom keypad', async ({ page }) => {
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('vmeste.demo.v1')!);
+    for (let i = 9; i <= 10; i++)
+      data.categories.push({
+        ...data.categories[0],
+        id: crypto.randomUUID(),
+        name: `Категория ${i}`,
+      });
+    localStorage.setItem('vmeste.demo.v1', JSON.stringify(data));
+  });
+  await page.reload();
+  await page.getByRole('button', { name: 'Открыть деморежим' }).click();
   for (const [width, height] of [
     [320, 568],
     [375, 667],
     [390, 844],
+    [400, 844],
+    [401, 844],
     [430, 932],
+    [430, 568],
   ]) {
     await page.setViewportSize({ width, height });
     await expect(page.locator('.quick-entry input, .quick-entry textarea')).toHaveCount(0);
+    await expect(page.locator('.quick-category-grid button')).toHaveCount(10);
+    const columns = await page
+      .locator('.quick-category-grid')
+      .evaluate((grid) => getComputedStyle(grid).gridTemplateColumns.split(' ').length);
+    expect(columns).toBe(2);
+    await expect(page.getByRole('button', { name: 'Следующие категории' })).toHaveCount(0);
+    const categoryBottom = await page
+      .locator('.quick-category-grid')
+      .evaluate((grid) => grid.getBoundingClientRect().bottom);
+    const keypadTop = await page
+      .locator('.expense-keypad')
+      .evaluate((keypad) => keypad.getBoundingClientRect().top);
+    expect(categoryBottom).toBeLessThanOrEqual(keypadTop);
     await expect(page.getByLabel('Дата расхода')).toHaveCount(0);
     await expect(page.getByLabel('Комментарий')).toHaveCount(0);
     const bounds = await page.evaluate(() => ({
@@ -233,8 +259,11 @@ test('extra categories are paged without scrolling, and new expenses get today a
   });
   await page.reload();
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
+  await expect(page.locator('.quick-category-grid button')).toHaveCount(10);
+  await expect(page.getByRole('button', { name: 'Своя категория 2', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Следующие категории' }).click();
-  await page.getByRole('button', { name: 'Своя категория 1', exact: true }).click();
+  await expect(page.locator('.quick-category-grid button')).toHaveCount(10);
+  await page.getByRole('button', { name: 'Своя категория 3', exact: true }).click();
   await enterAmount(page, '123');
   await page.getByRole('button', { name: 'Удалить цифру' }).click();
   await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('12');
@@ -355,4 +384,49 @@ test('success toasts expire after two seconds and repeat notifications restart t
   await expect(page.locator('.app-toast')).toHaveCount(0);
   await navigation.getByRole('button', { name: 'Расход', exact: true }).click();
   await expect(page.locator('.app-toast')).toHaveCount(0);
+});
+
+test('category list actions support editing and confirmed deletion without an archive', async ({
+  page,
+}) => {
+  const categoriesTab = page
+    .getByRole('navigation', { name: 'Мобильная навигация' })
+    .getByRole('button', { name: 'Категории' });
+  await categoriesTab.click();
+  await page.getByRole('button', { name: 'Удалить категорию Продукты', exact: true }).click();
+  await expect(
+    page.getByRole('dialog').getByRole('button', { name: 'Удалить', exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByRole('dialog')).toContainText('есть расходы');
+  await page.getByRole('button', { name: 'Отмена', exact: true }).click();
+  await page.getByRole('button', { name: 'Добавить', exact: true }).click();
+  await page.getByLabel('Название', { exact: true }).fill('Для удаления');
+  await page.getByRole('button', { name: 'Сохранить категорию' }).click();
+  await page
+    .getByRole('button', { name: 'Редактировать категорию Для удаления', exact: true })
+    .click();
+  await expect(page.getByLabel('Убрать категорию в архив')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Удалить категорию', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Закрыть', exact: true }).click();
+  await page.getByRole('button', { name: 'Удалить категорию Для удаления', exact: true }).click();
+  await page.getByRole('button', { name: 'Отмена', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Редактировать категорию Для удаления', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Удалить категорию Для удаления', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Удалить', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Удалить категорию Для удаления', exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator('.app-toast[role="status"]')).toContainText('Категория удалена');
+  await page.reload();
+  await page.getByRole('button', { name: 'Открыть деморежим' }).click();
+  await categoriesTab.click();
+  await expect(
+    page.getByRole('button', { name: 'Удалить категорию Для удаления', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Редактировать категорию Продукты', exact: true }),
+  ).toBeVisible();
 });

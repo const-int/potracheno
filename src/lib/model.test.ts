@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { csv, parseAmount, shiftMonth, summarize, type Category, type Expense } from './model';
+import {
+  money,
+  categoryIconColor,
+  csv,
+  parseAmount,
+  shiftMonth,
+  summarize,
+  type Category,
+  type Expense,
+} from './model';
 
 describe('amounts stored as integer kopecks', () => {
   it('parses comma, dot and grouped rubles without float arithmetic', () => {
@@ -57,4 +66,25 @@ it('exports exact kopecks and escapes quotes, newlines and spreadsheet formulas'
   expect(result).not.toContain('Скрытая старая заметка');
   expect(result).not.toContain('Комментарий');
   expect(result).toContain('"\'+Телефон ""тест""\nновая строка"');
+});
+
+it('displays only whole rubles, rounding any fraction upwards without changing stored amounts', () => {
+  expect(money(0)).toBe('0 ₽');
+  expect(money(1)).toBe('1 ₽');
+  expect(money(100)).toBe('1 ₽');
+  expect(money(101)).toBe('2 ₽');
+  expect(money(199)).toBe('2 ₽');
+  expect(money(19888984)).toBe('198,890 ₽');
+  expect(money(100.001)).toBe('2 ₽');
+});
+
+it('keeps dark category colors and darkens light icon strokes without changing their hue family', () => {
+  expect(categoryIconColor('#3f6f93')).toBe('#3f6f93');
+  const pale = '#bda7ed';
+  const adjusted = categoryIconColor(pale);
+  expect(adjusted).not.toBe(pale);
+  const channels = [1, 3, 5].map((index) => parseInt(adjusted.slice(index, index + 2), 16));
+  expect(channels[2]).toBeGreaterThan(channels[0]);
+  expect(channels[0]).toBeGreaterThan(channels[1]);
+  expect(pale).toBe('#bda7ed');
 });

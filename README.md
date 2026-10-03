@@ -6,14 +6,16 @@ Built with React, TypeScript, and Vite. Supabase handles storage and authenticat
 GitHub Pages hosts the frontend. No custom backend is required.
 
 The application interface is in Russian.
-Categories offer 20 colors and 14 curated icons: the family's ten categories,
+Categories offer 35 fresh, contrasting colors across the full spectrum, including warm tones, greens, blues, purples, pinks, and neutrals and 14 curated icons: the family's ten categories,
 plus groceries, travel, fuel, and bills. Older icon IDs remain supported.
+Existing category colors are preserved, including previously selected pastel colors.
+Icon strokes use a darker variant when necessary for contrast.
 For an existing Supabase project, run
 `supabase/migrations/20261003_expand_category_icons.sql` once in SQL Editor
 to allow the expanded icon set. New projects can use the updated `schema.sql`.
-Amounts use commas to group thousands (for example, `1,234 ₽`). Existing fractional
-amounts are preserved and displayed with a decimal point. CSV amounts use a decimal
-point without grouping.
+Amounts use commas to group thousands (for example, `1,234 ₽`). Amounts throughout the interface are rounded up to whole rubles.
+Original fractional amounts remain stored exactly, including when editing only the
+date or category. CSV amounts retain a decimal point without grouping.
 
 On phones, the app opens on the expense tab. Enter an amount using the built-in
 numeric keypad, choose a category, and tap the checkmark key to save. New amounts
@@ -21,11 +23,25 @@ use whole rubles only. The keypad has a backspace key instead of a decimal key;
 there is no separate backspace button next to the amount. The entry
 screen preselects the first available category.
 It fits the viewport without page scrolling or the phone's native keyboard.
-New mobile expenses use today's date and an empty note. More than eight categories
+The expense picker uses two columns and five rows on phones.
+New mobile expenses use today's date and an empty note. More than ten categories
 are displayed on additional pages. Dates and amounts can be edited in History. Expense comments are not used.
 Mobile History shows the month selector, total, and expense list. Summary places
-the category chart first, with compact expense-count and average-expense cards
+a horizontal bar for each category, sorted by amount, with its total and percentage.
+Compact expense-count and average-expense cards appear
 below it. CSV export is available in Settings on mobile.
+
+Categories have separate edit and delete buttons in the category list.
+There is no category archive. Deletion requires confirmation; categories with expenses
+remain protected until those expenses are moved to another category or deleted. For an existing Supabase
+project, run `supabase/migrations/20261003_enable_category_deletion.sql` in SQL Editor
+to enable owner-only deletion. The foreign key protects categories used by expenses.
+
+Drag categories by the grip on the right to change their order. The expense picker uses
+this same order. Changes save automatically and sync through Supabase; new categories
+appear at the end. Mouse, touch, and keyboard (Space, arrows, Space) are supported.
+For an existing project, run `supabase/migrations/20261004_category_order.sql` in SQL Editor.
+The order is updated atomically through an owner-scoped, RLS-protected database function.
 
 ## Run locally
 
@@ -63,7 +79,7 @@ are preserved.
 Row Level Security (RLS) restricts each request to the record's owner (`auth.uid()`).
 A composite foreign key prevents expenses from referencing another user's category.
 The publishable key is intended for browser use; access protection relies on the
-session and RLS. Categories are archived rather than deleted to preserve history.
+session and RLS. Categories used by expenses cannot be deleted until those expenses are moved or removed.
 
 To check the connection, sign in on two devices, add an expense on the first,
 and return to the app on the second to confirm that it appears. Data refreshes

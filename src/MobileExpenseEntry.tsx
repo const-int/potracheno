@@ -3,6 +3,8 @@ import { Check, ChevronLeft, ChevronRight, Delete, LoaderCircle } from 'lucide-r
 import { type Category, parseAmount, today } from './lib/model';
 import { errorMessage, saveExpense } from './lib/store';
 
+const categoriesPerPage = 10;
+
 export default function MobileExpenseEntry({
   categories,
   userId,
@@ -24,7 +26,7 @@ export default function MobileExpenseEntry({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const locked = useRef(false);
-  const pageCount = Math.max(1, Math.ceil(categories.length / 8));
+  const pageCount = Math.max(1, Math.ceil(categories.length / categoriesPerPage));
   const currentPage = Math.min(page, pageCount - 1);
   const kopecks = parseAmount(amount);
   const selectedCategoryId = categories.some((c) => c.id === categoryId)
@@ -94,21 +96,31 @@ export default function MobileExpenseEntry({
       </div>
       <div className="quick-categories">
         <div className="quick-category-grid" aria-label="Категории расходов">
-          {categories.slice(currentPage * 8, currentPage * 8 + 8).map((category) => (
-            <button
-              key={category.id}
-              className={`quick-category ${selectedCategoryId === category.id ? 'selected' : ''}`}
-              aria-pressed={selectedCategoryId === category.id}
-              disabled={busy}
-              onClick={() => {
-                setCategoryId(category.id);
-                setError('');
-              }}
-            >
-              {renderCategoryIcon(category)}
-              <span>{category.name}</span>
-            </button>
-          ))}
+          {categories
+            .slice(currentPage * categoriesPerPage, (currentPage + 1) * categoriesPerPage)
+            .map((category) => (
+              <button
+                key={category.id}
+                className={`quick-category ${selectedCategoryId === category.id ? 'selected' : ''}`}
+                aria-pressed={selectedCategoryId === category.id}
+                disabled={busy}
+                onClick={() => {
+                  setCategoryId(category.id);
+                  setError('');
+                }}
+              >
+                {renderCategoryIcon(category)}
+                <span className="quick-category-name">{category.name}</span>
+                {selectedCategoryId === category.id && (
+                  <Check
+                    className="quick-category-check"
+                    size={16}
+                    strokeWidth={2.5}
+                    aria-hidden="true"
+                  />
+                )}
+              </button>
+            ))}
         </div>
         {!categories.length && (
           <p className="quick-empty">Добавьте категории на вкладке «Категории».</p>

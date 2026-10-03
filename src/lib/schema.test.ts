@@ -49,6 +49,25 @@ it('executes the real SQL schema and access tests against embedded PostgreSQL', 
         "insert into public.categories(user_id,name,icon) values ('33333333-3333-4333-8333-333333333333','Invalid icon','unknown-icon')",
       ),
     ).rejects.toThrow();
+    // Exercise upgrading an existing project that did not allow category deletion.
+    await db.exec(
+      'revoke delete on public.categories from authenticated; drop policy categories_delete on public.categories;',
+    );
+    const deletionMigration = await readFile(
+      new URL('../../supabase/migrations/20261003_enable_category_deletion.sql', import.meta.url),
+      'utf8',
+    );
+    await db.exec(deletionMigration);
+    await db.exec(deletionMigration); // Safe to rerun.
+    const orderMigration = await readFile(
+      new URL('../../supabase/migrations/20261004_category_order.sql', import.meta.url),
+      'utf8',
+    );
+    await db.exec(
+      'drop function public.reorder_categories(uuid[]); alter table public.categories drop column sort_order;',
+    );
+    await db.exec(orderMigration);
+    await db.exec(orderMigration);
     await db.exec(
       await readFile(new URL('../../supabase/tests/access.sql', import.meta.url), 'utf8'),
     );
