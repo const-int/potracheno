@@ -1827,15 +1827,6 @@ fieldset {
     background: #6e947c;
     border-radius: 2px;
   }
-  .quick-erase {
-    color: #8b9d80;
-    padding: 11px 6px;
-    flex-shrink: 0;
-  }
-  .quick-erase:disabled {
-    opacity: 0.2;
-    cursor: default;
-  }
   .quick-categories {
     flex: 0 0 clamp(112px, 24dvh, 184px);
     min-height: 0;

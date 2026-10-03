@@ -31,17 +31,15 @@ export default function MobileExpenseEntry({
     ? categoryId
     : (categories[0]?.id ?? '');
   const selected = !!selectedCategoryId;
-  const [rubles, fraction] = (amount || '0').split('.');
-  const display =
-    Number(rubles).toLocaleString('en-US') + (fraction !== undefined ? '.' + fraction : '');
+  const display = Number(amount || '0').toLocaleString('en-US');
 
   function press(key: string) {
     if (locked.current) return;
     setError('');
     setAmount((previous) => {
-      if (key === '.') return previous.includes('.') ? previous : (previous || '0') + '.';
+      if (key === 'erase') return previous.slice(0, -1);
       const next = previous === '0' ? key : previous + key;
-      return /^\d{1,9}(\.\d{0,2})?$/.test(next) ? next : previous;
+      return /^\d{1,9}$/.test(next) ? next : previous;
     });
   }
   async function submit() {
@@ -93,17 +91,6 @@ export default function MobileExpenseEntry({
             ₽
           </span>
         </div>
-        <button
-          className="quick-erase"
-          aria-label="Удалить цифру"
-          disabled={busy || !amount}
-          onClick={() => {
-            setError('');
-            setAmount((value) => value.slice(0, -1));
-          }}
-        >
-          <Delete size={23} />
-        </button>
       </div>
       <div className="quick-categories">
         <div className="quick-category-grid" aria-label="Категории расходов">
@@ -156,14 +143,14 @@ export default function MobileExpenseEntry({
         </div>
       )}
       <div className="expense-keypad" role="group" aria-label="Цифровая клавиатура">
-        {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0'].map((key) => (
+        {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'erase', '0'].map((key) => (
           <button
             key={key}
-            disabled={busy}
-            aria-label={key === '.' ? 'Десятичная точка' : key}
+            disabled={busy || (key === 'erase' && !amount)}
+            aria-label={key === 'erase' ? 'Удалить цифру' : key}
             onClick={() => press(key)}
           >
-            {key}
+            {key === 'erase' ? <Delete size={23} /> : key}
           </button>
         ))}
         <button

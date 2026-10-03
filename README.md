@@ -6,11 +6,14 @@ Built with React, TypeScript, and Vite. Supabase handles storage and authenticat
 GitHub Pages hosts the frontend. No custom backend is required.
 
 The application interface is in Russian.
-Amounts use commas to group thousands and a decimal point for kopecks
-(for example, `1,234.56 ₽`). CSV amounts use a decimal point without grouping.
+Amounts use commas to group thousands (for example, `1,234 ₽`). Existing fractional
+amounts are preserved and displayed with a decimal point. CSV amounts use a decimal
+point without grouping.
 
 On phones, the app opens on the expense tab. Enter an amount using the built-in
-numeric keypad, choose a category, and tap the checkmark key to save. The entry
+numeric keypad, choose a category, and tap the checkmark key to save. New amounts
+use whole rubles only. The keypad has a backspace key instead of a decimal key;
+there is no separate backspace button next to the amount. The entry
 screen preselects the first available category.
 It fits the viewport without page scrolling or the phone's native keyboard.
 New mobile expenses use today's date and an empty note. More than eight categories

@@ -987,8 +987,8 @@ function ExpenseForm({
     if (submitLock.current) return;
     setError('');
     const kopecks = parseAmount(amount);
-    if (kopecks === null) {
-      setError('Укажите сумму больше нуля, до 999,999,999.99 ₽, с точностью до копеек.');
+    if (kopecks === null || (kopecks % 100 !== 0 && kopecks !== existing?.amount_kopecks)) {
+      setError('Укажите целую сумму в рублях от 1 до 999,999,999 ₽.');
       return;
     }
     if (!categories.some((c) => c.id === categoryId)) {
@@ -1038,7 +1038,7 @@ function ExpenseForm({
         <div className="amount-input">
           <input
             id="amount"
-            inputMode="decimal"
+            inputMode="numeric"
             autoComplete="off"
             placeholder="0"
             aria-label="Сумма расхода"
