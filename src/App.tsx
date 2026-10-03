@@ -1486,8 +1486,8 @@ function Summary({
 }) {
   const groups = summarize(expenses, categories);
   const { costliestDay, largestExpense } = expenseHighlights(expenses);
-  const dayLabel = (date: string) =>
-    new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(
+  const dayLabel = (date: string, month: 'long' | 'short' = 'long') =>
+    new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month }).format(
       new Date(`${date}T12:00:00`),
     );
   return (
@@ -1528,7 +1528,7 @@ function Summary({
           </strong>
           <small>
             {largestExpense
-              ? `${categories.find((category) => category.id === largestExpense.category_id)?.name ?? 'Категория'} · ${dayLabel(largestExpense.spent_on)}`
+              ? `${categories.find((category) => category.id === largestExpense.category_id)?.name ?? 'Категория'} · ${dayLabel(largestExpense.spent_on, 'short')}`
               : 'Нет расходов'}
           </small>
         </section>
