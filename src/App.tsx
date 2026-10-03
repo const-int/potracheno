@@ -33,7 +33,6 @@ import {
   Smartphone,
   BriefcaseBusiness,
   Check,
-  CircleHelp,
   Coffee,
   Download,
   FileUp,
@@ -212,10 +211,7 @@ export default function App() {
   }, []);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | 'new' | null>(null);
-  const [deleting, setDeleting] = useState<Expense | null>(null);
-  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
-  const [deleteBusy, setDeleteBusy] = useState(false);
-  const [actionError, setActionError] = useState('');
+  const [editorBusy, setEditorBusy] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
   const generation = useRef(0);
   const inFlight = useRef<Promise<void> | null>(null);
@@ -345,7 +341,6 @@ export default function App() {
       }
       setSettings(false);
       setEditing(null);
-      setDeleting(null);
       setEditingCategory(null);
       setData(empty);
       setTab('add');
@@ -380,82 +375,34 @@ export default function App() {
       <div className="login-page">
         <div className="login-brand">
           <Brand />
-          <span>Семейные финансы, спокойно и понятно.</span>
         </div>
-        <div className="login-layout">
-          <section className="intro">
-            <div className="eyebrow">
-              <Leaf size={15} /> ПРОСТО О ВАЖНОМ
-            </div>
-            <h1>
-              Все расходы.
-              <br />
-              Одна семья.
-            </h1>
-            <p>
-              Покупки, поездки и маленькие радости.
-              <br />
-              Держите общую картину перед глазами.
-            </p>
-            <div className="intro-card">
-              <span className="intro-symbol">
-                <Wallet size={30} />
-              </span>
-              <div>
-                <strong>Больше ясности, меньше подсчетов</strong>
-                <p>
-                  Добавьте расход за пару секунд —<br />
-                  остальное соберется в статистику.
-                </p>
-              </div>
-            </div>
-            <div className="intro-bottom">
-              <span className="mini-dot" /> Вместе проще планировать завтра.
-            </div>
-          </section>
-          <section className="login-card">
-            <div className="eyebrow">ВАШЕ СЕМЕЙНОЕ ПРОСТРАНСТВО</div>
-            <h2>{supabase ? 'С возвращением' : 'Давайте начнем'}</h2>
-            <p>
-              {supabase
-                ? 'Войдите в общий аккаунт на каждом устройстве.'
-                : 'Интерфейс готов к знакомству. Общую базу подключим следующим шагом.'}
-            </p>
-            {authLoading ? (
-              <p role="status">Проверяем вход…</p>
-            ) : supabase ? (
-              <Login
-                userName={userName}
-                onNameChange={setUserName}
-                onSignedIn={rememberName}
-                onError={(message) => setNotice(message, 'error')}
-              />
-            ) : (
-              <div className="setup-note">
-                <CircleHelp size={20} />
-                <span>До подключения базы доступен деморежим с примерами расходов.</span>
-              </div>
-            )}
-            <button
-              className={supabase ? 'secondary demo-login' : 'primary demo-login'}
-              onClick={() => {
-                rememberName(userName || 'Демо');
-                setDemo(true);
-              }}
-            >
-              Открыть деморежим <ArrowRight size={18} />
-            </button>
-            <small>
-              Демоданные сохраняются только в этом браузере.
-              <br />
-              Между телефонами они не синхронизируются.
-            </small>
-          </section>
-        </div>
+        <section className="login-card" aria-label="Вход в приложение">
+          {authLoading ? (
+            <p role="status">Проверяем вход…</p>
+          ) : supabase ? (
+            <Login
+              userName={userName}
+              onNameChange={setUserName}
+              onSignedIn={rememberName}
+              onError={(message) => setNotice(message, 'error')}
+            />
+          ) : null}
+          <button
+            className={supabase ? 'secondary demo-login' : 'primary demo-login'}
+            onClick={() => {
+              rememberName(userName || 'Демо');
+              setDemo(true);
+            }}
+          >
+            Открыть деморежим <ArrowRight size={18} />
+          </button>
+          <p className="demo-storage-note">
+            Демо-данные сохраняются только в этом браузере и не синхронизируются между телефонами.
+          </p>
+        </section>
         {notice && notice.placement !== 'expense' && (
           <Toast key={notice.id} notice={notice} onClose={closeNotice} />
         )}
-        <footer className="login-footer">potracheno · учет семейных расходов</footer>
       </div>
     );
 
@@ -518,10 +465,10 @@ export default function App() {
           <h1 className="screen-title">
             {
               {
-                add: 'Добавить расход',
-                history: 'История расходов',
-                summary: 'Общая картина',
-                categories: 'Категории расходов',
+                add: 'Добавить трату',
+                history: 'История трат',
+                summary: 'Общие траты',
+                categories: 'Категории трат',
               }[tab]
             }
           </h1>
@@ -561,8 +508,8 @@ export default function App() {
                   {
                     {
                       add: 'Каждый расход на своем месте',
-                      history: 'История расходов',
-                      summary: 'Общая картина',
+                      history: 'История трат',
+                      summary: 'Общие траты',
                       categories: 'Ваши категории',
                     }[tab]
                   }
@@ -771,16 +718,6 @@ export default function App() {
                               >
                                 <Pencil size={20} />
                               </button>
-                              <button
-                                className="icon-button expense-delete-button"
-                                aria-label={`Удалить ${categoryById(e.category_id)?.name}`}
-                                onClick={() => {
-                                  setActionError('');
-                                  setDeleting(e);
-                                }}
-                              >
-                                <Trash2 size={20} />
-                              </button>
                             </div>
                           </div>
                         ))}
@@ -801,10 +738,6 @@ export default function App() {
                     expenses={data.expenses}
                     renderIcon={(category) => <CategoryIcon category={category} />}
                     onEdit={setEditingCategory}
-                    onDelete={(category) => {
-                      setActionError('');
-                      setDeletingCategory(category);
-                    }}
                     onReorder={async (categories) => {
                       const previous = data.categories;
                       const current = generation.current;
@@ -850,9 +783,9 @@ export default function App() {
       <nav className="mobile-nav" aria-label="Мобильная навигация">
         {(
           [
-            ['add', Plus, 'Расход'],
+            ['add', Plus, 'Трата'],
             ['history', List, 'История'],
-            ['summary', BarChart3, 'Сводка'],
+            ['summary', BarChart3, 'Потрачено'],
             ['categories', LayoutGrid, 'Категории'],
           ] as const
         ).map(([id, Icon, label]) => (
@@ -871,13 +804,23 @@ export default function App() {
         <Toast key={notice.id} notice={notice} onClose={closeNotice} />
       )}
       {editing && (
-        <Modal title="Редактировать расход" close={() => setEditing(null)}>
+        <Modal
+          title="Редактировать трату"
+          close={() => {
+            if (!editorBusy) setEditing(null);
+          }}
+        >
           <ExpenseForm
             categories={data.categories}
             userId={session!}
             demo={demo}
             userName={userName}
             existing={editing}
+            onBusy={setEditorBusy}
+            onDelete={async () => {
+              setEditing(null);
+              await afterSave('Расход удален');
+            }}
             onSave={async () => {
               setEditing(null);
               await afterSave('Расход обновлен');
@@ -888,110 +831,28 @@ export default function App() {
       {editingCategory && (
         <Modal
           title={editingCategory === 'new' ? 'Новая категория' : 'Изменить категорию'}
-          close={() => setEditingCategory(null)}
+          close={() => {
+            if (!editorBusy) setEditingCategory(null);
+          }}
         >
           <CategoryForm
             userId={session!}
             demo={demo}
             existing={editingCategory === 'new' ? undefined : editingCategory}
+            onBusy={setEditorBusy}
+            hasExpenses={
+              editingCategory !== 'new' &&
+              data.expenses.some((expense) => expense.category_id === editingCategory.id)
+            }
+            onDelete={async () => {
+              setEditingCategory(null);
+              await afterSave('Категория удалена');
+            }}
             onSave={async () => {
               setEditingCategory(null);
               await afterSave('Категория сохранена');
             }}
           />
-        </Modal>
-      )}
-      {deletingCategory && (
-        <Modal
-          title="Удалить категорию?"
-          close={() => {
-            if (!deleteBusy) setDeletingCategory(null);
-          }}
-        >
-          <p className="muted">
-            {data.expenses.some((expense) => expense.category_id === deletingCategory.id)
-              ? `В категории «${deletingCategory.name}» есть расходы. Сначала удалите их или выберите для них другую категорию.`
-              : `Удалить категорию «${deletingCategory.name}»? Это действие нельзя отменить.`}
-          </p>
-          {actionError && (
-            <p className="form-error" role="alert">
-              {actionError}
-            </p>
-          )}
-          <div className="modal-actions">
-            <button
-              className="secondary"
-              disabled={deleteBusy}
-              onClick={() => setDeletingCategory(null)}
-            >
-              Отмена
-            </button>
-            <button
-              className="danger"
-              disabled={
-                deleteBusy ||
-                data.expenses.some((expense) => expense.category_id === deletingCategory.id)
-              }
-              onClick={async () => {
-                if (deleteBusy) return;
-                setDeleteBusy(true);
-                setActionError('');
-                try {
-                  await deleteCategory(demo, deletingCategory.id);
-                  setDeletingCategory(null);
-                  await afterSave('Категория удалена');
-                } catch (error) {
-                  setActionError(errorMessage(error));
-                } finally {
-                  setDeleteBusy(false);
-                }
-              }}
-            >
-              {deleteBusy ? 'Удаляем…' : 'Удалить'}
-            </button>
-          </div>
-        </Modal>
-      )}
-      {deleting && (
-        <Modal
-          title="Удалить расход?"
-          close={() => {
-            if (!deleteBusy) setDeleting(null);
-          }}
-        >
-          <p className="muted">
-            {money(deleting.amount_kopecks)} · {categoryById(deleting.category_id)?.name}. Удаленную
-            запись нельзя восстановить.
-          </p>
-          {actionError && (
-            <p className="form-error" role="alert">
-              {actionError}
-            </p>
-          )}
-          <div className="modal-actions">
-            <button className="secondary" onClick={() => setDeleting(null)} disabled={deleteBusy}>
-              Отмена
-            </button>
-            <button
-              className="danger"
-              disabled={deleteBusy}
-              onClick={async () => {
-                setDeleteBusy(true);
-                setActionError('');
-                try {
-                  await deleteExpense(demo, deleting.id);
-                  setDeleting(null);
-                  await afterSave('Расход удален');
-                } catch (e) {
-                  setActionError(errorMessage(e));
-                } finally {
-                  setDeleteBusy(false);
-                }
-              }}
-            >
-              {deleteBusy ? 'Удаляем…' : 'Удалить'}
-            </button>
-          </div>
         </Modal>
       )}
       {importOpen && (
@@ -1151,6 +1012,8 @@ function ExpenseForm({
   userName,
   existing,
   onSave,
+  onDelete,
+  onBusy,
   draftAmount,
   onDraftAmountChange,
 }: {
@@ -1160,6 +1023,8 @@ function ExpenseForm({
   userName: string;
   existing?: Expense;
   onSave: () => Promise<void>;
+  onDelete?: () => Promise<void>;
+  onBusy?: (busy: boolean) => void;
   draftAmount?: string;
   onDraftAmountChange?: Dispatch<SetStateAction<string>>;
 }) {
@@ -1174,6 +1039,10 @@ function ExpenseForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const submitLock = useRef(false);
+  useEffect(() => {
+    onBusy?.(busy);
+    return () => onBusy?.(false);
+  }, [busy, onBusy]);
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (submitLock.current) return;
@@ -1221,11 +1090,13 @@ function ExpenseForm({
     }
   }
   return (
-    <form className="expense-form" onSubmit={submit}>
+    <form className={`expense-form ${existing ? 'expense-edit-form' : ''}`} onSubmit={submit}>
       <fieldset disabled={busy}>
-        <label className="amount-label" htmlFor="amount">
-          Сумма расхода
-        </label>
+        {!existing && (
+          <label className="amount-label" htmlFor="amount">
+            Сумма расхода
+          </label>
+        )}
         <div className="amount-input">
           <input
             id="amount"
@@ -1254,9 +1125,9 @@ function ExpenseForm({
               onClick={() => setCategoryId(c.id)}
               aria-pressed={categoryId === c.id}
             >
-              <CategoryIcon category={c} size={22} />
+              {!existing && <CategoryIcon category={c} size={22} />}
               <span>{c.name}</span>
-              {categoryId === c.id && <Check className="category-check" size={13} />}
+              {!existing && categoryId === c.id && <Check className="category-check" size={13} />}
             </button>
           ))}
         </div>
@@ -1275,10 +1146,12 @@ function ExpenseForm({
           />
         </label>
 
-        <div className="form-author">
-          <UserRound size={15} />
-          {existing?.device_name || userName || 'Имя пока не указано'}
-        </div>
+        {!existing && (
+          <div className="form-author">
+            <UserRound size={15} />
+            {userName || 'Имя пока не указано'}
+          </div>
+        )}
         {error && (
           <p className="form-error" role="alert">
             {error}
@@ -1288,6 +1161,31 @@ function ExpenseForm({
           <Plus size={19} />
           {busy ? 'Сохраняем…' : existing ? 'Сохранить изменения' : 'Добавить расход'}
         </button>
+        {existing && onDelete && (
+          <button
+            type="button"
+            className="danger full-width editor-delete-button"
+            disabled={busy}
+            onClick={async () => {
+              if (submitLock.current) return;
+              submitLock.current = true;
+              setBusy(true);
+              setError('');
+              try {
+                await deleteExpense(demo, existing.id);
+                await onDelete();
+              } catch (error) {
+                setError(errorMessage(error));
+              } finally {
+                setBusy(false);
+                submitLock.current = false;
+              }
+            }}
+          >
+            <Trash2 size={18} />
+            {busy ? 'Подождите…' : 'Удалить трату'}
+          </button>
+        )}
       </fieldset>
     </form>
   );
@@ -1297,22 +1195,35 @@ function CategoryForm({
   userId,
   demo,
   onSave,
+  onDelete,
+  onBusy,
+  hasExpenses,
 }: {
   existing?: Category;
   userId: string;
   demo: boolean;
   onSave: () => Promise<void>;
+  onDelete: () => Promise<void>;
+  onBusy: (busy: boolean) => void;
+  hasExpenses: boolean;
 }) {
   const [name, setName] = useState(existing?.name ?? '');
   const [color, setColor] = useState(existing?.color ?? categoryColorOptions[0]);
   const [icon, setIcon] = useState(existing?.icon ?? 'other');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const actionLock = useRef(false);
+  useEffect(() => {
+    onBusy(busy);
+    return () => onBusy(false);
+  }, [busy, onBusy]);
   return (
     <form
       onSubmit={async (e) => {
         e.preventDefault();
-        if (!name.trim() || busy) return;
+        if (!name.trim() || actionLock.current || confirmDelete) return;
+        actionLock.current = true;
         setBusy(true);
         setError('');
         try {
@@ -1333,6 +1244,7 @@ function CategoryForm({
           setError(errorMessage(e));
         } finally {
           setBusy(false);
+          actionLock.current = false;
         }
       }}
     >
@@ -1393,9 +1305,61 @@ function CategoryForm({
             {error}
           </p>
         )}
-        <button className="primary full-width" disabled={busy || !name.trim()}>
+        <button className="primary full-width" disabled={busy || !name.trim() || confirmDelete}>
           {busy ? 'Сохраняем…' : 'Сохранить категорию'}
         </button>
+        {existing &&
+          (confirmDelete ? (
+            <div className="category-delete-confirm">
+              <p className="muted">
+                {hasExpenses
+                  ? `В категории «${existing.name}» есть расходы. Сначала удалите их или выберите для них другую категорию.`
+                  : `Удалить категорию «${existing.name}»? Это действие нельзя отменить.`}
+              </p>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={busy}
+                  onClick={() => setConfirmDelete(false)}
+                >
+                  Отмена
+                </button>
+                <button
+                  type="button"
+                  className="danger"
+                  disabled={busy || hasExpenses}
+                  onClick={async () => {
+                    if (actionLock.current) return;
+                    actionLock.current = true;
+                    setBusy(true);
+                    setError('');
+                    try {
+                      await deleteCategory(demo, existing.id);
+                      await onDelete();
+                    } catch (error) {
+                      setError(errorMessage(error));
+                    } finally {
+                      setBusy(false);
+                      actionLock.current = false;
+                    }
+                  }}
+                >
+                  {busy ? 'Удаляем…' : 'Удалить'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="danger full-width editor-delete-button"
+              disabled={busy}
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 size={18} />
+              Удалить категорию
+            </button>
+          ))}
       </fieldset>
     </form>
   );
@@ -1523,7 +1487,7 @@ function Summary({
   const groups = summarize(expenses, categories);
   const { costliestDay, largestExpense } = expenseHighlights(expenses);
   const dayLabel = (date: string) =>
-    new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' }).format(
+    new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(
       new Date(`${date}T12:00:00`),
     );
   return (

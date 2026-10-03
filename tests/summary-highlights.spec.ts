@@ -39,7 +39,7 @@ test('summary distinguishes a daily total from one purchase and updates when the
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
-    .getByRole('button', { name: 'Сводка' })
+    .getByRole('button', { name: 'Потрачено' })
     .click();
   const day = page.getByRole('region', { name: 'Самый затратный день', exact: true });
   const purchase = page.getByRole('region', { name: 'Самая крупная трата', exact: true });

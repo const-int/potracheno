@@ -23,10 +23,13 @@ use whole rubles only. The keypad has a backspace key instead of a decimal key;
 there is no separate backspace button next to the amount. The entry
 screen preselects the first available category. The entered amount survives tab switches
 and is cleared after a successful save or when leaving the account.
-It fits the viewport without page scrolling or the phone's native keyboard.
+It fits the viewport without page scrolling or the phone's native keyboard. Categories
+sit directly above the keypad, with no blank rows or unused pager space. The amount
+is centered in the remaining space above them.
 The expense picker uses two columns and five rows on phones.
 New mobile expenses use today's date and an empty note. More than ten categories
-are displayed on additional pages. Dates and amounts can be edited in History. Expense comments are not used.
+are displayed on additional pages. Use the edit button in History to change a date or amount. The editor also offers
+immediate expense deletion without a confirmation step. Expense comments are not used.
 Mobile History shows the month selector, total, and expense list. Summary places
 a treemap of soft rounded blocks sized by category shares, separated by small gaps, followed by horizontal
 bars sorted by amount with totals and percentages. The treemap is a static visualization without hover or click actions.
@@ -36,7 +39,8 @@ Compact cards below show the operation count, average expense, costliest day, an
 largest expense for the selected month. Daily totals use the expense date; tied
 maximum days use the most recent date. CSV export is available in Settings on mobile.
 
-Categories have separate edit and delete buttons in the category list.
+Categories have one edit button in the list. Category deletion is available in the
+editor and requires confirmation.
 There is no category archive. Deletion requires confirmation; categories with expenses
 remain protected until those expenses are moved to another category or deleted. For an existing Supabase
 project, run `supabase/migrations/20261003_enable_category_deletion.sql` in SQL Editor

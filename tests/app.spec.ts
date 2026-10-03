@@ -33,6 +33,12 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
   await expect(newRow).toContainText('1,234 ₽');
   await newRow.getByRole('button', { name: 'Редактировать Продукты' }).click();
   await expect(page.getByRole('dialog').getByLabel('Комментарий')).toHaveCount(0);
+  await expect(
+    page.getByRole('heading', { name: 'Редактировать трату', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('dialog').locator('.form-author, .category-picker .category-icon'),
+  ).toHaveCount(0);
   await page.getByRole('dialog').getByRole('textbox', { name: 'Сумма расхода' }).fill('1500');
   await page.getByRole('button', { name: 'Сохранить изменения' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -47,13 +53,13 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
-    .getByRole('button', { name: 'Сводка' })
+    .getByRole('button', { name: 'Потрачено' })
     .click();
   await expect(page.getByRole('list', { name: /Распределение/ })).toBeVisible();
   await expect(page.locator('.category-bars').getByText('Еда', { exact: true })).toBeVisible();
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
-    .getByRole('button', { name: 'Расход', exact: true })
+    .getByRole('button', { name: 'Трата', exact: true })
     .click();
   await expect(page.getByRole('button', { name: 'Еда', exact: true })).toBeVisible();
   await page
@@ -73,8 +79,14 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
   expect(contents).toContain('"Алексей"');
   expect(contents).toContain('"1500.00";"Еда"');
   await page.getByRole('button', { name: 'Закрыть', exact: true }).click();
-  await newRow.getByRole('button', { name: 'Удалить Еда', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Удалить', exact: true }).click();
+  await expect(newRow.locator('.row-actions button')).toHaveCount(1);
+  await expect(newRow.locator('.expense-delete-button')).toHaveCount(0);
+  await newRow.getByRole('button', { name: 'Редактировать Еда', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Удалить трату', exact: true })
+    .click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(newRow).toHaveCount(0);
 });
 
@@ -90,7 +102,7 @@ test('validation, persistence, month navigation and mobile layout', async ({ pag
   await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
-    .getByRole('button', { name: 'Расход', exact: true })
+    .getByRole('button', { name: 'Трата', exact: true })
     .waitFor();
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
@@ -102,7 +114,7 @@ test('validation, persistence, month navigation and mobile layout', async ({ pag
   expect(await page.evaluate(() => localStorage.getItem('vmeste.device'))).toBe('Алексей');
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
-    .getByRole('button', { name: 'Сводка' })
+    .getByRole('button', { name: 'Потрачено' })
     .click();
   await expect(page.getByRole('button', { name: 'Следующий месяц' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Предыдущий месяц' }).click();
@@ -114,7 +126,7 @@ test('validation, persistence, month navigation and mobile layout', async ({ pag
     '2,029 ₽',
   );
   await page.getByRole('button', { name: 'Предыдущий месяц' }).click();
-  await navigation.getByRole('button', { name: 'Сводка', exact: true }).click();
+  await navigation.getByRole('button', { name: 'Потрачено', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Следующий месяц' })).toHaveCount(0);
   await expect(page.getByRole('list', { name: /Распределение/ })).toBeVisible();
   await page.getByRole('button', { name: 'Предыдущий месяц' }).click();
@@ -172,7 +184,7 @@ test('custom categories can be created and edited', async ({ page }) => {
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
-    .getByRole('button', { name: 'Расход', exact: true })
+    .getByRole('button', { name: 'Трата', exact: true })
     .click();
   await expect(page.getByRole('button', { name: 'Путешествия', exact: true })).toBeVisible();
 });
@@ -296,7 +308,7 @@ test('history and summary keep the mobile interface compact', async ({ page }) =
   await expect(page.getByRole('button', { name: 'Экспорт CSV', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Расходы за месяц' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Предыдущий месяц' })).toBeVisible();
-  await navigation.getByRole('button', { name: 'Сводка' }).click();
+  await navigation.getByRole('button', { name: 'Потрачено' }).click();
   await expect(page.locator('.page-heading')).toHaveCount(0);
   await expect(page.locator('.compact-summary .stat:visible')).toHaveCount(4);
   const order = await page.evaluate(() => ({
@@ -328,10 +340,10 @@ test('mobile toolbar height stays fixed across tabs, with titles and no tap high
   page,
 }) => {
   const tabs = [
-    ['Расход', 'Добавить расход'],
-    ['История', 'История расходов'],
-    ['Сводка', 'Общая картина'],
-    ['Категории', 'Категории расходов'],
+    ['Трата', 'Добавить трату'],
+    ['История', 'История трат'],
+    ['Потрачено', 'Общие траты'],
+    ['Категории', 'Категории трат'],
   ] as const;
   for (const [width, height] of [
     [320, 568],
@@ -382,23 +394,26 @@ test('success toasts expire after two seconds and repeat notifications restart t
   const navigation = page.getByRole('navigation', { name: 'Мобильная навигация' });
   await navigation.getByRole('button', { name: 'История', exact: true }).click();
   await expect(page.locator('.app-toast')).toHaveCount(0);
-  await navigation.getByRole('button', { name: 'Расход', exact: true }).click();
+  await navigation.getByRole('button', { name: 'Трата', exact: true }).click();
   await expect(page.locator('.app-toast')).toHaveCount(0);
 });
 
-test('category list actions support editing and confirmed deletion without an archive', async ({
+test('category deletion is inside the editor, needs confirmation, and preserves existing expenses', async ({
   page,
 }) => {
   const categoriesTab = page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'Категории' });
   await categoriesTab.click();
-  await page.getByRole('button', { name: 'Удалить категорию Продукты', exact: true }).click();
+  await expect(page.locator('.category-manage .expense-delete-button')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Редактировать категорию Продукты', exact: true }).click();
+  await page.getByRole('button', { name: 'Удалить категорию', exact: true }).click();
   await expect(
     page.getByRole('dialog').getByRole('button', { name: 'Удалить', exact: true }),
   ).toBeDisabled();
   await expect(page.getByRole('dialog')).toContainText('есть расходы');
   await page.getByRole('button', { name: 'Отмена', exact: true }).click();
+  await page.getByRole('button', { name: 'Закрыть', exact: true }).click();
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
   await page.getByLabel('Название', { exact: true }).fill('Для удаления');
   await page.getByRole('button', { name: 'Сохранить категорию' }).click();
@@ -406,25 +421,29 @@ test('category list actions support editing and confirmed deletion without an ar
     .getByRole('button', { name: 'Редактировать категорию Для удаления', exact: true })
     .click();
   await expect(page.getByLabel('Убрать категорию в архив')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Удалить категорию', exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Закрыть', exact: true }).click();
-  await page.getByRole('button', { name: 'Удалить категорию Для удаления', exact: true }).click();
+  await page.getByLabel('Название', { exact: true }).fill('Черновик');
+  await page.getByRole('button', { name: 'Удалить категорию', exact: true }).click();
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('vmeste.demo.v1')!).categories.some(
+        (category: { name: string }) => category.name === 'Для удаления',
+      ),
+    ),
+  ).toBe(true);
   await page.getByRole('button', { name: 'Отмена', exact: true }).click();
-  await expect(
-    page.getByRole('button', { name: 'Редактировать категорию Для удаления', exact: true }),
-  ).toBeVisible();
-  await page.getByRole('button', { name: 'Удалить категорию Для удаления', exact: true }).click();
+  await expect(page.getByLabel('Название', { exact: true })).toHaveValue('Черновик');
+  await page.getByRole('button', { name: 'Удалить категорию', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Удалить', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(
-    page.getByRole('button', { name: 'Удалить категорию Для удаления', exact: true }),
+    page.getByRole('button', { name: 'Редактировать категорию Для удаления', exact: true }),
   ).toHaveCount(0);
   await expect(page.locator('.app-toast[role="status"]')).toContainText('Категория удалена');
   await page.reload();
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
   await categoriesTab.click();
   await expect(
-    page.getByRole('button', { name: 'Удалить категорию Для удаления', exact: true }),
+    page.getByRole('button', { name: 'Редактировать категорию Для удаления', exact: true }),
   ).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: 'Редактировать категорию Продукты', exact: true }),
@@ -436,15 +455,15 @@ test('expense amount survives tab switches and clears after saving or leaving th
 }) => {
   await enterAmount(page, '1234');
   const nav = page.getByRole('navigation', { name: 'Мобильная навигация' });
-  for (const tab of ['История', 'Сводка', 'Категории']) {
+  for (const tab of ['История', 'Потрачено', 'Категории']) {
     await nav.getByRole('button', { name: tab, exact: true }).click();
-    await nav.getByRole('button', { name: 'Расход', exact: true }).click();
+    await nav.getByRole('button', { name: 'Трата', exact: true }).click();
     await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('1,234');
   }
   await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
   await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
   await nav.getByRole('button', { name: 'История', exact: true }).click();
-  await nav.getByRole('button', { name: 'Расход', exact: true }).click();
+  await nav.getByRole('button', { name: 'Трата', exact: true }).click();
   await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
   await enterAmount(page, '99');
   await page.getByRole('button', { name: 'Настройки', exact: true }).click();

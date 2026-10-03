@@ -18,7 +18,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { GripVertical, Pencil } from 'lucide-react';
 import type { Category, Expense } from './lib/model';
 
 type Props = {
@@ -26,7 +26,6 @@ type Props = {
   expenses: Expense[];
   renderIcon: (category: Category) => ReactNode;
   onEdit: (category: Category) => void;
-  onDelete: (category: Category) => void;
   onReorder: (categories: Category[]) => Promise<void>;
 };
 
@@ -143,7 +142,6 @@ function RowContent({
   expenses,
   renderIcon,
   onEdit,
-  onDelete,
 }: Props & { category: Category; disabled: boolean }) {
   const count = expenses.filter((expense) => expense.category_id === category.id).length;
   const label = new Intl.PluralRules('ru').select(count);
@@ -164,14 +162,6 @@ function RowContent({
           onClick={() => onEdit(category)}
         >
           <Pencil size={20} />
-        </button>
-        <button
-          className="icon-button expense-delete-button"
-          aria-label={`Удалить категорию ${category.name}`}
-          disabled={disabled}
-          onClick={() => onDelete(category)}
-        >
-          <Trash2 size={20} />
         </button>
       </div>
     </>

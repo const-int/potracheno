@@ -35,7 +35,7 @@ test('fractional expenses display rounded rubles and retain precision when editi
   ).toBe(284050);
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
-    .getByRole('button', { name: 'Сводка' })
+    .getByRole('button', { name: 'Потрачено' })
     .click();
   const expected = await page.evaluate(() => {
     const expenses = JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses;

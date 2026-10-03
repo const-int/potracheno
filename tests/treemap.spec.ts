@@ -5,7 +5,7 @@ test('static treemap areas match category shares at mobile sizes', async ({ page
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
-    .getByRole('button', { name: 'Сводка' })
+    .getByRole('button', { name: 'Потрачено' })
     .click();
   await expect(page.locator('.treemap-tile')).toHaveCount(7);
   for (const width of [320, 390, 430]) {

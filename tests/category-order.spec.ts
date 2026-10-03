@@ -53,7 +53,7 @@ test('touch reordering persists, matches the expense picker, and survives edits 
   await expect(page.locator('.app-toast[role="status"]')).toContainText(
     'Порядок категорий сохранён',
   );
-  await nav(page, 'Расход').click();
+  await nav(page, 'Трата').click();
   await expect(page.locator('.quick-category-name')).toHaveText(reordered);
   await page.reload();
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();

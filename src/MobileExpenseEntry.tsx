@@ -1,4 +1,4 @@
-import { useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useRef, useState, type Dispatch, type SetStateAction, type CSSProperties } from 'react';
 import { Check, ChevronLeft, ChevronRight, Delete, LoaderCircle } from 'lucide-react';
 import { type Category, parseAmount, today } from './lib/model';
 import { errorMessage, saveExpense } from './lib/store';
@@ -31,6 +31,11 @@ export default function MobileExpenseEntry({
   const locked = useRef(false);
   const pageCount = Math.max(1, Math.ceil(categories.length / categoriesPerPage));
   const currentPage = Math.min(page, pageCount - 1);
+  const visibleCategories = categories.slice(
+    currentPage * categoriesPerPage,
+    (currentPage + 1) * categoriesPerPage,
+  );
+  const categoryRows = Math.max(1, Math.ceil(visibleCategories.length / 2));
   const kopecks = parseAmount(amount);
   const selectedCategoryId = categories.some((c) => c.id === categoryId)
     ? categoryId
@@ -81,7 +86,11 @@ export default function MobileExpenseEntry({
     }
   }
   return (
-    <section className="quick-entry" aria-label="Новый расход">
+    <section
+      className={`quick-entry ${pageCount > 1 ? 'has-category-pages' : ''} ${!categories.length ? 'has-no-categories' : ''}`}
+      style={{ '--quick-category-rows': categoryRows } as CSSProperties}
+      aria-label="Новый расход"
+    >
       <div className="quick-amount-row">
         <div className="quick-amount" data-length={display.length > 11 ? 'long' : 'short'}>
           <output
@@ -99,58 +108,54 @@ export default function MobileExpenseEntry({
       </div>
       <div className="quick-categories">
         <div className="quick-category-grid" aria-label="Категории расходов">
-          {categories
-            .slice(currentPage * categoriesPerPage, (currentPage + 1) * categoriesPerPage)
-            .map((category) => (
-              <button
-                key={category.id}
-                className={`quick-category ${selectedCategoryId === category.id ? 'selected' : ''}`}
-                aria-pressed={selectedCategoryId === category.id}
-                disabled={busy}
-                onClick={() => {
-                  setCategoryId(category.id);
-                  setError('');
-                }}
-              >
-                {renderCategoryIcon(category)}
-                <span className="quick-category-name">{category.name}</span>
-                {selectedCategoryId === category.id && (
-                  <Check
-                    className="quick-category-check"
-                    size={16}
-                    strokeWidth={2.5}
-                    aria-hidden="true"
-                  />
-                )}
-              </button>
-            ))}
+          {visibleCategories.map((category) => (
+            <button
+              key={category.id}
+              className={`quick-category ${selectedCategoryId === category.id ? 'selected' : ''}`}
+              aria-pressed={selectedCategoryId === category.id}
+              disabled={busy}
+              onClick={() => {
+                setCategoryId(category.id);
+                setError('');
+              }}
+            >
+              {renderCategoryIcon(category)}
+              <span className="quick-category-name">{category.name}</span>
+              {selectedCategoryId === category.id && (
+                <Check
+                  className="quick-category-check"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden="true"
+                />
+              )}
+            </button>
+          ))}
         </div>
         {!categories.length && (
           <p className="quick-empty">Добавьте категории на вкладке «Категории».</p>
         )}
-        <div className="quick-category-pages">
-          {pageCount > 1 && (
-            <>
-              <button
-                aria-label="Предыдущие категории"
-                disabled={busy || currentPage === 0}
-                onClick={() => setPage(currentPage - 1)}
-              >
-                <ChevronLeft size={17} />
-              </button>
-              <span>
-                {currentPage + 1} / {pageCount}
-              </span>
-              <button
-                aria-label="Следующие категории"
-                disabled={busy || currentPage === pageCount - 1}
-                onClick={() => setPage(currentPage + 1)}
-              >
-                <ChevronRight size={17} />
-              </button>
-            </>
-          )}
-        </div>
+        {pageCount > 1 && (
+          <div className="quick-category-pages">
+            <button
+              aria-label="Предыдущие категории"
+              disabled={busy || currentPage === 0}
+              onClick={() => setPage(currentPage - 1)}
+            >
+              <ChevronLeft size={17} />
+            </button>
+            <span>
+              {currentPage + 1} / {pageCount}
+            </span>
+            <button
+              aria-label="Следующие категории"
+              disabled={busy || currentPage === pageCount - 1}
+              onClick={() => setPage(currentPage + 1)}
+            >
+              <ChevronRight size={17} />
+            </button>
+          </div>
+        )}
       </div>
       {error && (
         <div className="quick-error" role="alert" onClick={() => setError('')}>
