@@ -64,7 +64,7 @@ export default function CsvImport({
     }
   }
   function template() {
-    const text = `\uFEFFДата;Сумма;Категория;Комментарий;Автор\r\n${today()};1000;Продукты;Пример расхода;\r\n`;
+    const text = `\uFEFFДата;Сумма;Категория;Автор\r\n${today()};1000;Продукты;\r\n`;
     const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
     const link = document.createElement('a');
     link.href = url;
@@ -95,8 +95,8 @@ export default function CsvImport({
   return (
     <div className="csv-import">
       <p className="muted">
-        Обязательные колонки: дата, сумма, категория. Комментарий и автор — необязательные. Без
-        автора будет указано ваше имя.
+        Обязательные колонки: дата, сумма, категория. Автор — необязательная колонка. Без автора
+        будет указано ваше имя.
       </p>
       <fieldset disabled={busy}>
         <button className="text-button import-template" onClick={template}>
@@ -154,9 +154,7 @@ export default function CsvImport({
                   />
                   Пропускать уже существующие расходы
                 </label>
-                <p className="muted">
-                  Совпадение — одинаковые дата, сумма, категория, комментарий и автор.
-                </p>
+                <p className="muted">Совпадение — одинаковые дата, сумма, категория и автор.</p>
                 {plan.newCategories.length > 0 && (
                   <p className="muted">Будут созданы категории: {plan.newCategories.join(', ')}.</p>
                 )}

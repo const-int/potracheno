@@ -17,7 +17,7 @@ import {
   GraduationCap,
   Dumbbell,
   Gift,
-  Clapperboard,
+  PartyPopper,
   ReceiptText,
   Smartphone,
   BriefcaseBusiness,
@@ -26,19 +26,19 @@ import {
   Coffee,
   Download,
   FileUp,
-  Heart,
+  HeartPulse,
   Home,
   LayoutGrid,
   Leaf,
   List,
   LogOut,
   MoreHorizontal,
-  PawPrint,
+  Cat,
   Pencil,
   Plus,
   Settings,
   ShoppingBasket,
-  ShoppingBag,
+  ShoppingCart,
   UserRound,
   Trash2,
   Wallet,
@@ -50,6 +50,7 @@ import {
   type Expense,
   colors,
   categoryIconLabels,
+  categoryIconOptions,
   csv,
   money,
   monthLabel,
@@ -70,10 +71,10 @@ import {
 
 const icons = {
   basket: ShoppingBasket,
-  shop: ShoppingBag,
+  shop: ShoppingCart,
   car: Car,
-  heart: Heart,
-  paw: PawPrint,
+  heart: HeartPulse,
+  paw: Cat,
   home: Home,
   coffee: Coffee,
   other: MoreHorizontal,
@@ -85,7 +86,7 @@ const icons = {
   study: GraduationCap,
   sport: Dumbbell,
   gifts: Gift,
-  fun: Clapperboard,
+  fun: PartyPopper,
   bills: ReceiptText,
   phone: Smartphone,
   work: BriefcaseBusiness,
@@ -182,8 +183,12 @@ export default function App() {
   const [importBusy, setImportBusy] = useState(false);
   const [notice, setNoticeState] = useState<ToastNotice | null>(null);
   const noticeSequence = useRef(0);
-  function setNotice(message: string, kind: ToastNotice['kind'] = 'success') {
-    setNoticeState(message ? { id: ++noticeSequence.current, message, kind } : null);
+  function setNotice(
+    message: string,
+    kind: ToastNotice['kind'] = 'success',
+    placement?: 'expense',
+  ) {
+    setNoticeState(message ? { id: ++noticeSequence.current, message, kind, placement } : null);
   }
   const closeNotice = useCallback((id: number) => {
     setNoticeState((current) => (current?.id === id ? null : current));
@@ -197,6 +202,10 @@ export default function App() {
   const generation = useRef(0);
   const inFlight = useRef<Promise<void> | null>(null);
   const session = demo ? 'demo' : userId;
+  useEffect(() => {
+    if (tab !== 'add' || !session)
+      setNoticeState((current) => (current?.placement === 'expense' ? null : current));
+  }, [tab, session, notice?.id]);
   const activeSession = useRef(session);
   activeSession.current = session;
 
@@ -284,9 +293,9 @@ export default function App() {
   const total = monthExpenses.reduce((sum, e) => sum + e.amount_kopecks, 0);
   const categoryById = (id: string) => data.categories.find((c) => c.id === id);
   const activeCategories = data.categories.filter((c) => !c.archived);
-  async function afterSave(text: string) {
+  async function afterSave(text: string, placement?: 'expense') {
     await refresh();
-    setNotice(text);
+    setNotice(text, 'success', placement);
   }
   async function exportData() {
     setExportBusy(true);
@@ -423,7 +432,9 @@ export default function App() {
             </small>
           </section>
         </div>
-        {notice && <Toast key={notice.id} notice={notice} onClose={closeNotice} />}
+        {notice && notice.placement !== 'expense' && (
+          <Toast key={notice.id} notice={notice} onClose={closeNotice} />
+        )}
         <footer className="login-footer">potracheno · учет семейных расходов</footer>
       </div>
     );
@@ -572,7 +583,7 @@ export default function App() {
                   userName={userName}
                   demo={demo}
                   renderCategoryIcon={(category) => <CategoryIcon category={category} size={19} />}
-                  onSave={() => afterSave('Расход сохранен')}
+                  onSave={() => afterSave('Расход сохранен', 'expense')}
                 />
               )}
               {tab === 'add' && !isMobile && (
@@ -592,7 +603,7 @@ export default function App() {
                       userId={session!}
                       demo={demo}
                       userName={userName}
-                      onSave={() => afterSave('Расход сохранен')}
+                      onSave={() => afterSave('Расход сохранен', 'expense')}
                     />
                   </section>
                   <aside className="entry-aside">
@@ -640,7 +651,7 @@ export default function App() {
                             <CategoryIcon category={categoryById(e.category_id)} />
                             <div>
                               <strong>{categoryById(e.category_id)?.name}</strong>
-                              <span>{e.note || e.device_name}</span>
+                              <span>{e.device_name}</span>
                             </div>
                             <b>{money(e.amount_kopecks)}</b>
                           </div>
@@ -720,7 +731,6 @@ export default function App() {
                                   <span className="archived-tag">архив</span>
                                 )}
                               </strong>
-                              {e.note ? <p>{e.note}</p> : !isMobile && <p>Без комментария</p>}
                               <span>
                                 {new Intl.DateTimeFormat('ru-RU', {
                                   day: 'numeric',
@@ -729,18 +739,22 @@ export default function App() {
                                 · {e.device_name}
                               </span>
                             </div>
-                            <b>{money(e.amount_kopecks)}</b>
+                            <b
+                              className={`expense-amount ${money(e.amount_kopecks).length > 9 ? 'is-long' : ''}`}
+                            >
+                              {money(e.amount_kopecks)}
+                            </b>
                             <div className="row-actions">
                               <button
                                 className="icon-button expense-edit-button"
-                                aria-label={`Редактировать ${e.note || categoryById(e.category_id)?.name}`}
+                                aria-label={`Редактировать ${categoryById(e.category_id)?.name}`}
                                 onClick={() => setEditing(e)}
                               >
                                 <Pencil size={20} />
                               </button>
                               <button
                                 className="icon-button expense-delete-button"
-                                aria-label={`Удалить ${e.note || categoryById(e.category_id)?.name}`}
+                                aria-label={`Удалить ${categoryById(e.category_id)?.name}`}
                                 onClick={() => {
                                   setActionError('');
                                   setDeleting(e);
@@ -826,7 +840,9 @@ export default function App() {
           </button>
         ))}
       </nav>
-      {notice && <Toast key={notice.id} notice={notice} onClose={closeNotice} />}
+      {notice && (notice.placement !== 'expense' || tab === 'add') && (
+        <Toast key={notice.id} notice={notice} onClose={closeNotice} />
+      )}
       {editing && (
         <Modal title="Редактировать расход" close={() => setEditing(null)}>
           <ExpenseForm
@@ -1069,7 +1085,6 @@ function ExpenseForm({
   const [amount, setAmount] = useState(existing ? String(existing.amount_kopecks / 100) : '');
   const [categoryId, setCategoryId] = useState(existing?.category_id ?? categories[0]?.id ?? '');
   const [date, setDate] = useState(existing?.spent_on ?? today());
-  const [note, setNote] = useState(existing?.note ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const submitLock = useRef(false);
@@ -1101,7 +1116,7 @@ function ExpenseForm({
           amount_kopecks: kopecks,
           category_id: categoryId,
           spent_on: date,
-          note: note.trim(),
+          note: existing?.note ?? '',
           device_name: existing?.device_name ?? userName,
           created_at: existing?.created_at ?? new Date().toISOString(),
         },
@@ -1109,7 +1124,6 @@ function ExpenseForm({
       );
       if (!existing) {
         setAmount('');
-        setNote('');
         setDate(today());
       }
       await onSave();
@@ -1171,15 +1185,7 @@ function ExpenseForm({
             max="2100-12-31"
           />
         </label>
-        <label>
-          Комментарий <span className="optional">необязательно</span>
-          <input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Например, продукты на неделю"
-            maxLength={500}
-          />
-        </label>
+
         <div className="form-author">
           <UserRound size={15} />
           {existing?.device_name || userName || 'Имя пока не указано'}
@@ -1271,19 +1277,25 @@ function CategoryForm({
         </div>
         <div className="field-heading">Значок</div>
         <div className="icon-picker">
-          {Object.entries(icons).map(([id, Icon]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setIcon(id)}
-              aria-label={`Значок ${categoryIconLabels[id]}`}
-              title={categoryIconLabels[id]}
-              aria-pressed={icon === id}
-              className={icon === id ? 'selected' : ''}
-            >
-              <Icon size={22} />
-            </button>
-          ))}
+          {(categoryIconOptions.includes(icon)
+            ? categoryIconOptions
+            : [icon, ...categoryIconOptions]
+          ).map((id) => {
+            const Icon = icons[id as keyof typeof icons] ?? MoreHorizontal;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setIcon(id)}
+                aria-label={`Значок ${categoryIconLabels[id]}`}
+                title={categoryIconLabels[id]}
+                aria-pressed={icon === id}
+                className={icon === id ? 'selected' : ''}
+              >
+                <Icon size={22} />
+              </button>
+            );
+          })}
         </div>
         {existing && (
           <label className="checkbox-label">

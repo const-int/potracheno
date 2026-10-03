@@ -2469,11 +2469,11 @@ fieldset {
   inset: auto auto 20px 20px;
   margin: 0;
   width: min(420px, calc(100vw - 40px));
-  min-height: 76px;
-  padding: 18px 20px;
+  min-height: 65px;
+  padding: 14px 18px;
   border: 0;
   border-radius: 16px;
-  background: #36834b;
+  background: #527961;
   color: #fff;
   display: flex;
   align-items: center;
@@ -2485,8 +2485,8 @@ fieldset {
   animation: app-toast-enter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .app-toast-icon {
-  flex: 0 0 38px;
-  height: 38px;
+  flex: 0 0 34px;
+  height: 34px;
   border-radius: 50%;
   background: #ffffff26;
   display: flex;
@@ -2532,8 +2532,8 @@ fieldset {
   .app-toast {
     inset: auto 16px calc(82px + env(safe-area-inset-bottom)) 16px;
     width: auto;
-    min-height: 76px;
-    padding: 17px 18px;
+    min-height: 65px;
+    padding: 12px 18px;
   }
 }
 @media (max-width: 650px) and (max-height: 620px) {
@@ -2619,5 +2619,53 @@ fieldset {
   .icon-picker button {
     width: 100%;
     height: 44px;
+  }
+}
+
+.expense-toast-zone {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  margin: 0;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1000;
+}
+.expense-toast-zone .app-toast {
+  position: absolute;
+  inset: auto 0 0 0;
+  width: 100%;
+}
+.row-actions .expense-edit-button,
+.mobile-compact .row-actions .expense-edit-button {
+  background: #edf3f9;
+  border-color: #d6e2ed;
+  color: #527494;
+}
+.row-actions .expense-edit-button:hover,
+.row-actions .expense-edit-button:active {
+  background: #dce8f3;
+}
+@media (max-width: 650px) {
+  .mobile-compact .expense-row {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: 6px 10px;
+  }
+  .mobile-compact .expense-row > .expense-amount {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.7px;
+    align-self: center;
+    line-height: 1.2;
+    color: #2d4937;
+    text-align: right;
+  }
+  .mobile-compact .expense-row > .expense-amount.is-long {
+    font-size: 20px;
   }
 }

@@ -41,7 +41,7 @@ test('CSV preview does not mutate data, confirmation imports and reimport skips 
     spent_on: '2026-01-02',
     amount_kopecks: 150000,
     device_name: 'Анна',
-    note: 'Поездка',
+    note: '',
   });
   expect(saved.expenses[1].device_name).toBe('Алексей');
   expect(

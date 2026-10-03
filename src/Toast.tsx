@@ -2,7 +2,21 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, CircleAlert } from 'lucide-react';
 
-export type ToastNotice = { id: number; message: string; kind: 'success' | 'error' };
+export type ToastNotice = {
+  id: number;
+  message: string;
+  kind: 'success' | 'error';
+  placement?: 'expense';
+};
+
+function expenseAnchor(placement?: 'expense') {
+  const keypad = placement === 'expense' ? document.querySelector('.expense-keypad') : null;
+  if (!keypad) return null;
+  return {
+    top: Math.ceil(document.querySelector('.topbar')?.getBoundingClientRect().bottom ?? 0),
+    bottom: Math.ceil(window.innerHeight - keypad.getBoundingClientRect().top + 12),
+  };
+}
 
 export default function Toast({
   notice,
@@ -12,7 +26,26 @@ export default function Toast({
   onClose: (id: number) => void;
 }) {
   const [leaving, setLeaving] = useState(false);
+  const [anchor, setAnchor] = useState(() => expenseAnchor(notice.placement));
   const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (notice.placement !== 'expense') return;
+    const reposition = () => {
+      const next = expenseAnchor(notice.placement);
+      setAnchor((current) =>
+        current?.top === next?.top && current?.bottom === next?.bottom ? current : next,
+      );
+    };
+    const observer = new ResizeObserver(reposition);
+    for (const element of document.querySelectorAll('.expense-keypad, .topbar, .quick-entry'))
+      observer.observe(element);
+    window.addEventListener('resize', reposition);
+    reposition();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', reposition);
+    };
+  }, [notice.placement]);
   useLayoutEffect(() => {
     const element = ref.current;
     // The browser's top layer also keeps feedback visible above open settings dialogs.
@@ -22,7 +55,7 @@ export default function Toast({
         if (element.matches(':popover-open')) element.hidePopover();
       };
     }
-  }, []);
+  }, [!!anchor]);
   useEffect(() => {
     const leave = setTimeout(() => setLeaving(true), 1800);
     const remove = setTimeout(() => onClose(notice.id), 2040);
@@ -32,18 +65,33 @@ export default function Toast({
     };
   }, [notice.id, onClose]);
   const Icon = notice.kind === 'success' ? Check : CircleAlert;
-  return createPortal(
-    <div
-      ref={ref}
-      popover="manual"
-      className={`app-toast app-toast-${notice.kind} ${leaving ? 'is-leaving' : ''}`}
-      role={notice.kind === 'error' ? 'alert' : 'status'}
-      aria-atomic="true"
-    >
+  const content = (
+    <>
       <span className="app-toast-icon" aria-hidden="true">
         <Icon size={24} strokeWidth={2.5} />
       </span>
       <span className="app-toast-message">{notice.message}</span>
+    </>
+  );
+  const className = `app-toast app-toast-${notice.kind} ${leaving ? 'is-leaving' : ''}`;
+  if (anchor)
+    return createPortal(
+      <div ref={ref} popover="manual" className="expense-toast-zone" style={anchor}>
+        <div className={className} role="status" aria-atomic="true">
+          {content}
+        </div>
+      </div>,
+      document.body,
+    );
+  return createPortal(
+    <div
+      ref={ref}
+      popover="manual"
+      className={className}
+      role={notice.kind === 'error' ? 'alert' : 'status'}
+      aria-atomic="true"
+    >
+      {content}
     </div>,
     document.body,
   );

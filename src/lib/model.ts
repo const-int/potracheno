@@ -41,11 +41,11 @@ export const colors = [
 ];
 export const categoryIconLabels: Record<string, string> = {
   basket: 'Продукты',
-  shop: 'Покупки',
-  car: 'Машина',
+  shop: 'Супермаркет',
+  car: 'Тачка',
   heart: 'Здоровье',
-  paw: 'Животные',
-  home: 'Дом',
+  paw: 'Кот',
+  home: 'Для дома',
   coffee: 'Кафе',
   other: 'Другое',
   fuel: 'Топливо',
@@ -61,6 +61,22 @@ export const categoryIconLabels: Record<string, string> = {
   phone: 'Телефон',
   work: 'Работа',
 };
+export const categoryIconOptions = [
+  'shop',
+  'coffee',
+  'home',
+  'paw',
+  'car',
+  'clothes',
+  'heart',
+  'gifts',
+  'fun',
+  'other',
+  'basket',
+  'travel',
+  'fuel',
+  'bills',
+];
 export const initialCategories = [
   { name: 'Продукты', icon: 'basket' },
   { name: 'Супермаркеты', icon: 'shop' },
@@ -117,12 +133,11 @@ export function csv(data: Data) {
   return (
     '\uFEFF' +
     [
-      ['Дата', 'Сумма, ₽', 'Категория', 'Комментарий', 'Автор'],
+      ['Дата', 'Сумма, ₽', 'Категория', 'Автор'],
       ...data.expenses.map((e) => [
         e.spent_on,
         (e.amount_kopecks / 100).toFixed(2),
         data.categories.find((c) => c.id === e.category_id)?.name ?? 'Категория',
-        e.note,
         e.device_name,
       ]),
     ]
@@ -140,24 +155,24 @@ export function demoData(): Data {
     archived: false,
   }));
   const examples = [
-    [0, 284050, 'Продукты на неделю'],
-    [2, 320000, 'Заправка'],
-    [6, 89000, 'Завтрак вдвоем'],
-    [4, 165000, 'Корм'],
-    [0, 127000, 'Овощи и фрукты'],
-    [3, 210000, 'Аптека'],
-    [5, 349000, 'Для дома'],
-    [1, 186050, 'Покупки в супермаркете'],
-    [0, 67000, 'К ужину'],
+    [0, 284050],
+    [2, 320000],
+    [6, 89000],
+    [4, 165000],
+    [0, 127000],
+    [3, 210000],
+    [5, 349000],
+    [1, 186050],
+    [0, 67000],
   ] as const;
   return {
     categories,
-    expenses: examples.map(([c, amount, note], i) => ({
+    expenses: examples.map(([c, amount], i) => ({
       id: crypto.randomUUID(),
       user_id,
       category_id: categories[c].id,
       amount_kopecks: amount,
-      note,
+      note: '',
       spent_on:
         today().slice(0, 8) + String(Math.max(1, Number(today().slice(8)) - i)).padStart(2, '0'),
       device_name: i % 2 ? 'Анна' : 'Иван',

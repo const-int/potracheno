@@ -62,7 +62,6 @@ export async function saveExpense(demo: boolean, expense: Expense, editing: bool
           amount_kopecks: expense.amount_kopecks,
           category_id: expense.category_id,
           spent_on: expense.spent_on,
-          note: expense.note,
         })
         .eq('id', expense.id)
         .select()
@@ -155,7 +154,7 @@ export async function importExpenses(
       category_id: categoryId,
       amount_kopecks: row.amount,
       spent_on: row.date,
-      note: row.note,
+      note: '',
       device_name: row.author,
       created_at: createdAt,
     };

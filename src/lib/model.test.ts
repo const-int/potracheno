@@ -48,12 +48,13 @@ it('includes archived categories in totals and sorts by amount', () => {
 it('exports exact kopecks and escapes quotes, newlines and spreadsheet formulas', () => {
   const e = {
     ...expense('food', 129),
-    note: '=HYPERLINK("x")\nновая строка',
-    device_name: '+Телефон',
+    note: 'Скрытая старая заметка',
+    device_name: '+Телефон "тест"\nновая строка',
   };
   const result = csv({ expenses: [e], categories });
   expect(result.startsWith('\uFEFF')).toBe(true);
   expect(result).toContain('"1.29"');
-  expect(result).toContain('"\'=HYPERLINK(""x"")\nновая строка"');
-  expect(result).toContain('"\'+Телефон"');
+  expect(result).not.toContain('Скрытая старая заметка');
+  expect(result).not.toContain('Комментарий');
+  expect(result).toContain('"\'+Телефон ""тест""\nновая строка"');
 });

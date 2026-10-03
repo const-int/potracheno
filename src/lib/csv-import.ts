@@ -6,7 +6,6 @@ export type ImportRow = {
   date: string;
   amount: number;
   category: string;
-  note: string;
   author: string;
 };
 export type ImportIssue = { row: number; message: string };
@@ -31,7 +30,6 @@ const aliases = {
     'expense amount',
   ],
   category: ['категория', 'категория расхода', 'category'],
-  note: ['комментарий', 'описание', 'note', 'comment', 'description'],
   author: [
     'автор',
     'устройство',
@@ -105,7 +103,6 @@ export function parseImport(source: string, defaultAuthor: string): ParsedImport
     const date = dateValue(get('date'));
     const amount = parseAmount(get('amount'));
     const category = textValue(get('category')).trim();
-    const note = textValue(get('note'));
     const author = textValue(get('author')).trim() || defaultAuthor.trim();
     const problems: string[] = [];
     if (record.length > header.length)
@@ -115,17 +112,15 @@ export function parseImport(source: string, defaultAuthor: string): ParsedImport
       problems.push('сумма должна быть больше нуля и не превышать 999,999,999.99 ₽');
     if (!category || category.length > 40)
       problems.push('название категории должно содержать от 1 до 40 символов');
-    if (note.length > 500) problems.push('комментарий длиннее 500 символов');
     if (!author || author.length > 40)
       problems.push('имя автора должно содержать от 1 до 40 символов');
     if (problems.length) issues.push({ row, message: problems.join('; ') });
-    else
-      rows.push({ id: crypto.randomUUID(), date: date!, amount: amount!, category, note, author });
+    else rows.push({ id: crypto.randomUUID(), date: date!, amount: amount!, category, author });
   });
   return { rows, issues };
 }
 const fingerprint = (row: Omit<ImportRow, 'id'>) =>
-  JSON.stringify([row.date, row.amount, categoryKey(row.category), row.note, row.author]);
+  JSON.stringify([row.date, row.amount, categoryKey(row.category), row.author]);
 export function planImport(rows: ImportRow[], data: Data, skipDuplicates = true) {
   const counts = new Map<string, number>();
   const categoryNames = new Map(data.categories.map((category) => [category.id, category.name]));
@@ -135,7 +130,6 @@ export function planImport(rows: ImportRow[], data: Data, skipDuplicates = true)
       date: expense.spent_on,
       amount: expense.amount_kopecks,
       category: categoryNames.get(expense.category_id) ?? '',
-      note: expense.note,
       author: expense.device_name,
     });
     counts.set(key, (counts.get(key) ?? 0) + 1);

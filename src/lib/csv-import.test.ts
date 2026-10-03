@@ -18,7 +18,7 @@ const expense: Expense = {
   amount_kopecks: 123450,
   spent_on: '2024-02-29',
   note: '=A1\nHe said "hello"; twice',
-  device_name: '+Анна',
+  device_name: '+Анна "тест"\nвторая строка',
   created_at: '2024-02-29T12:00:00Z',
 };
 const data: Data = { categories: [category], expenses: [expense] };
@@ -32,9 +32,9 @@ describe('CSV import', () => {
       date: expense.spent_on,
       amount: expense.amount_kopecks,
       category: category.name,
-      note: expense.note,
       author: expense.device_name,
     });
+    expect(result.rows[0]).not.toHaveProperty('note');
     expect(planImport(result.rows, data).skipped).toBe(1);
   });
   it('reads Russian Excel-style dates and optional fields', () => {
@@ -47,7 +47,6 @@ describe('CSV import', () => {
       date: '2024-02-29',
       amount: 150000,
       author: 'Анна',
-      note: '',
     });
   });
   it('reads comma-delimited English headers and grouped amounts in quoted cells', () => {
@@ -56,7 +55,7 @@ describe('CSV import', () => {
       'Анна',
     );
     expect(result.issues).toEqual([]);
-    expect(result.rows[0]).toMatchObject({ amount: 123450, note: 'A, B', author: 'Phone' });
+    expect(result.rows[0]).toMatchObject({ amount: 123450, author: 'Phone' });
   });
   it('reports impossible dates, zero amounts and missing categories with row numbers', () => {
     const result = parseImport(

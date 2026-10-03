@@ -6,7 +6,9 @@ Built with React, TypeScript, and Vite. Supabase handles storage and authenticat
 GitHub Pages hosts the frontend. No custom backend is required.
 
 The application interface is in Russian.
-Categories offer 20 colors and 20 icons. For an existing Supabase project, run
+Categories offer 20 colors and 14 curated icons: the family's ten categories,
+plus groceries, travel, fuel, and bills. Older icon IDs remain supported.
+For an existing Supabase project, run
 `supabase/migrations/20261003_expand_category_icons.sql` once in SQL Editor
 to allow the expanded icon set. New projects can use the updated `schema.sql`.
 Amounts use commas to group thousands (for example, `1,234 ₽`). Existing fractional
@@ -20,7 +22,7 @@ there is no separate backspace button next to the amount. The entry
 screen preselects the first available category.
 It fits the viewport without page scrolling or the phone's native keyboard.
 New mobile expenses use today's date and an empty note. More than eight categories
-are displayed on additional pages. Dates and notes can still be edited in History.
+are displayed on additional pages. Dates and amounts can be edited in History. Expense comments are not used.
 Mobile History shows the month selector, total, and expense list. Summary places
 the category chart first, with compact expense-count and average-expense cards
 below it. CSV export is available in Settings on mobile.
@@ -131,20 +133,20 @@ https://supabase.com/docs/guides/platform/free-project-pausing.
 
 Save a copy of your sheet as CSV UTF-8. Use one header row and one expense per row.
 Required columns: `Дата` / `Date`, `Сумма` / `Amount`, and `Категория` / `Category`.
-Optional columns: `Комментарий` / `Note` and `Автор` / `Author`. Legacy `Устройство`
+Optional column: `Автор` / `Author`. Comment columns in older files are ignored. Legacy `Устройство`
 and `Device` headers are also supported. Dates can use `YYYY-MM-DD` or `DD.MM.YYYY`.
 Amounts are in rubles; imported fractional values are preserved without rounding.
 An omitted or empty author uses the name you entered at sign-in.
 
 Open Settings → CSV import, choose the file, review the preview, and confirm.
-The app accepts semicolon, comma, and tab delimiters, quoted multiline comments,
+The app accepts semicolon, comma, and tab delimiters, quoted multiline cells,
 UTF-8, Windows-1251, and UTF-16LE files. Limit: 5 MB and 5,000 expenses per file.
 Unknown categories are created automatically. Archived categories are reused.
 Any invalid row blocks import until the file is corrected. A template is available
 in the import dialog, and the app's own CSV exports can be imported as well.
 
 By default, import skips existing expenses matching the date, amount, category,
-note, and author. Identical rows are counted: two identical purchases in a file
+and author. Identical rows are counted: two identical purchases in a file
 remain two purchases, and reimporting that file skips both. You can disable
 this comparison if the coinciding rows represent additional expenses.
 Stable row IDs also prevent duplicate writes when retrying an interrupted import
@@ -187,3 +189,6 @@ The check serves the built files at `http://127.0.0.1:4175/potracheno/` to repro
 the repository subpath. Physical Android installation must be checked after
 publishing the HTTPS site; an ordinary HTTP address on a local network does not
 provide the required secure context.
+
+Legacy database comment values are retained for compatibility but are not shown,
+edited, exported, or used for duplicate matching. New imports save an empty comment.
