@@ -1,4 +1,4 @@
-# Together — family expenses
+# potracheno — family expenses
 
 A mobile web app for one family: a shared account, expenses in rubles,
 custom categories, expense history, monthly insights, and CSV export.

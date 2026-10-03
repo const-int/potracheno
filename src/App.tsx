@@ -374,7 +374,7 @@ export default function App() {
             {notice}
           </div>
         )}
-        <footer className="login-footer">Вместе · учет семейных расходов</footer>
+        <footer className="login-footer">potracheno · учет семейных расходов</footer>
       </div>
     );
 
@@ -879,7 +879,7 @@ function Brand() {
       <span>
         <Wallet size={23} />
       </span>
-      вместе<span className="brand-period">.</span>
+      potracheno<span className="brand-period">.</span>
     </div>
   );
 }
