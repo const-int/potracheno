@@ -621,12 +621,22 @@ export default function App() {
                         <ArrowLeft size={17} />
                       </button>
                       <span>{monthLabel(month)}</span>
-                      <button
-                        onClick={() => setMonth(shiftMonth(month, 1))}
-                        aria-label="Следующий месяц"
-                      >
-                        <ArrowRight size={17} />
-                      </button>
+                      {month < today().slice(0, 7) ? (
+                        <button
+                          onClick={() =>
+                            setMonth((previous) => {
+                              const next = shiftMonth(previous, 1);
+                              const current = today().slice(0, 7);
+                              return next > current ? current : next;
+                            })
+                          }
+                          aria-label="Следующий месяц"
+                        >
+                          <ArrowRight size={17} />
+                        </button>
+                      ) : (
+                        <div className="month-next-placeholder" aria-hidden="true" />
+                      )}
                     </div>
                     {!isMobile && <span className="muted">{monthExpenses.length} записей</span>}
                     {isMobile && tab === 'history' && (

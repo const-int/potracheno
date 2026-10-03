@@ -105,9 +105,11 @@ test('validation, persistence, month navigation and mobile layout', async ({ pag
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'Summary' })
     .click();
+  await expect(page.getByRole('button', { name: 'Следующий месяц' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Предыдущий месяц' }).click();
   await expect(page.getByRole('heading', { name: 'Здесь пока тихо' })).toBeVisible();
   await page.getByRole('button', { name: 'Следующий месяц' }).click();
+  await expect(page.getByRole('button', { name: 'Следующий месяц' })).toHaveCount(0);
   await expect(page.getByRole('img', { name: /Распределение/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,

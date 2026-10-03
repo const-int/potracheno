@@ -719,6 +719,11 @@ fieldset {
   min-width: 140px;
   text-align: center;
 }
+.month-next-placeholder {
+  width: 33px;
+  height: 33px;
+  flex-shrink: 0;
+}
 .history-panel,
 .summary-panel,
 .categories-panel {
