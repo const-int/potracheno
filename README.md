@@ -19,7 +19,8 @@ npm run dev
 Open http://localhost:5173. Until Supabase is configured, use the demo button
 on the welcome screen. Sample data and changes are saved only in the current
 browser and do not sync between devices. Demo storage is separate from the
-shared database. Set a device name in Settings before adding your first expense.
+shared database. Set your name in Settings before adding your first expense. Each person enters
+their own name in their browser while using the same shared login.
 
 ## Connect Supabase
 
@@ -92,9 +93,12 @@ Testing real sign-in, authentication, and shared access requires a Supabase proj
 ## Data preservation
 
 CSV export includes **the entire expense history**, not just the selected month,
-along with device names. Save exports periodically. CSV import is not implemented.
-Device names are stored in localStorage and must be set again after clearing
-browser data. Editing an expense preserves the name of the device that created it.
+along with author names. Save exports periodically. CSV import is not implemented.
+User names are stored in localStorage and must be set again after clearing
+browser data. Editing an expense preserves the name of its original author.
+For compatibility, names still use the existing `vmeste.device` storage key and
+the `expenses.device_name` database field. Existing expense signatures are preserved;
+changing your name applies to new expenses.
 Renaming a category updates its name throughout the expense history.
 
 The free Supabase plan has limits, and projects may be paused after seven days

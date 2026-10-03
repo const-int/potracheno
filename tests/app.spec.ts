@@ -4,9 +4,9 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
   await page.getByRole('heading', { name: 'Новый расход' }).waitFor();
-  await page.getByRole('button', { name: 'Назвать устройство' }).click();
-  await page.getByLabel('Название устройства', { exact: true }).fill('Тестовый телефон');
-  await page.getByRole('button', { name: 'Сохранить название' }).click();
+  await page.getByRole('button', { name: 'Указать имя' }).click();
+  await page.getByLabel('Имя пользователя', { exact: true }).fill('Алексей');
+  await page.getByRole('button', { name: 'Сохранить имя' }).click();
 });
 
 test('complete mobile flow: create, edit, archive category, summary, export and delete', async ({
@@ -59,6 +59,8 @@ test('complete mobile flow: create, edit, archive category, summary, export and 
   let contents = '';
   for await (const chunk of stream!) contents += chunk.toString();
   expect(contents).toContain('Тестовая покупка');
+  expect(contents).toContain('"Автор"');
+  expect(contents).toContain('"Алексей"');
   expect(contents).toContain('"1500,01";"Еда"');
   await page.getByRole('button', { name: 'Удалить Тестовая покупка', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Удалить', exact: true }).click();
@@ -77,7 +79,7 @@ test('validation, persistence, month navigation and mobile layout', async ({ pag
   await page.reload();
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
   await expect(page.getByText('Запись для перезагрузки', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Тестовый телефон' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Алексей' })).toBeVisible();
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'Summary' })

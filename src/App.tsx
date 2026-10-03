@@ -23,7 +23,7 @@ import {
   Settings,
   ShoppingBasket,
   ShoppingBag,
-  Smartphone,
+  UserRound,
   Trash2,
   Wallet,
   X,
@@ -122,7 +122,7 @@ export default function App() {
   const [loadError, setLoadError] = useState('');
   const [tab, setTab] = useState<Tab>('add');
   const [month, setMonth] = useState(today().slice(0, 7));
-  const [device, setDevice] = useState(() => localStorage.getItem('vmeste.device') ?? '');
+  const [userName, setUserName] = useState(() => localStorage.getItem('vmeste.device') ?? '');
   const [settings, setSettings] = useState(false);
   const [notice, setNotice] = useState('');
   const [editing, setEditing] = useState<Expense | null>(null);
@@ -414,9 +414,9 @@ export default function App() {
               }
             </span>
           </div>
-          <button className="device-pill" onClick={() => setSettings(true)}>
-            <Smartphone size={15} />
-            <span>{device || 'Назвать устройство'}</span>
+          <button className="user-pill" onClick={() => setSettings(true)}>
+            <UserRound size={15} />
+            <span>{userName || 'Указать имя'}</span>
             <span className={`status-dot ${demo ? 'demo-dot' : ''}`} />
           </button>
         </header>
@@ -497,9 +497,9 @@ export default function App() {
                       categories={activeCategories}
                       userId={session!}
                       demo={demo}
-                      device={device}
+                      userName={userName}
                       onSave={() => afterSave('Расход сохранен')}
-                      onDevice={() => setSettings(true)}
+                      onName={() => setSettings(true)}
                     />
                   </section>
                   <aside className="entry-aside">
@@ -717,9 +717,9 @@ export default function App() {
             categories={data.categories.filter((c) => !c.archived || c.id === editing.category_id)}
             userId={session!}
             demo={demo}
-            device={device}
+            userName={userName}
             existing={editing}
-            onDevice={() => setSettings(true)}
+            onName={() => setSettings(true)}
             onSave={async () => {
               setEditing(null);
               await afterSave('Расход обновлен');
@@ -787,13 +787,13 @@ export default function App() {
       )}
       {settings && (
         <Modal title="Настройки" close={() => setSettings(false)}>
-          <DeviceSettings
-            device={device}
+          <UserSettings
+            userName={userName}
             onSave={(name) => {
               localStorage.setItem('vmeste.device', name);
-              setDevice(name);
+              setUserName(name);
               setSettings(false);
-              setNotice('Название устройства сохранено');
+              setNotice('Имя пользователя сохранено');
             }}
           />
           <div className="settings-separator" />
@@ -872,18 +872,18 @@ function ExpenseForm({
   categories,
   userId,
   demo,
-  device,
+  userName,
   existing,
   onSave,
-  onDevice,
+  onName,
 }: {
   categories: Category[];
   userId: string;
   demo: boolean;
-  device: string;
+  userName: string;
   existing?: Expense;
   onSave: () => Promise<void>;
-  onDevice: () => void;
+  onName: () => void;
 }) {
   const [amount, setAmount] = useState(
     existing ? String(existing.amount_kopecks / 100).replace('.', ',') : '',
@@ -907,8 +907,8 @@ function ExpenseForm({
       setError('Выберите категорию.');
       return;
     }
-    if (!device && !existing) {
-      setError('Назовите устройство, чтобы видеть, кто добавил расход.');
+    if (!userName && !existing) {
+      setError('Укажите свое имя, чтобы видеть, кто добавил расход.');
       return;
     }
     submitLock.current = true;
@@ -923,7 +923,7 @@ function ExpenseForm({
           category_id: categoryId,
           spent_on: date,
           note: note.trim(),
-          device_name: existing?.device_name ?? device,
+          device_name: existing?.device_name ?? userName,
           created_at: existing?.created_at ?? new Date().toISOString(),
         },
         !!existing,
@@ -1001,12 +1001,12 @@ function ExpenseForm({
             maxLength={500}
           />
         </label>
-        <div className="form-device">
-          <Smartphone size={15} />
-          {existing?.device_name || device || 'Устройство пока не названо'}
+        <div className="form-author">
+          <UserRound size={15} />
+          {existing?.device_name || userName || 'Имя пока не указано'}
           {!existing && (
-            <button type="button" onClick={onDevice}>
-              {device ? 'Изменить' : 'Назвать'}
+            <button type="button" onClick={onName}>
+              {userName ? 'Изменить' : 'Указать'}
             </button>
           )}
         </div>
@@ -1132,8 +1132,8 @@ function CategoryForm({
     </form>
   );
 }
-function DeviceSettings({ device, onSave }: { device: string; onSave: (name: string) => void }) {
-  const [name, setName] = useState(device);
+function UserSettings({ userName, onSave }: { userName: string; onSave: (name: string) => void }) {
+  const [name, setName] = useState(userName);
   return (
     <form
       onSubmit={(e) => {
@@ -1142,20 +1142,20 @@ function DeviceSettings({ device, onSave }: { device: string; onSave: (name: str
       }}
     >
       <p className="muted">
-        Название видно рядом с добавленными расходами. Оно хранится на этом устройстве.
+        Имя видно рядом с добавленными расходами. Каждый из вас указывает свое имя в своем браузере.
       </p>
       <label>
-        Название устройства
+        Имя пользователя
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={40}
           required
-          placeholder="Например, телефон жены"
+          placeholder="Например, Анна"
         />
       </label>
       <button className="primary full-width" disabled={!name.trim()}>
-        Сохранить название
+        Сохранить имя
       </button>
     </form>
   );

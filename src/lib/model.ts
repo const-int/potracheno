@@ -81,7 +81,7 @@ export function csv(data: Data) {
   return (
     '\uFEFF' +
     [
-      ['Дата', 'Сумма, ₽', 'Категория', 'Комментарий', 'Устройство'],
+      ['Дата', 'Сумма, ₽', 'Категория', 'Комментарий', 'Автор'],
       ...data.expenses.map((e) => [
         e.spent_on,
         (e.amount_kopecks / 100).toFixed(2).replace('.', ','),
@@ -124,7 +124,7 @@ export function demoData(): Data {
       note,
       spent_on:
         today().slice(0, 8) + String(Math.max(1, Number(today().slice(8)) - i)).padStart(2, '0'),
-      device_name: i % 2 ? 'Телефон жены' : 'Мой телефон',
+      device_name: i % 2 ? 'Анна' : 'Иван',
       created_at: new Date(Date.now() - i * 3600000).toISOString(),
     })),
   };

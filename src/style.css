@@ -355,7 +355,7 @@ fieldset {
 .breadcrumb span {
   color: #556151;
 }
-.device-pill {
+.user-pill {
   border: 1px solid #e2e5da;
   border-radius: 24px;
   background: #fcfcf9;
@@ -364,7 +364,7 @@ fieldset {
   color: #7e8878;
   max-width: 250px;
 }
-.device-pill span:first-of-type {
+.user-pill span:first-of-type {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -542,7 +542,7 @@ fieldset {
   color: #a0a493;
   font-weight: 400;
 }
-.form-device {
+.form-author {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -550,7 +550,7 @@ fieldset {
   font-size: 10px;
   color: #969d8e;
 }
-.form-device button {
+.form-author button {
   margin-left: auto;
   text-decoration: underline;
   font-size: 10px;
@@ -1413,7 +1413,7 @@ fieldset {
     font-size: 10px;
     gap: 7px;
   }
-  .device-pill {
+  .user-pill {
     padding: 8px 10px;
     max-width: 175px;
     font-size: 9px;
