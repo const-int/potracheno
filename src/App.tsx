@@ -965,9 +965,7 @@ function ExpenseForm({
   existing?: Expense;
   onSave: () => Promise<void>;
 }) {
-  const [amount, setAmount] = useState(
-    existing ? String(existing.amount_kopecks / 100).replace('.', ',') : '',
-  );
+  const [amount, setAmount] = useState(existing ? String(existing.amount_kopecks / 100) : '');
   const [categoryId, setCategoryId] = useState(existing?.category_id ?? '');
   const [date, setDate] = useState(existing?.spent_on ?? today());
   const [note, setNote] = useState(existing?.note ?? '');
@@ -980,7 +978,7 @@ function ExpenseForm({
     setError('');
     const kopecks = parseAmount(amount);
     if (kopecks === null) {
-      setError('Укажите сумму больше нуля, до 999 999 999,99 ₽, с точностью до копеек.');
+      setError('Укажите сумму больше нуля, до 999,999,999.99 ₽, с точностью до копеек.');
       return;
     }
     if (!categories.some((c) => c.id === categoryId)) {
@@ -1313,7 +1311,7 @@ function Summary({
         </section>
         <section className="panel stat">
           <span>Количество расходов</span>
-          <strong>{expenses.length}</strong>
+          <strong>{expenses.length.toLocaleString('en-US')}</strong>
           <small>Записей за выбранный месяц</small>
         </section>
         <section className="panel stat">
@@ -1384,7 +1382,7 @@ function Summary({
                       <span style={{ width: `${(c.total / total) * 100}%`, background: c.color }} />
                     </div>
                     <span>
-                      {((c.total / total) * 100).toLocaleString('ru-RU', {
+                      {((c.total / total) * 100).toLocaleString('en-US', {
                         maximumFractionDigits: 1,
                       })}
                       %

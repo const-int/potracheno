@@ -28,17 +28,17 @@ export default function MobileExpenseEntry({
   const currentPage = Math.min(page, pageCount - 1);
   const kopecks = parseAmount(amount);
   const selected = categories.some((c) => c.id === categoryId);
-  const [rubles, fraction] = (amount || '0').split(',');
+  const [rubles, fraction] = (amount || '0').split('.');
   const display =
-    Number(rubles).toLocaleString('ru-RU') + (fraction !== undefined ? ',' + fraction : '');
+    Number(rubles).toLocaleString('en-US') + (fraction !== undefined ? '.' + fraction : '');
 
   function press(key: string) {
     if (locked.current) return;
     setError('');
     setAmount((previous) => {
-      if (key === ',') return previous.includes(',') ? previous : (previous || '0') + ',';
+      if (key === '.') return previous.includes('.') ? previous : (previous || '0') + '.';
       const next = previous === '0' ? key : previous + key;
-      return /^\d{1,9}(,\d{0,2})?$/.test(next) ? next : previous;
+      return /^\d{1,9}(\.\d{0,2})?$/.test(next) ? next : previous;
     });
   }
   async function submit() {
@@ -153,11 +153,11 @@ export default function MobileExpenseEntry({
         </div>
       )}
       <div className="expense-keypad" role="group" aria-label="Цифровая клавиатура">
-        {['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0'].map((key) => (
+        {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0'].map((key) => (
           <button
             key={key}
             disabled={busy}
-            aria-label={key === ',' ? 'Десятичная запятая' : key}
+            aria-label={key === '.' ? 'Десятичная точка' : key}
             onClick={() => press(key)}
           >
             {key}

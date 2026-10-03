@@ -42,18 +42,20 @@ export function today() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 export function parseAmount(value: string): number | null {
-  const clean = value.replace(/[\s\u00a0]/g, '').replace(',', '.');
+  const raw = value.replace(/[\s\u00a0]/g, '');
+  const clean = /^[1-9]\d{0,2}(,\d{3})+(\.\d{1,2})?$/.test(raw)
+    ? raw.replaceAll(',', '')
+    : raw.replace(',', '.');
   if (!/^\d{1,9}(\.\d{1,2})?$/.test(clean)) return null;
   const [rubles, fraction = ''] = clean.split('.');
   const result = Number(rubles) * 100 + Number(fraction.padEnd(2, '0'));
   return result > 0 && result <= 99_999_999_999 ? result : null;
 }
 export const money = (kopecks: number) =>
-  new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'RUB',
+  new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: kopecks % 100 ? 2 : 0,
     maximumFractionDigits: kopecks % 100 ? 2 : 0,
-  }).format(kopecks / 100);
+  }).format(kopecks / 100) + ' ₽';
 export function monthLabel(month: string) {
   return new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' })
     .format(new Date(`${month}-01T12:00:00`))
@@ -84,7 +86,7 @@ export function csv(data: Data) {
       ['Дата', 'Сумма, ₽', 'Категория', 'Комментарий', 'Автор'],
       ...data.expenses.map((e) => [
         e.spent_on,
-        (e.amount_kopecks / 100).toFixed(2).replace('.', ','),
+        (e.amount_kopecks / 100).toFixed(2),
         data.categories.find((c) => c.id === e.category_id)?.name ?? 'Категория',
         e.note,
         e.device_name,

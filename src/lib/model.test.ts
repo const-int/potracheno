@@ -4,6 +4,8 @@ import { csv, parseAmount, shiftMonth, summarize, type Category, type Expense } 
 describe('amounts stored as integer kopecks', () => {
   it('parses comma, dot and grouped rubles without float arithmetic', () => {
     expect(parseAmount('1 234,56')).toBe(123456);
+    expect(parseAmount('1,234.56')).toBe(123456);
+    expect(parseAmount('1,000,000')).toBe(100000000);
     expect(parseAmount('0.29')).toBe(29);
     expect(parseAmount('12,5')).toBe(1250);
     expect(parseAmount('999999999.99')).toBe(99999999999);
@@ -51,7 +53,7 @@ it('exports exact kopecks and escapes quotes, newlines and spreadsheet formulas'
   };
   const result = csv({ expenses: [e], categories });
   expect(result.startsWith('\uFEFF')).toBe(true);
-  expect(result).toContain('"1,29"');
+  expect(result).toContain('"1.29"');
   expect(result).toContain('"\'=HYPERLINK(""x"")\nновая строка"');
   expect(result).toContain('"\'+Телефон"');
 });

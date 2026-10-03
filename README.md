@@ -6,6 +6,8 @@ Built with React, TypeScript, and Vite. Supabase handles storage and authenticat
 GitHub Pages hosts the frontend. No custom backend is required.
 
 The application interface is in Russian.
+Amounts use commas to group thousands and a decimal point for kopecks
+(for example, `1,234.56 ₽`). CSV amounts use a decimal point without grouping.
 
 On phones, the app opens on the expense tab. Enter an amount using the built-in
 numeric keypad, choose a category, and tap the checkmark key to save. The entry
