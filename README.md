@@ -1,55 +1,58 @@
-# Вместе — семейные расходы
+# Together — family expenses
 
-Мобильное веб-приложение для одной семьи: общий аккаунт, расходы в рублях,
-динамические категории, история, статистика по месяцам и экспорт CSV.
-React + TypeScript + Vite. Хранение и вход — Supabase. Хостинг — GitHub Pages.
-Собственного backend нет.
+A mobile web app for one family: a shared account, expenses in rubles,
+custom categories, expense history, monthly insights, and CSV export.
+Built with React, TypeScript, and Vite. Supabase handles storage and authentication;
+GitHub Pages hosts the frontend. No custom backend is required.
 
-## Запустить локально
+The application interface is in Russian.
 
-Нужен Node.js 22.12+ (рекомендуется 24).
+## Run locally
+
+Requires Node.js 22.12 or later (version 24 is recommended).
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Открыть http://localhost:5173. Пока Supabase не настроен, нажмите
-«Открыть деморежим». Примеры и изменения сохраняются только в этом браузере
-и не синхронизируются с другими устройствами. Деморежим отделен от общей базы.
-Перед первым расходом задайте название устройства в настройках.
+Open http://localhost:5173. Until Supabase is configured, use the demo button
+on the welcome screen. Sample data and changes are saved only in the current
+browser and do not sync between devices. Demo storage is separate from the
+shared database. Set a device name in Settings before adding your first expense.
 
-## Подключить Supabase
+## Connect Supabase
 
-1. Создайте проект на https://supabase.com/dashboard с бесплатным тарифом.
-2. В SQL Editor выполните `supabase/schema.sql` целиком один раз в новом проекте.
-3. В Authentication → Users создайте одного пользователя с email и паролем
-   (для административного создания подтвердите email). На обоих телефонах
-   будете входить с этими данными. Отключите публичную регистрацию в настройках
-   Authentication. Формы регистрации в приложении нет.
-4. В настройках проекта скопируйте Project URL и **publishable key**.
-   Не используйте secret key или service_role key: они обходят защиту базы.
-5. Скопируйте `.env.example` в `.env.local` и заполните оба значения.
-   Перезапустите `npm run dev`. Пароль аккаунта в код и `.env` не записывается.
-6. Войдите в приложение. На вкладке «Категории» добавьте базовый список
-   или собственные категории. После этого можно добавлять расходы.
+1. Create a project on the free plan at https://supabase.com/dashboard.
+2. Run the entire `supabase/schema.sql` file once in the new project's SQL Editor.
+3. In Authentication → Users, create one user with an email and password.
+   Confirm the email when creating the user administratively. Use these same
+   credentials on both phones. Disable public sign-ups in Authentication settings.
+   The application has no registration form.
+4. Copy the Project URL and **publishable key** from the project settings.
+   Do not use a secret key or service_role key: these bypass database protection.
+5. Copy `.env.example` to `.env.local` and fill in both values.
+   Restart `npm run dev`. Never put the account password in the code or `.env`.
+6. Sign in to the application. Open Categories and add the default list or create
+   your own categories. You can then start recording expenses.
 
-Доступ защищен RLS: каждый запрос ограничен владельцем записи (`auth.uid()`).
-Составной внешний ключ не дает привязать расход к чужой категории.
-Публичный ключ предназначен для браузера; защита основана на сессии и RLS.
-Категории архивируются, а не удаляются, чтобы история сохранялась.
+Row Level Security (RLS) restricts each request to the record's owner (`auth.uid()`).
+A composite foreign key prevents expenses from referencing another user's category.
+The publishable key is intended for browser use; access protection relies on the
+session and RLS. Categories are archived rather than deleted to preserve history.
 
-Для проверки подключения: войдите с двух устройств, добавьте расход с первого,
-вернитесь в приложение на втором и проверьте запись. Обновление происходит
-при возвращении во вкладку, каждые 30 секунд в активной вкладке и после изменения.
-При ошибке обновления показывается сообщение и последняя загруженная версия.
-Работа без интернета и очередь офлайн-расходов в эту версию не входят.
+To check the connection, sign in on two devices, add an expense on the first,
+and return to the app on the second to confirm that it appears. Data refreshes
+when you return to the browser tab, every 30 seconds while the tab is active,
+and after changes. If a refresh fails, the app displays an error and the last
+loaded data. Offline operation and queued offline expenses are not supported
+in this version.
 
-## Опубликовать на GitHub Pages
+## Publish to GitHub Pages
 
-1. Создайте **публичный** репозиторий `potracheno` на GitHub без README.
-   Для бесплатного GitHub Pages используйте публичный репозиторий.
-2. Добавьте remote и отправьте файлы:
+1. Create a **public** GitHub repository named `potracheno` without an initial README.
+   Use a public repository for free GitHub Pages hosting.
+2. Add the remote and push the files:
 
    ```bash
    git branch -M main
@@ -58,17 +61,18 @@ npm run dev
    git push -u origin main
    ```
 
-3. В Settings → Secrets and variables → Actions → **Variables** добавьте
-   `VITE_SUPABASE_URL` и `VITE_SUPABASE_PUBLISHABLE_KEY`.
-   Значения попадут в публичную сборку — это ожидаемо для publishable key.
-4. В Settings → Pages выберите Source: **GitHub Actions**.
-5. В Actions запустите Deploy to GitHub Pages → Run workflow, если первый
-   запуск произошел до заполнения переменных. Итоговый URL появится в workflow.
+3. In Settings → Secrets and variables → Actions → **Variables**, add
+   `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
+   These values are included in the public build, as expected for a publishable key.
+4. In Settings → Pages, select **GitHub Actions** as the source.
+5. If the first deployment ran before the variables were configured, open
+   Actions → Deploy to GitHub Pages → Run workflow. The workflow displays
+   the published site URL.
 
-Относительный base Vite позволяет разместить сборку в подпапке репозитория.
-Переходы между экранами не меняют URL и не требуют серверного роутинга.
+Vite's relative base supports hosting under a repository subpath. Navigation
+between screens does not change the URL and requires no server-side routing.
 
-## Проверки
+## Checks
 
 ```bash
 npm test
@@ -77,23 +81,23 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Unit-тесты проверяют расчеты, даты, CSV и SQL-схему с RLS в локальном PostgreSQL
-(PGlite, без отдельного сервера). Браузерные тесты проверяют основные
-сценарии в деморежиме. SQL-проверка `supabase/tests/access.sql` предназначена
-для запуска в SQL Editor после схемы; ее нельзя запускать на чужой базе.
-В ней все тестовые изменения откатываются. Локальная проверка RLS использует
-упрощенный заменитель auth.users и auth.uid(). Проверка реального входа,
-авторизации и совместной работы требует созданного проекта Supabase.
+Unit tests cover calculations, dates, CSV export, and the SQL schema with RLS
+in embedded PostgreSQL (PGlite, without a separate server). Browser tests cover
+the main demo-mode workflows. The SQL check in `supabase/tests/access.sql`
+is intended to run in the project's SQL Editor after applying the schema;
+do not run it against someone else's database. All test changes are rolled back.
+The local RLS test uses simplified substitutes for `auth.users` and `auth.uid()`.
+Testing real sign-in, authentication, and shared access requires a Supabase project.
 
-## Сохранность данных
+## Data preservation
 
-Экспорт CSV включает **всю историю**, а не только выбранный месяц, и подписи
-устройств. Сохраняйте его периодически. Обратный импорт CSV пока не реализован.
-Название устройства хранится в localStorage и после очистки браузера задается
-заново. При редактировании сохраняется устройство, создавшее запись.
-Переименование категории отражается во всей истории этой категории.
+CSV export includes **the entire expense history**, not just the selected month,
+along with device names. Save exports periodically. CSV import is not implemented.
+Device names are stored in localStorage and must be set again after clearing
+browser data. Editing an expense preserves the name of the device that created it.
+Renaming a category updates its name throughout the expense history.
 
-У бесплатного Supabase есть ограничения и возможна приостановка проекта при
-низкой активности в течение семи дней. Проверяйте актуальные условия:
-https://supabase.com/pricing и
+The free Supabase plan has limits, and projects may be paused after seven days
+of low activity. Check the current terms:
+https://supabase.com/pricing and
 https://supabase.com/docs/guides/platform/free-project-pausing.
