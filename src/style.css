@@ -1208,6 +1208,10 @@ fieldset {
   color: #a7b095;
   padding: 20px;
 }
+.name-prompt {
+  max-width: 440px;
+  margin: 60px auto;
+}
 @media (min-width: 1450px) {
   .content {
     padding-top: 45px;

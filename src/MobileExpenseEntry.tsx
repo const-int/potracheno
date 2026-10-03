@@ -44,7 +44,7 @@ export default function MobileExpenseEntry({
   async function submit() {
     if (locked.current || kopecks === null || !selected) return;
     if (!userName.trim()) {
-      setError('Укажите свое имя в настройках вверху экрана.');
+      setError('Укажите свое имя при входе.');
       return;
     }
     locked.current = true;

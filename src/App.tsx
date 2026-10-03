@@ -276,6 +276,23 @@ export default function App() {
     }
   }
 
+  function rememberName(name: string) {
+    const value = name.trim();
+    localStorage.setItem('vmeste.device', value);
+    setUserName(value);
+  }
+
+  if (session && !userName.trim())
+    return (
+      <div className="login-page">
+        <Brand />
+        <section className="login-card name-prompt">
+          <h2>Как вас зовут?</h2>
+          <NamePrompt userName="" onSave={rememberName} />
+        </section>
+      </div>
+    );
+
   if (!session)
     return (
       <div className="login-page">
@@ -325,7 +342,12 @@ export default function App() {
             {authLoading ? (
               <p role="status">Проверяем вход…</p>
             ) : supabase ? (
-              <Login onError={setNotice} />
+              <Login
+                userName={userName}
+                onNameChange={setUserName}
+                onSignedIn={rememberName}
+                onError={setNotice}
+              />
             ) : (
               <div className="setup-note">
                 <CircleHelp size={20} />
@@ -334,7 +356,10 @@ export default function App() {
             )}
             <button
               className={supabase ? 'secondary demo-login' : 'primary demo-login'}
-              onClick={() => setDemo(true)}
+              onClick={() => {
+                rememberName(userName || 'Демо');
+                setDemo(true);
+              }}
             >
               Открыть деморежим <ArrowRight size={18} />
             </button>
@@ -423,10 +448,12 @@ export default function App() {
               }
             </span>
           </div>
-          <button className="user-pill" onClick={() => setSettings(true)}>
-            <UserRound size={15} />
-            <span>{userName || 'Указать имя'}</span>
-            <span className={`status-dot ${demo ? 'demo-dot' : ''}`} />
+          <button
+            className="icon-button settings-button"
+            aria-label="Настройки"
+            onClick={() => setSettings(true)}
+          >
+            <Settings size={19} />
           </button>
         </header>
         <div className="content">
@@ -520,7 +547,6 @@ export default function App() {
                       demo={demo}
                       userName={userName}
                       onSave={() => afterSave('Расход сохранен')}
-                      onName={() => setSettings(true)}
                     />
                   </section>
                   <aside className="entry-aside">
@@ -754,7 +780,6 @@ export default function App() {
             demo={demo}
             userName={userName}
             existing={editing}
-            onName={() => setSettings(true)}
             onSave={async () => {
               setEditing(null);
               await afterSave('Расход обновлен');
@@ -822,15 +847,7 @@ export default function App() {
       )}
       {settings && (
         <Modal title="Настройки" close={() => setSettings(false)}>
-          <UserSettings
-            userName={userName}
-            onSave={(name) => {
-              localStorage.setItem('vmeste.device', name);
-              setUserName(name);
-              setSettings(false);
-              setNotice('Имя пользователя сохранено');
-            }}
-          />
+          <p className="muted">{userName}</p>
           <div className="settings-separator" />
           <button className="secondary full-width" onClick={exportData} disabled={exportBusy}>
             <Download size={17} />
@@ -856,11 +873,27 @@ function Brand() {
     </div>
   );
 }
-function Login({ onError }: { onError: (message: string) => void }) {
+function Login({
+  userName,
+  onNameChange,
+  onSignedIn,
+  onError,
+}: {
+  userName: string;
+  onNameChange: (name: string) => void;
+  onSignedIn: (name: string) => void;
+  onError: (message: string) => void;
+}) {
   const [busy, setBusy] = useState(false);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const values = new FormData(e.currentTarget);
+    const name = userName.trim();
+    if (!name) {
+      onError('Укажите свое имя.');
+      return;
+    }
+    onError('');
     setBusy(true);
     try {
       const { error } = await supabase!.auth.signInWithPassword({
@@ -868,6 +901,7 @@ function Login({ onError }: { onError: (message: string) => void }) {
         password: String(values.get('password')),
       });
       if (error) throw error;
+      onSignedIn(name);
     } catch (error) {
       onError(errorMessage(error));
     } finally {
@@ -896,6 +930,19 @@ function Login({ onError }: { onError: (message: string) => void }) {
           placeholder="Ваш общий пароль"
         />
       </label>
+      <label>
+        Имя пользователя
+        <input
+          name="display_name"
+          autoComplete="name"
+          value={userName}
+          onChange={(e) => onNameChange(e.target.value)}
+          required
+          maxLength={40}
+          placeholder="Например, Анна"
+          disabled={busy}
+        />
+      </label>
       <button className="primary full-width" disabled={busy}>
         {busy ? 'Входим…' : 'Войти'}
         <ArrowRight size={18} />
@@ -910,7 +957,6 @@ function ExpenseForm({
   userName,
   existing,
   onSave,
-  onName,
 }: {
   categories: Category[];
   userId: string;
@@ -918,7 +964,6 @@ function ExpenseForm({
   userName: string;
   existing?: Expense;
   onSave: () => Promise<void>;
-  onName: () => void;
 }) {
   const [amount, setAmount] = useState(
     existing ? String(existing.amount_kopecks / 100).replace('.', ',') : '',
@@ -1039,11 +1084,6 @@ function ExpenseForm({
         <div className="form-author">
           <UserRound size={15} />
           {existing?.device_name || userName || 'Имя пока не указано'}
-          {!existing && (
-            <button type="button" onClick={onName}>
-              {userName ? 'Изменить' : 'Указать'}
-            </button>
-          )}
         </div>
         {error && (
           <p className="form-error" role="alert">
@@ -1167,7 +1207,7 @@ function CategoryForm({
     </form>
   );
 }
-function UserSettings({ userName, onSave }: { userName: string; onSave: (name: string) => void }) {
+function NamePrompt({ userName, onSave }: { userName: string; onSave: (name: string) => void }) {
   const [name, setName] = useState(userName);
   return (
     <form
@@ -1177,7 +1217,7 @@ function UserSettings({ userName, onSave }: { userName: string; onSave: (name: s
       }}
     >
       <p className="muted">
-        Имя видно рядом с добавленными расходами. Каждый из вас указывает свое имя в своем браузере.
+        Имя видно рядом с добавленными расходами. Укажите свое имя для подписи расходов.
       </p>
       <label>
         Имя пользователя

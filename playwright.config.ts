@@ -11,6 +11,10 @@ export default defineConfig({
     command: 'npm run dev -- --port 4174 --strictPort',
     url: 'http://127.0.0.1:4174',
     reuseExistingServer: !process.env.CI,
+    env: {
+      VITE_SUPABASE_URL: 'https://potracheno-test.supabase.co',
+      VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test',
+    },
   },
   projects: [{ name: 'mobile-chromium', use: { ...devices['Pixel 7'], browserName: 'chromium' } }],
 });

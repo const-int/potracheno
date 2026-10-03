@@ -28,8 +28,10 @@ npm run dev
 Open http://localhost:5173. Until Supabase is configured, use the demo button
 on the welcome screen. Sample data and changes are saved only in the current
 browser and do not sync between devices. Demo storage is separate from the
-shared database. Set your name in Settings before adding your first expense. Each person enters
-their own name in their browser while using the same shared login.
+shared database. The third sign-in field asks for your name. Each person enters
+their own name while using the same shared email and password. Your name stays in
+your browser and is recorded as the author of new expenses. To change it, sign out
+and enter a different name when signing in again.
 
 ## Connect Supabase
 

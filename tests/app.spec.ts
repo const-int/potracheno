@@ -9,12 +9,10 @@ async function enterAmount(page: Page, amount: string) {
 }
 
 test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('vmeste.device', 'Алексей'));
   await page.goto('/');
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
   await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
-  await page.getByRole('button', { name: 'Указать имя' }).click();
-  await page.getByLabel('Имя пользователя', { exact: true }).fill('Алексей');
-  await page.getByRole('button', { name: 'Сохранить имя' }).click();
 });
 
 test('complete mobile flow: create, edit, archive category, summary, export and delete', async ({
@@ -61,7 +59,7 @@ test('complete mobile flow: create, edit, archive category, summary, export and 
     .getByRole('button', { name: 'История' })
     .click();
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Алексей', exact: true }).click();
+  await page.getByRole('button', { name: 'Настройки', exact: true }).click();
   await page.getByRole('button', { name: 'Экспортировать все расходы в CSV' }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^family-expenses-.*\.csv$/);
@@ -99,7 +97,7 @@ test('validation, persistence, month navigation and mobile layout', async ({ pag
   await expect(page.locator('.expense-row').filter({ hasText: 'Алексей' })).toContainText(
     '20,29 ₽',
   );
-  await expect(page.getByRole('button', { name: 'Алексей' })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('vmeste.device'))).toBe('Алексей');
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'Summary' })
