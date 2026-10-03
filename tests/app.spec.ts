@@ -232,3 +232,53 @@ test('history and summary keep the mobile interface compact', async ({ page }) =
   expect(order.chartBottom).toBeLessThan(order.statsTop);
   await page.screenshot({ path: 'test-results/summary-compact.png', fullPage: true });
 });
+
+test('first category is selected automatically and used when saving', async ({ page }) => {
+  const firstCategory = page.locator('.quick-category-grid button').first();
+  await expect(firstCategory).toHaveAttribute('aria-pressed', 'true');
+  const firstId = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).categories[0].id,
+  );
+  await enterAmount(page, '1');
+  await expect(page.getByRole('button', { name: 'Сохранить расход', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
+  await expect(page.getByText('Расход сохранен', { exact: true })).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses[0].category_id,
+    ),
+  ).toBe(firstId);
+});
+
+test('mobile toolbar height stays fixed across tabs, with titles and no tap highlight', async ({
+  page,
+}) => {
+  const tabs = [
+    ['Расход', 'Добавить расход'],
+    ['История', 'История расходов'],
+    ['Summary', 'Общая картина'],
+    ['Категории', 'Категории расходов'],
+  ] as const;
+  for (const [width, height] of [
+    [320, 568],
+    [390, 844],
+  ]) {
+    await page.setViewportSize({ width, height });
+    const measurements: number[] = [];
+    for (const [tab, title] of tabs) {
+      await page
+        .getByRole('navigation', { name: 'Мобильная навигация' })
+        .getByRole('button', { name: tab, exact: true })
+        .click();
+      await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
+      const state = await page.evaluate(() => ({
+        height: document.querySelector('.mobile-nav')!.getBoundingClientRect().height,
+        highlight: getComputedStyle(document.querySelector('.mobile-nav button')!)
+          .webkitTapHighlightColor,
+      }));
+      measurements.push(state.height);
+      expect(state.highlight).toBe('rgba(0, 0, 0, 0)');
+    }
+    expect(new Set(measurements).size).toBe(1);
+  }
+});

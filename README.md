@@ -11,7 +11,8 @@ Amounts use commas to group thousands and a decimal point for kopecks
 
 On phones, the app opens on the expense tab. Enter an amount using the built-in
 numeric keypad, choose a category, and tap the checkmark key to save. The entry
-screen fits the viewport without page scrolling or the phone's native keyboard.
+screen preselects the first available category.
+It fits the viewport without page scrolling or the phone's native keyboard.
 New mobile expenses use today's date and an empty note. More than eight categories
 are displayed on additional pages. Dates and notes can still be edited in History.
 Mobile History shows the month selector, total, and expense list. Summary places

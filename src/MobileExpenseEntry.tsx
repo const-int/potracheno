@@ -19,7 +19,7 @@ export default function MobileExpenseEntry({
   onSave: () => Promise<void>;
 }) {
   const [amount, setAmount] = useState('');
-  const [categoryId, setCategoryId] = useState('');
+  const [categoryId, setCategoryId] = useState(() => categories[0]?.id ?? '');
   const [page, setPage] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +27,10 @@ export default function MobileExpenseEntry({
   const pageCount = Math.max(1, Math.ceil(categories.length / 8));
   const currentPage = Math.min(page, pageCount - 1);
   const kopecks = parseAmount(amount);
-  const selected = categories.some((c) => c.id === categoryId);
+  const selectedCategoryId = categories.some((c) => c.id === categoryId)
+    ? categoryId
+    : (categories[0]?.id ?? '');
+  const selected = !!selectedCategoryId;
   const [rubles, fraction] = (amount || '0').split('.');
   const display =
     Number(rubles).toLocaleString('en-US') + (fraction !== undefined ? '.' + fraction : '');
@@ -56,7 +59,7 @@ export default function MobileExpenseEntry({
         {
           id: crypto.randomUUID(),
           user_id: userId,
-          category_id: categoryId,
+          category_id: selectedCategoryId,
           amount_kopecks: kopecks,
           spent_on: today(),
           note: '',
@@ -107,8 +110,8 @@ export default function MobileExpenseEntry({
           {categories.slice(currentPage * 8, currentPage * 8 + 8).map((category) => (
             <button
               key={category.id}
-              className={`quick-category ${categoryId === category.id ? 'selected' : ''}`}
-              aria-pressed={categoryId === category.id}
+              className={`quick-category ${selectedCategoryId === category.id ? 'selected' : ''}`}
+              aria-pressed={selectedCategoryId === category.id}
               disabled={busy}
               onClick={() => {
                 setCategoryId(category.id);

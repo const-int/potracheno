@@ -7,7 +7,6 @@ import {
   BarChart3,
   Car,
   Check,
-  ChevronRight,
   CircleHelp,
   Coffee,
   Download,
@@ -435,19 +434,16 @@ export default function App() {
       </aside>
       <main className="main">
         <header className="topbar">
-          <div className="breadcrumb">
-            Наша семья <ChevronRight size={13} />{' '}
-            <span>
+          <h1 className="screen-title">
+            {
               {
-                {
-                  add: 'Добавить расход',
-                  history: 'История',
-                  summary: 'Summary',
-                  categories: 'Категории',
-                }[tab]
-              }
-            </span>
-          </div>
+                add: 'Добавить расход',
+                history: 'История расходов',
+                summary: 'Общая картина',
+                categories: 'Категории расходов',
+              }[tab]
+            }
+          </h1>
           <button
             className="icon-button settings-button"
             aria-label="Настройки"
@@ -966,7 +962,7 @@ function ExpenseForm({
   onSave: () => Promise<void>;
 }) {
   const [amount, setAmount] = useState(existing ? String(existing.amount_kopecks / 100) : '');
-  const [categoryId, setCategoryId] = useState(existing?.category_id ?? '');
+  const [categoryId, setCategoryId] = useState(existing?.category_id ?? categories[0]?.id ?? '');
   const [date, setDate] = useState(existing?.spent_on ?? today());
   const [note, setNote] = useState(existing?.note ?? '');
   const [busy, setBusy] = useState(false);
