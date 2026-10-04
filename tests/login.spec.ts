@@ -21,7 +21,7 @@ test('login keeps the shared credentials and saves a personal name after success
       category_id: category.id,
       amount_kopecks: 50000,
       spent_on: '2026-01-01',
-      note: 'Старый расход',
+      note: 'Старая трата',
       device_name: 'Анна',
       created_at: '2026-01-01T12:00:00Z',
     },
@@ -109,8 +109,8 @@ test('login keeps the shared credentials and saves a personal name after success
   const keypad = page.getByRole('group', { name: 'Цифровая клавиатура' });
   await keypad.getByRole('button', { name: '1', exact: true }).click();
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
-  await keypad.getByRole('button', { name: 'Сохранить расход' }).click();
-  await expect(page.getByText('Расход сохранен', { exact: true })).toBeVisible();
+  await keypad.getByRole('button', { name: 'Сохранить трату' }).click();
+  await expect(page.getByText('Трата сохранена', { exact: true })).toBeVisible();
   expect(expenses).toHaveLength(2);
   expect(expenses[0].device_name).toBe('Анна');
   expect(expenses[1]).toMatchObject({ user_id: userId, device_name: 'Мария', amount_kopecks: 100 });

@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('vmeste.device', 'Алексей'));
   await page.goto('/');
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  await page.getByLabel('Сумма траты', { exact: true }).waitFor();
 });
 
 test('complete mobile flow: create, edit category, summary, export and delete', async ({
@@ -23,8 +23,8 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
 }) => {
   await enterAmount(page, '1234');
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
-  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
-  await expect(page.getByText('Расход сохранен', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
+  await expect(page.getByText('Трата сохранена', { exact: true })).toBeVisible();
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'История' })
@@ -39,7 +39,7 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
   await expect(
     page.getByRole('dialog').locator('.form-author, .category-picker .category-icon'),
   ).toHaveCount(0);
-  await page.getByRole('dialog').getByRole('textbox', { name: 'Сумма расхода' }).fill('1500');
+  await page.getByRole('dialog').getByRole('textbox', { name: 'Сумма траты' }).fill('1500');
   await page.getByRole('button', { name: 'Сохранить изменения' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByText('1,500 ₽', { exact: true })).toBeVisible();
@@ -68,7 +68,7 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
     .click();
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Настройки', exact: true }).click();
-  await page.getByRole('button', { name: 'Экспорт расходов в CSV' }).click();
+  await page.getByRole('button', { name: 'Экспорт трат в CSV' }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^family-expenses-.*\.csv$/);
   const stream = await download.createReadStream();
@@ -93,13 +93,13 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
 test('validation, persistence, month navigation and mobile layout', async ({ page }) => {
   await enterAmount(page, '0');
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Сохранить расход', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Сохранить трату', exact: true })).toBeDisabled();
   await enterAmount(page, '2029');
-  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
-  await expect(page.getByText('Расход сохранен', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
+  await expect(page.getByText('Трата сохранена', { exact: true })).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('0');
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'Трата', exact: true })
@@ -226,7 +226,7 @@ test('entry fits small phones and uses only the custom keypad', async ({ page })
       .locator('.expense-keypad')
       .evaluate((keypad) => keypad.getBoundingClientRect().top);
     expect(categoryBottom).toBeLessThanOrEqual(keypadTop);
-    await expect(page.getByLabel('Дата расхода')).toHaveCount(0);
+    await expect(page.getByLabel('Дата траты')).toHaveCount(0);
     await expect(page.getByLabel('Комментарий')).toHaveCount(0);
     const bounds = await page.evaluate(() => ({
       width: document.documentElement.scrollWidth,
@@ -250,10 +250,10 @@ test('entry fits small phones and uses only the custom keypad', async ({ page })
   ).toBeDisabled();
   await enterAmount(page, '2840');
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
-  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('2,840');
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('2,840');
   await page.screenshot({ path: 'test-results/mobile-entry.png' });
   await page.getByRole('button', { name: 'Удалить цифру' }).click();
-  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('284');
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('284');
 });
 
 test('extra categories are paged without scrolling, and new expenses get today and no note', async ({
@@ -278,12 +278,12 @@ test('extra categories are paged without scrolling, and new expenses get today a
   await page.getByRole('button', { name: 'Своя категория 3', exact: true }).click();
   await enterAmount(page, '123');
   await page.getByRole('button', { name: 'Удалить цифру' }).click();
-  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('12');
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('12');
   const previousCount = await page.evaluate(
     () => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses.length,
   );
-  await page.getByRole('button', { name: 'Сохранить расход' }).dblclick();
-  await expect(page.getByText('Расход сохранен', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Сохранить трату' }).dblclick();
+  await expect(page.getByText('Трата сохранена', { exact: true })).toBeVisible();
   const result = await page.evaluate(() => {
     const data = JSON.parse(localStorage.getItem('vmeste.demo.v1')!);
     const date = new Date();
@@ -295,7 +295,7 @@ test('extra categories are paged without scrolling, and new expenses get today a
   expect(result.expense.note).toBe('');
   expect(result.expense.spent_on).toBe(result.today);
   expect(result.expense.device_name).toBe('Алексей');
-  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('0');
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(
     true,
   );
@@ -306,7 +306,7 @@ test('history and summary keep the mobile interface compact', async ({ page }) =
   await navigation.getByRole('button', { name: 'История' }).click();
   await expect(page.locator('.page-heading')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Экспорт CSV', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: 'Расходы за месяц' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Траты за месяц' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Предыдущий месяц' })).toBeVisible();
   await navigation.getByRole('button', { name: 'Потрачено' }).click();
   await expect(page.locator('.page-heading')).toHaveCount(0);
@@ -326,9 +326,9 @@ test('first category is selected automatically and used when saving', async ({ p
     () => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).categories[0].id,
   );
   await enterAmount(page, '1');
-  await expect(page.getByRole('button', { name: 'Сохранить расход', exact: true })).toBeEnabled();
-  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
-  await expect(page.getByText('Расход сохранен', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Сохранить трату', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
+  await expect(page.getByText('Трата сохранена', { exact: true })).toBeVisible();
   expect(
     await page.evaluate(
       () => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses[0].category_id,
@@ -374,8 +374,8 @@ test('success toasts expire after two seconds and repeat notifications restart t
 }) => {
   await page.clock.install();
   await enterAmount(page, '1');
-  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
-  await expect(page.locator('.app-toast')).toContainText('Расход сохранен');
+  await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
+  await expect(page.locator('.app-toast')).toContainText('Трата сохранена');
   const position = await page.evaluate(() => ({
     toastAreaBottom: document.querySelector('.expense-toast-zone')!.getBoundingClientRect().bottom,
     keypadTop: document.querySelector('.expense-keypad')!.getBoundingClientRect().top,
@@ -383,14 +383,14 @@ test('success toasts expire after two seconds and repeat notifications restart t
   expect(position.toastAreaBottom).toBeLessThan(position.keypadTop);
   await page.clock.fastForward(1500);
   await enterAmount(page, '2');
-  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
+  await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
   await page.clock.fastForward(600);
-  await expect(page.locator('.app-toast')).toContainText('Расход сохранен');
+  await expect(page.locator('.app-toast')).toContainText('Трата сохранена');
   await page.clock.fastForward(1500);
   await expect(page.locator('.app-toast')).toHaveCount(0);
   await enterAmount(page, '3');
-  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
-  await expect(page.locator('.app-toast')).toContainText('Расход сохранен');
+  await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
+  await expect(page.locator('.app-toast')).toContainText('Трата сохранена');
   const navigation = page.getByRole('navigation', { name: 'Мобильная навигация' });
   await navigation.getByRole('button', { name: 'История', exact: true }).click();
   await expect(page.locator('.app-toast')).toHaveCount(0);
@@ -411,7 +411,7 @@ test('category deletion is inside the editor, needs confirmation, and preserves 
   await expect(
     page.getByRole('dialog').getByRole('button', { name: 'Удалить', exact: true }),
   ).toBeDisabled();
-  await expect(page.getByRole('dialog')).toContainText('есть расходы');
+  await expect(page.getByRole('dialog')).toContainText('есть траты');
   await page.getByRole('button', { name: 'Отмена', exact: true }).click();
   await page.getByRole('button', { name: 'Закрыть', exact: true }).click();
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
@@ -458,16 +458,16 @@ test('expense amount survives tab switches and clears after saving or leaving th
   for (const tab of ['История', 'Потрачено', 'Категории']) {
     await nav.getByRole('button', { name: tab, exact: true }).click();
     await nav.getByRole('button', { name: 'Трата', exact: true }).click();
-    await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('1,234');
+    await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('1,234');
   }
-  await page.getByRole('button', { name: 'Сохранить расход', exact: true }).click();
-  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
+  await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('0');
   await nav.getByRole('button', { name: 'История', exact: true }).click();
   await nav.getByRole('button', { name: 'Трата', exact: true }).click();
-  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('0');
   await enterAmount(page, '99');
   await page.getByRole('button', { name: 'Настройки', exact: true }).click();
   await page.getByRole('button', { name: 'Выйти из деморежима', exact: true }).click();
   await page.getByRole('button', { name: 'Открыть деморежим', exact: true }).click();
-  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('0');
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('0');
 });

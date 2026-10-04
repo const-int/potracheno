@@ -19,7 +19,7 @@ const normalizeHeader = (name: string) =>
     .replace(/[\s_,().₽:]+/g, ' ')
     .trim();
 const aliases = {
-  date: ['дата', 'дата расхода', 'date', 'spent on', 'expense date'],
+  date: ['дата', 'дата расхода', 'дата траты', 'date', 'spent on', 'expense date'],
   amount: [
     'сумма',
     'сумма руб',
@@ -29,7 +29,7 @@ const aliases = {
     'amount rubles',
     'expense amount',
   ],
-  category: ['категория', 'категория расхода', 'category'],
+  category: ['категория', 'категория расхода', 'категория траты', 'category'],
   author: [
     'автор',
     'устройство',
@@ -66,14 +66,12 @@ export function parseImport(source: string, defaultAuthor: string): ParsedImport
   if (!header?.length || !records.length)
     return {
       rows: [],
-      issues: [{ row: 1, message: 'В файле должны быть заголовки и хотя бы один расход.' }],
+      issues: [{ row: 1, message: 'В файле должны быть заголовки и хотя бы одна трата.' }],
     };
   if (records.length > maxImportRows)
     return {
       rows: [],
-      issues: [
-        { row: 1, message: `В одном файле можно импортировать до ${maxImportRows} расходов.` },
-      ],
+      issues: [{ row: 1, message: `В одном файле можно импортировать до ${maxImportRows} трат.` }],
     };
   const columns: Partial<Record<keyof typeof aliases, number>> = {};
   header.forEach((name, index) => {

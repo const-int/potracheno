@@ -89,12 +89,12 @@ export default function MobileExpenseEntry({
     <section
       className={`quick-entry ${pageCount > 1 ? 'has-category-pages' : ''} ${!categories.length ? 'has-no-categories' : ''}`}
       style={{ '--quick-category-rows': categoryRows } as CSSProperties}
-      aria-label="Новый расход"
+      aria-label="Новая трата"
     >
       <div className="quick-amount-row">
         <div className="quick-amount" data-length={display.length > 11 ? 'long' : 'short'}>
           <output
-            aria-label="Сумма расхода"
+            aria-label="Сумма траты"
             aria-live="polite"
             className={amount ? '' : 'is-empty'}
           >
@@ -107,7 +107,7 @@ export default function MobileExpenseEntry({
         </div>
       </div>
       <div className="quick-categories">
-        <div className="quick-category-grid" aria-label="Категории расходов">
+        <div className="quick-category-grid" aria-label="Категории трат">
           {visibleCategories.map((category) => (
             <button
               key={category.id}
@@ -175,7 +175,7 @@ export default function MobileExpenseEntry({
         ))}
         <button
           className="keypad-submit"
-          aria-label="Сохранить расход"
+          aria-label="Сохранить трату"
           disabled={busy || kopecks === null || !selected}
           onClick={() => void submit()}
         >

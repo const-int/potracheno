@@ -152,7 +152,7 @@ export default function CsvImport({
                     checked={skipDuplicates}
                     onChange={(event) => setSkipDuplicates(event.target.checked)}
                   />
-                  Пропускать уже существующие расходы
+                  Пропускать уже существующие траты
                 </label>
                 <p className="muted">Совпадение — одинаковые дата, сумма, категория и автор.</p>
                 {plan.newCategories.length > 0 && (
@@ -171,7 +171,7 @@ export default function CsvImport({
                     </li>
                   ))}
                 </ul>
-                {!plan.rows.length && <p className="muted">Новых расходов для импорта нет.</p>}
+                {!plan.rows.length && <p className="muted">Новых трат для импорта нет.</p>}
               </>
             )}
             <button
@@ -180,7 +180,7 @@ export default function CsvImport({
               onClick={() => void submit()}
             >
               <FileUp size={18} />
-              {busy ? 'Импортируем…' : `Импортировать расходы (${plan.rows.length})`}
+              {busy ? 'Импортируем…' : `Импортировать траты (${plan.rows.length})`}
             </button>
           </>
         )}

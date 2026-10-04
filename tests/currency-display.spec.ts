@@ -20,8 +20,8 @@ test('fractional expenses display rounded rubles and retain precision when editi
     .filter({ has: page.locator('.expense-amount', { hasText: '2,841 ₽' }) });
   await expect(row).toHaveCount(1);
   await row.getByRole('button', { name: 'Редактировать Продукты', exact: true }).click();
-  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveValue('2841');
-  await page.getByLabel('Дата расхода', { exact: true }).fill(original.spent_on.slice(0, 8) + '01');
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveValue('2841');
+  await page.getByLabel('Дата траты', { exact: true }).fill(original.spent_on.slice(0, 8) + '01');
   await page.getByRole('button', { name: 'Сохранить изменения' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(

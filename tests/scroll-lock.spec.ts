@@ -10,7 +10,7 @@ test('last content clears the bottom navigation with and without an iPhone safe 
 }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  await page.getByLabel('Сумма траты', { exact: true }).waitFor();
   for (const height of [520, 844]) {
     await page.setViewportSize({ width: 390, height });
     for (const inset of [0, 34]) {
@@ -42,7 +42,7 @@ test('every tab switch resets scroll, including returning to a previously scroll
   await page.setViewportSize({ width: 390, height: 520 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  await page.getByLabel('Сумма траты', { exact: true }).waitFor();
   await page.evaluate(() => {
     const data = JSON.parse(localStorage.getItem('vmeste.demo.v1')!);
     for (let i = 0; i < 40; i++)
@@ -57,7 +57,7 @@ test('every tab switch resets scroll, including returning to a previously scroll
   });
   await page.reload();
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  await page.getByLabel('Сумма траты', { exact: true }).waitFor();
   for (const name of ['История', 'Потрачено', 'Категории', 'История', 'Категории', 'Потрачено']) {
     await nav(page, name).click();
     await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
@@ -79,7 +79,7 @@ test('entry locks page scrolling on return from history while history and modals
 }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  await page.getByLabel('Сумма траты', { exact: true }).waitFor();
   await page.evaluate(() => {
     const data = JSON.parse(localStorage.getItem('vmeste.demo.v1')!);
     for (let i = 0; i < 40; i++)
@@ -102,7 +102,7 @@ test('entry locks page scrolling on return from history while history and modals
   );
   await nav(page, 'Трата').click();
   await expect(page.locator('html')).toHaveClass(/entry-viewport-locked/);
-  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('12');
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('12');
   await page.evaluate(() => {
     scrollTo(0, 500);
     window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
@@ -140,7 +140,7 @@ test('entry follows visible Chrome viewport changes and resume even when layout 
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  await page.getByLabel('Сумма траты', { exact: true }).waitFor();
   const testViewport = async (height: number, top: number, event: string) => {
     await page.evaluate(
       ({ height, top, event }) => {

@@ -144,7 +144,7 @@ export async function saveCategory(demo: boolean, category: Category, editing: b
 }
 export async function deleteCategory(demo: boolean, id: string) {
   const inUse =
-    'В категории есть расходы. Сначала удалите их или выберите для них другую категорию.';
+    'В категории есть траты. Сначала удалите их или выберите для них другую категорию.';
   if (demo) {
     const data = readDemo();
     if (data.expenses.some((expense) => expense.category_id === id)) throw new Error(inUse);

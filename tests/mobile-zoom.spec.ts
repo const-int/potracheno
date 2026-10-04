@@ -29,7 +29,7 @@ test('mobile zoom is blocked without breaking repeated keypad taps, scroll, or S
   await keypad.getByRole('button', { name: '1', exact: true }).tap();
   await keypad.getByRole('button', { name: '0', exact: true }).tap();
   await keypad.getByRole('button', { name: '0', exact: true }).tap();
-  await expect(page.getByLabel('Сумма расхода', { exact: true })).toHaveText('100');
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('100');
   const cdp = await context.newCDPSession(page);
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchStart',

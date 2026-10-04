@@ -330,7 +330,7 @@ export default function App() {
       a.download = `family-expenses-${today()}.csv`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setNotice('Все расходы экспортированы');
+      setNotice('Все траты экспортированы');
     } catch (e) {
       setNotice(errorMessage(e), 'error');
     } finally {
@@ -427,8 +427,8 @@ export default function App() {
         <nav aria-label="Основная навигация">
           {(
             [
-              ['add', Plus, 'Добавить расход'],
-              ['history', List, 'История расходов'],
+              ['add', Plus, 'Добавить трату'],
+              ['history', List, 'История трат'],
               ['summary', BarChart3, 'Summary'],
               ['categories', LayoutGrid, 'Категории'],
             ] as const
@@ -513,7 +513,7 @@ export default function App() {
                 <h1>
                   {
                     {
-                      add: 'Каждый расход на своем месте',
+                      add: 'Каждая трата на своем месте',
                       history: 'История трат',
                       summary: 'Общие траты',
                       categories: 'Ваши категории',
@@ -545,7 +545,7 @@ export default function App() {
           )}
           {!loaded ? (
             <div className="panel empty-state" role="status">
-              {loadError ? 'Не удалось загрузить расходы.' : 'Загружаем семейные расходы…'}
+              {loadError ? 'Не удалось загрузить траты.' : 'Загружаем семейные траты…'}
             </div>
           ) : (
             <>
@@ -558,7 +558,7 @@ export default function App() {
                   userName={userName}
                   demo={demo}
                   renderCategoryIcon={(category) => <CategoryIcon category={category} size={19} />}
-                  onSave={() => afterSave('Расход сохранен', 'expense')}
+                  onSave={() => afterSave('Трата сохранена', 'expense')}
                 />
               )}
               {tab === 'add' && !isMobile && (
@@ -569,7 +569,7 @@ export default function App() {
                         <span className="heading-symbol">
                           <Plus size={18} />
                         </span>
-                        Новый расход
+                        Новая трата
                       </h2>
                       <span className="pill">₽ RUB</span>
                     </div>
@@ -580,7 +580,7 @@ export default function App() {
                       userId={session!}
                       demo={demo}
                       userName={userName}
-                      onSave={() => afterSave('Расход сохранен', 'expense')}
+                      onSave={() => afterSave('Трата сохранена', 'expense')}
                     />
                   </section>
                   <aside className="entry-aside">
@@ -594,7 +594,7 @@ export default function App() {
                             .reduce((s, e) => s + e.amount_kopecks, 0),
                         )}
                       </div>
-                      <span>Общие расходы семьи</span>
+                      <span>Общие траты семьи</span>
                       <div className="monthly-divider" />
                       <button
                         onClick={() => {
@@ -634,7 +634,7 @@ export default function App() {
                           </div>
                         ))}
                       {!data.expenses.length && (
-                        <p className="muted">Здесь появятся ваши первые расходы.</p>
+                        <p className="muted">Здесь появятся ваши первые траты.</p>
                       )}
                     </section>
                     <div className="help-note">
@@ -642,7 +642,7 @@ export default function App() {
                       <p>
                         {demo
                           ? 'Можно попробовать всё: добавление, категории и статистику.'
-                          : 'Расходы доступны на обоих телефонах. Список обновляется каждые 30 секунд и при возвращении в приложение.'}
+                          : 'Траты доступны на обоих телефонах. Список обновляется каждые 30 секунд и при возвращении в приложение.'}
                       </p>
                     </div>
                   </aside>
@@ -689,10 +689,10 @@ export default function App() {
                       compact={isMobile}
                     />
                   ) : (
-                    <section className="panel history-panel" aria-label="История расходов">
+                    <section className="panel history-panel" aria-label="История трат">
                       {!isMobile && (
                         <div className="section-heading">
-                          <h2>Расходы за месяц</h2>
+                          <h2>Траты за месяц</h2>
                           <strong className="history-total">{money(total)}</strong>
                         </div>
                       )}
@@ -736,7 +736,7 @@ export default function App() {
                 <section className="panel categories-panel">
                   {!isMobile && (
                     <div className="section-heading">
-                      <h2>Категории расходов</h2>
+                      <h2>Категории трат</h2>
                     </div>
                   )}
                   <SortableCategoryList
@@ -825,11 +825,11 @@ export default function App() {
             onBusy={setEditorBusy}
             onDelete={async () => {
               setEditing(null);
-              await afterSave('Расход удален');
+              await afterSave('Трата удалена');
             }}
             onSave={async () => {
               setEditing(null);
-              await afterSave('Расход обновлен');
+              await afterSave('Трата обновлена');
             }}
           />
         </Modal>
@@ -863,7 +863,7 @@ export default function App() {
       )}
       {importOpen && (
         <Modal
-          title="Импорт расходов"
+          title="Импорт трат"
           close={() => {
             if (!importBusy) setImportOpen(false);
           }}
@@ -876,9 +876,7 @@ export default function App() {
             onBusy={setImportBusy}
             onComplete={async ({ imported, skipped }) => {
               setImportOpen(false);
-              await afterSave(
-                `Импортировано расходов: ${imported}. Пропущено совпадений: ${skipped}.`,
-              );
+              await afterSave(`Импортировано трат: ${imported}. Пропущено совпадений: ${skipped}.`);
             }}
           />
         </Modal>
@@ -901,7 +899,7 @@ export default function App() {
             )}
             <button className="secondary full-width" onClick={exportData} disabled={exportBusy}>
               <Download size={17} />
-              {exportBusy ? 'Экспорт…' : 'Экспорт расходов в CSV'}
+              {exportBusy ? 'Экспорт…' : 'Экспорт трат в CSV'}
             </button>
             <button
               className="secondary full-width"
@@ -911,7 +909,7 @@ export default function App() {
               }}
             >
               <FileUp size={17} />
-              Импорт расходов из CSV
+              Импорт трат из CSV
             </button>
           </div>
           <button className="text-button logout-button" onClick={logout}>
@@ -1063,7 +1061,7 @@ function ExpenseForm({
       return;
     }
     if (!userName && !existing) {
-      setError('Укажите свое имя, чтобы видеть, кто добавил расход.');
+      setError('Укажите свое имя, чтобы видеть, кто добавил трату.');
       return;
     }
     submitLock.current = true;
@@ -1100,7 +1098,7 @@ function ExpenseForm({
       <fieldset disabled={busy}>
         {!existing && (
           <label className="amount-label" htmlFor="amount">
-            Сумма расхода
+            Сумма траты
           </label>
         )}
         <div className="amount-input">
@@ -1109,7 +1107,7 @@ function ExpenseForm({
             inputMode="numeric"
             autoComplete="off"
             placeholder="0"
-            aria-label="Сумма расхода"
+            aria-label="Сумма траты"
             value={amount}
             onChange={(e) => {
               setAmount(e.target.value);
@@ -1141,7 +1139,7 @@ function ExpenseForm({
           <p className="form-error">Сначала добавьте категории на вкладке «Категории».</p>
         )}
         <label>
-          Дата расхода
+          Дата траты
           <input
             type="date"
             value={date}
@@ -1165,7 +1163,7 @@ function ExpenseForm({
         )}
         <button className="primary full-width save-expense" disabled={busy || !categories.length}>
           <Plus size={19} />
-          {busy ? 'Сохраняем…' : existing ? 'Сохранить изменения' : 'Добавить расход'}
+          {busy ? 'Сохраняем…' : existing ? 'Сохранить изменения' : 'Добавить трату'}
         </button>
         {existing && onDelete && (
           <button
@@ -1319,7 +1317,7 @@ function CategoryForm({
             <div className="category-delete-confirm">
               <p className="muted">
                 {hasExpenses
-                  ? `В категории «${existing.name}» есть расходы. Сначала удалите их или выберите для них другую категорию.`
+                  ? `В категории «${existing.name}» есть траты. Сначала удалите их или выберите для них другую категорию.`
                   : `Удалить категорию «${existing.name}»? Это действие нельзя отменить.`}
               </p>
               <div className="modal-actions">
@@ -1385,7 +1383,7 @@ function NamePrompt({ userName, onSave }: { userName: string; onSave: (name: str
       }}
     >
       <p className="muted">
-        Имя видно рядом с добавленными расходами. Укажите свое имя для подписи расходов.
+        Имя видно рядом с добавленными тратами. Укажите свое имя для подписи трат.
       </p>
       <div className="name-save-row">
         <div className="name-field">
@@ -1470,10 +1468,10 @@ function Empty({ onClick }: { onClick?: () => void }) {
         <ArrowDownLeft size={30} />
       </span>
       <h3>Здесь пока тихо</h3>
-      <p>В этом месяце еще нет расходов.</p>
+      <p>В этом месяце еще нет трат.</p>
       {onClick && (
         <button className="secondary" onClick={onClick}>
-          Добавить первый расход
+          Добавить первую трату
         </button>
       )}
     </div>
@@ -1521,7 +1519,7 @@ function Summary({
           >
             {costliestDay ? money(costliestDay.total) : '—'}
           </strong>
-          <small>{costliestDay ? dayLabel(costliestDay.date) : 'Нет расходов'}</small>
+          <small>{costliestDay ? dayLabel(costliestDay.date) : 'Нет трат'}</small>
         </section>
         <section className="panel stat stat-insight" aria-label="Самая крупная трата">
           <span>Самая крупная трата</span>
@@ -1535,14 +1533,14 @@ function Summary({
           <small>
             {largestExpense
               ? `${categories.find((category) => category.id === largestExpense.category_id)?.name ?? 'Категория'} · ${dayLabel(largestExpense.spent_on, 'short')}`
-              : 'Нет расходов'}
+              : 'Нет трат'}
           </small>
         </section>
       </div>
-      <section className="panel summary-panel" aria-label="Расходы по категориям">
+      <section className="panel summary-panel" aria-label="Траты по категориям">
         {!compact && (
           <div className="section-heading">
-            <h2>Расходы по категориям</h2>
+            <h2>Траты по категориям</h2>
             <span className="pill">{groups.length} категорий</span>
           </div>
         )}
@@ -1552,12 +1550,12 @@ function Summary({
           <div className="category-breakdown">
             {compact && (
               <div className="summary-total">
-                <span>Расходы месяца</span>
+                <span>Траты месяца</span>
                 <strong>{money(total)}</strong>
               </div>
             )}
             <CategoryTreemap groups={groups} />
-            <ol className="category-bars" aria-label="Распределение расходов по категориям">
+            <ol className="category-bars" aria-label="Распределение трат по категориям">
               {groups.map((category) => {
                 const percentage = (category.total / total) * 100;
                 const percentageText =

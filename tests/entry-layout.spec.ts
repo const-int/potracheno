@@ -5,7 +5,7 @@ test('categories stay immediately above the keypad and the amount fills the uppe
 }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  await page.getByLabel('Сумма траты', { exact: true }).waitFor();
   for (const count of [3, 8, 10, 13]) {
     await page.evaluate((count) => {
       const data = JSON.parse(localStorage.getItem('vmeste.demo.v1')!);
@@ -21,7 +21,7 @@ test('categories stay immediately above the keypad and the amount fills the uppe
     }, count);
     await page.reload();
     await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-    await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+    await page.getByLabel('Сумма траты', { exact: true }).waitFor();
     for (const [width, height] of [
       [320, 480],
       [360, 520],

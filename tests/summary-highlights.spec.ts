@@ -63,5 +63,5 @@ test('summary distinguishes a daily total from one purchase and updates when the
   await page.getByRole('button', { name: 'Предыдущий месяц', exact: true }).click();
   await expect(day.locator('strong')).toHaveText('—');
   await expect(purchase.locator('strong')).toHaveText('—');
-  await expect(day.locator('small')).toHaveText('Нет расходов');
+  await expect(day.locator('small')).toHaveText('Нет трат');
 });

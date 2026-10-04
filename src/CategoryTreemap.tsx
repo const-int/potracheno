@@ -28,7 +28,7 @@ export default function CategoryTreemap({ groups }: { groups: Group[] }) {
         ref={ref}
         className="category-treemap"
         role="group"
-        aria-label="Размер блоков показывает доли расходов по категориям"
+        aria-label="Размер блоков показывает доли трат по категориям"
       >
         {tiles.map(({ item, x, y, width, height }) => {
           const percentage =

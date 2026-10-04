@@ -4,8 +4,8 @@ const content =
   'Дата;Сумма;Категория;Комментарий;Автор\n02.01.2026;1500;Путешествия;Поездка;Анна\n2026-01-03;200;путешествия;Билеты;';
 async function openImport(page: Page) {
   await page.getByRole('button', { name: 'Настройки', exact: true }).click();
-  await page.getByRole('button', { name: 'Импорт расходов из CSV', exact: true }).click();
-  await page.getByRole('heading', { name: 'Импорт расходов', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Импорт трат из CSV', exact: true }).click();
+  await page.getByRole('heading', { name: 'Импорт трат', exact: true }).waitFor();
 }
 async function selectFile(page: Page, text: string) {
   await page
@@ -18,22 +18,22 @@ test('CSV preview does not mutate data, confirmation imports and reimport skips 
   await page.addInitScript(() => localStorage.setItem('vmeste.device', 'Алексей'));
   await page.goto('/');
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  await page.getByLabel('Сумма траты', { exact: true }).waitFor();
   const previous = await page.evaluate(
     () => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses.length,
   );
   await openImport(page);
   await selectFile(page, content);
-  await expect(page.getByRole('button', { name: 'Импортировать расходы (2)' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Импортировать траты (2)' })).toBeEnabled();
   expect(
     await page.evaluate(() => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses.length),
   ).toBe(previous);
   await expect(
     page.getByText('Будут созданы категории: Путешествия.', { exact: true }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Импортировать расходы (2)' }).click();
+  await page.getByRole('button', { name: 'Импортировать траты (2)' }).click();
   await expect(
-    page.getByText('Импортировано расходов: 2. Пропущено совпадений: 0.', { exact: true }),
+    page.getByText('Импортировано трат: 2. Пропущено совпадений: 0.', { exact: true }),
   ).toBeVisible();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('vmeste.demo.v1')!));
   expect(saved.expenses.length).toBe(previous + 2);
@@ -49,10 +49,10 @@ test('CSV preview does not mutate data, confirmation imports and reimport skips 
   ).toHaveLength(1);
   await openImport(page);
   await selectFile(page, content);
-  await expect(page.getByText('Новых расходов для импорта нет.', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Импортировать расходы (0)' })).toBeDisabled();
-  await page.getByLabel('Пропускать уже существующие расходы', { exact: true }).uncheck();
-  await expect(page.getByRole('button', { name: 'Импортировать расходы (2)' })).toBeEnabled();
+  await expect(page.getByText('Новых трат для импорта нет.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Импортировать траты (0)' })).toBeDisabled();
+  await page.getByLabel('Пропускать уже существующие траты', { exact: true }).uncheck();
+  await expect(page.getByRole('button', { name: 'Импортировать траты (2)' })).toBeEnabled();
   await page.getByRole('button', { name: 'Закрыть', exact: true }).click();
   expect(
     await page.evaluate(() => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses.length),
@@ -62,11 +62,11 @@ test('CSV preview does not mutate data, confirmation imports and reimport skips 
 test('invalid CSV rows block the entire import', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
-  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  await page.getByLabel('Сумма траты', { exact: true }).waitFor();
   await openImport(page);
   await selectFile(page, 'Дата;Сумма;Категория\n2026-01-01;100;Дом\n2026-02-30;0;Дом');
   await expect(page.getByRole('alert')).toContainText('Строка 3');
-  await expect(page.getByRole('button', { name: /^Импортировать расходы \(/ })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /^Импортировать траты \(/ })).toBeDisabled();
   expect(
     await page.evaluate(() => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses.length),
   ).toBe(9);
@@ -129,13 +129,13 @@ test('cloud import uses a batch and retry does not duplicate a committed request
   await page.getByRole('group', { name: 'Цифровая клавиатура' }).waitFor();
   await openImport(page);
   await selectFile(page, 'Дата;Сумма;Категория\n2026-01-01;100;Поездки');
-  await page.getByLabel('Пропускать уже существующие расходы', { exact: true }).uncheck();
-  await page.getByRole('button', { name: 'Импортировать расходы (1)' }).click();
+  await page.getByLabel('Пропускать уже существующие траты', { exact: true }).uncheck();
+  await page.getByRole('button', { name: 'Импортировать траты (1)' }).click();
   await expect(page.getByRole('alert')).toContainText('Можно повторить попытку');
   expect(expenses).toHaveLength(1);
-  await page.getByRole('button', { name: 'Импортировать расходы (1)' }).click();
+  await page.getByRole('button', { name: 'Импортировать траты (1)' }).click();
   await expect(
-    page.getByText('Импортировано расходов: 0. Пропущено совпадений: 1.', { exact: true }),
+    page.getByText('Импортировано трат: 0. Пропущено совпадений: 1.', { exact: true }),
   ).toBeVisible();
   expect(expenses).toHaveLength(1);
   expect(categories).toHaveLength(1);
