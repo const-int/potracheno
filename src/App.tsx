@@ -1700,7 +1700,7 @@ function Summary({
                     >
                       <span
                         className="category-bar-fill"
-                        style={{ width: `${percentage}%`, background: category.color }}
+                        style={{ width: `${percentage}%`, backgroundColor: category.color }}
                       />
                     </div>
                   </li>

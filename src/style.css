@@ -735,15 +735,10 @@ fieldset {
   background: #eee6f5;
   color: #49365c;
 }
-@media (max-width: 650px) {
-  .summary-period-row .month-switch span {
-    white-space: nowrap;
-  }
-}
 .month-switch {
   display: flex;
   align-items: center;
-  gap: 19px;
+  gap: 14px;
   font-size: 13px;
   font-weight: 700;
   text-transform: capitalize;
@@ -757,7 +752,9 @@ fieldset {
   color: #7e708d;
 }
 .month-switch span {
-  min-width: 140px;
+  min-width: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
   text-align: center;
 }
 .month-next-placeholder {
@@ -1505,11 +1502,8 @@ fieldset {
     padding: 22px 18px;
   }
   .month-switch {
-    gap: 10px;
+    gap: 14px;
     font-size: 12px;
-  }
-  .month-switch span {
-    min-width: 133px;
   }
   .period-row > .muted {
     font-size: 10px;
@@ -1712,7 +1706,7 @@ fieldset {
   .quick-category {
     flex-direction: column;
     border: 1px solid #e3dde9;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 5px 3px;
     gap: 5px;
     min-width: 0;
@@ -1770,7 +1764,7 @@ fieldset {
     gap: 8px;
   }
   .expense-keypad button {
-    border-radius: 14px;
+    border-radius: 24px;
     background: #eee9f3;
     color: #433453;
     font-size: 28px;
@@ -1828,7 +1822,7 @@ fieldset {
     flex-direction: row;
     gap: 3px;
     padding: 4px;
-    border-radius: 8px;
+    border-radius: 16px;
   }
   .quick-category .category-icon {
     width: 20px;
@@ -1848,7 +1842,7 @@ fieldset {
   }
   .expense-keypad button {
     font-size: 24px;
-    border-radius: 11px;
+    border-radius: 24px;
   }
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -2106,7 +2100,7 @@ fieldset {
   }
   .month-switch {
     font-size: 16px;
-    gap: 8px;
+    gap: 14px;
   }
   .period-row {
     flex-wrap: wrap;
@@ -2657,6 +2651,12 @@ fieldset {
   display: block;
   height: 100%;
   border-radius: inherit;
+  background-image: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0) 55%,
+    rgba(0, 0, 0, 0.06) 100%
+  );
 }
 @media (max-width: 650px) {
   .category-bars {
@@ -2717,7 +2717,14 @@ fieldset {
   position: absolute;
   inset: var(--tile-gap);
   border-radius: 24px;
-  background: var(--tile-color);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0) 55%,
+      rgba(0, 0, 0, 0.06) 100%
+    ),
+    var(--tile-color);
   pointer-events: none;
 }
 .treemap-tile > span {
