@@ -236,6 +236,9 @@ test('entry fits small phones and uses only the custom keypad', async ({ page })
     [430, 568],
   ]) {
     await page.setViewportSize({ width, height });
+    await expect
+      .poll(() => page.locator('.mobile-entry').evaluate((el) => el.getBoundingClientRect().height))
+      .toBe(height);
     await expect(page.locator('.quick-entry input, .quick-entry textarea')).toHaveCount(0);
     await expect(page.locator('.quick-category-grid button')).toHaveCount(10);
     const columns = await page

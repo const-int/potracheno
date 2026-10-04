@@ -35,7 +35,11 @@ The expense picker uses two columns and five rows on phones.
 New mobile expenses use today's date and an empty note. More than ten categories
 are displayed on additional pages. Use the edit button in History to change a date or amount. The editor also offers
 immediate expense deletion without a confirmation step. Expense comments are not used.
-Mobile History shows the month selector, total, and expense list. Summary places
+Mobile History shows the month selector, category filter, total, and expense list.
+With no categories checked, all expenses are included; selecting one or more categories
+filters both the list and its total for the selected month. Clearing every checkbox restores all categories. The dropdown includes category icons
+and uses the available height above mobile navigation. A reset button appears beside
+the trigger when any categories are selected. Summary places
 a treemap of soft rounded blocks sized by category shares, separated by small gaps, followed by horizontal
 bars sorted by amount with totals and percentages. The treemap is a static visualization without hover or click actions.
 Labels use white text directly on the category color, and are hidden on blocks

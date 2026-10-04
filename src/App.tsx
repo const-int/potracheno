@@ -1,5 +1,6 @@
 import { useMobileViewport } from './lib/use-mobile-viewport';
 import CategoryTreemap from './CategoryTreemap';
+import HistoryCategoryFilter from './HistoryCategoryFilter';
 import SortableCategoryList from './SortableCategoryList';
 import Toast, { type ToastNotice } from './Toast';
 import { useRegisterSW } from 'virtual:pwa-register/react';
@@ -228,6 +229,7 @@ export default function App() {
   const quickEntry = isMobile && tab === 'add';
   const [month, setMonth] = useState(today().slice(0, 7));
   const [summaryPeriod, setSummaryPeriod] = useState<'month' | 'year'>('month');
+  const [historyCategoryIds, setHistoryCategoryIds] = useState<string[]>([]);
   const [userName, setUserName] = useState(() => localStorage.getItem('vmeste.device') ?? '');
   const [settings, setSettings] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -345,7 +347,13 @@ export default function App() {
     .sort(
       (a, b) => b.spent_on.localeCompare(a.spent_on) || b.created_at.localeCompare(a.created_at),
     );
-  const total = monthExpenses.reduce((sum, e) => sum + e.amount_kopecks, 0);
+  const selectedHistoryCategories = historyCategoryIds.filter((id) =>
+    data.categories.some((category) => category.id === id),
+  );
+  const historyExpenses = selectedHistoryCategories.length
+    ? monthExpenses.filter((expense) => selectedHistoryCategories.includes(expense.category_id))
+    : monthExpenses;
+  const historyTotal = historyExpenses.reduce((sum, expense) => sum + expense.amount_kopecks, 0);
   const yearlySummary = tab === 'summary' && summaryPeriod === 'year';
   const summaryExpenses = yearlySummary
     ? data.expenses.filter((e) => e.spent_on.startsWith(`${month.slice(0, 4)}-`))
@@ -387,6 +395,7 @@ export default function App() {
       setEditing(null);
       setEditingCategory(null);
       setData(empty);
+      setHistoryCategoryIds([]);
       setTab('add');
     } catch (e) {
       setNotice(errorMessage(e), 'error');
@@ -738,10 +747,10 @@ export default function App() {
                       </div>
                     )}
                     {!isMobile && tab === 'history' && (
-                      <span className="muted">{monthExpenses.length} записей</span>
+                      <span className="muted">{historyExpenses.length} записей</span>
                     )}
                     {isMobile && tab === 'history' && (
-                      <strong className="period-total">{money(total)}</strong>
+                      <strong className="period-total">{money(historyTotal)}</strong>
                     )}
                   </div>
                   {tab === 'summary' ? (
@@ -753,46 +762,61 @@ export default function App() {
                       compact={isMobile}
                     />
                   ) : (
-                    <section className="panel history-panel" aria-label="История трат">
-                      {!isMobile && (
-                        <div className="section-heading">
-                          <h2>Траты за месяц</h2>
-                          <strong className="history-total">{money(total)}</strong>
-                        </div>
-                      )}
-                      {!monthExpenses.length && <Empty onClick={() => setTab('add')} />}
-                      <div className="expense-list">
-                        {monthExpenses.map((e) => (
-                          <div className="expense-row" key={e.id}>
-                            <CategoryIcon category={categoryById(e.category_id)} />
-                            <div className="expense-info">
-                              <strong>{categoryById(e.category_id)?.name ?? 'Категория'}</strong>
-                              <span>
-                                {new Intl.DateTimeFormat('ru-RU', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                }).format(new Date(e.spent_on + 'T12:00:00'))}{' '}
-                                · {e.device_name}
-                              </span>
-                            </div>
-                            <b
-                              className={`expense-amount ${money(e.amount_kopecks).length > 9 ? 'is-long' : ''}`}
-                            >
-                              {money(e.amount_kopecks)}
-                            </b>
-                            <div className="row-actions">
-                              <button
-                                className="icon-button expense-edit-button"
-                                aria-label={`Редактировать ${categoryById(e.category_id)?.name}`}
-                                onClick={() => setEditing(e)}
-                              >
-                                <Pencil size={20} />
-                              </button>
-                            </div>
+                    <>
+                      <HistoryCategoryFilter
+                        categories={data.categories}
+                        selected={selectedHistoryCategories}
+                        onChange={setHistoryCategoryIds}
+                        renderIcon={(category) => <CategoryIcon category={category} size={19} />}
+                      />
+                      <section className="panel history-panel" aria-label="История трат">
+                        {!isMobile && (
+                          <div className="section-heading">
+                            <h2>Траты за месяц</h2>
+                            <strong className="history-total">{money(historyTotal)}</strong>
                           </div>
-                        ))}
-                      </div>
-                    </section>
+                        )}
+                        {!historyExpenses.length &&
+                          (selectedHistoryCategories.length ? (
+                            <div className="history-filter-empty">
+                              <p>Нет трат в выбранных категориях за этот месяц.</p>
+                            </div>
+                          ) : (
+                            <Empty onClick={() => setTab('add')} />
+                          ))}
+                        <div className="expense-list">
+                          {historyExpenses.map((e) => (
+                            <div className="expense-row" key={e.id}>
+                              <CategoryIcon category={categoryById(e.category_id)} />
+                              <div className="expense-info">
+                                <strong>{categoryById(e.category_id)?.name ?? 'Категория'}</strong>
+                                <span>
+                                  {new Intl.DateTimeFormat('ru-RU', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                  }).format(new Date(e.spent_on + 'T12:00:00'))}{' '}
+                                  · {e.device_name}
+                                </span>
+                              </div>
+                              <b
+                                className={`expense-amount ${money(e.amount_kopecks).length > 9 ? 'is-long' : ''}`}
+                              >
+                                {money(e.amount_kopecks)}
+                              </b>
+                              <div className="row-actions">
+                                <button
+                                  className="icon-button expense-edit-button"
+                                  aria-label={`Редактировать ${categoryById(e.category_id)?.name}`}
+                                  onClick={() => setEditing(e)}
+                                >
+                                  <Pencil size={20} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    </>
                   )}
                 </>
               )}
