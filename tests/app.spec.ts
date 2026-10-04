@@ -146,8 +146,21 @@ test('custom categories can be created and edited', async ({ page }) => {
     .click();
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
   await page.getByLabel('Название', { exact: true }).fill('Путешествия');
-  await expect(page.locator('.icon-picker button')).toHaveCount(18);
-  for (const name of ['Звезда', 'Велосипед', 'Молния', 'Пазл', 'Компас']) {
+  await expect(page.locator('.icon-picker button')).toHaveCount(21);
+  await expect(page.locator('.icon-picker button').last()).toHaveAttribute(
+    'aria-label',
+    'Значок Другое',
+  );
+  for (const name of [
+    'Звезда',
+    'Велосипед',
+    'Молния',
+    'Пазл',
+    'Компас',
+    'Лампочка',
+    'Книга',
+    'Палитра',
+  ]) {
     await expect(page.getByRole('button', { name: `Значок ${name}`, exact: true })).toBeVisible();
   }
   await expect(page.getByRole('button', { name: 'Значок Топливо', exact: true })).toHaveCount(0);
@@ -165,7 +178,7 @@ test('custom categories can be created and edited', async ({ page }) => {
   ]) {
     await expect(page.getByRole('button', { name: `Значок ${name}`, exact: true })).toBeVisible();
   }
-  await expect(page.locator('.swatch-list button')).toHaveCount(35);
+  await expect(page.locator('.swatch-list button')).toHaveCount(40);
   await page.getByRole('button', { name: 'Значок Путешествия', exact: true }).click();
   await page.getByRole('button', { name: 'Цвет #3989d4', exact: true }).click();
   await page.getByRole('button', { name: 'Сохранить категорию' }).click();

@@ -55,6 +55,11 @@ export const colors = [
   '#98877b',
   '#868480',
   '#62615f',
+  '#d2a34a',
+  '#c47c4f',
+  '#be527b',
+  '#9562a5',
+  '#7479a2',
 ];
 export const categoryColorOptions = colors;
 export const defaultCategoryColors = [
@@ -120,6 +125,9 @@ export const categoryIconLabels: Record<string, string> = {
   lightning: 'Молния',
   puzzle: 'Пазл',
   compass: 'Компас',
+  lightbulb: 'Лампочка',
+  book: 'Книга',
+  palette: 'Палитра',
 };
 export const categoryIconOptions = [
   'shop',
@@ -131,7 +139,6 @@ export const categoryIconOptions = [
   'heart',
   'gifts',
   'fun',
-  'other',
   'basket',
   'travel',
   'bills',
@@ -140,6 +147,10 @@ export const categoryIconOptions = [
   'lightning',
   'puzzle',
   'compass',
+  'lightbulb',
+  'book',
+  'palette',
+  'other',
 ];
 export const initialCategories = [
   { name: 'Продукты', icon: 'basket' },

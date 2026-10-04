@@ -28,6 +28,9 @@ import {
   Zap,
   Puzzle,
   Compass,
+  Lightbulb,
+  BookOpen,
+  Palette,
   Save,
   Bus,
   UtensilsCrossed,
@@ -107,6 +110,9 @@ const icons = {
   lightning: Zap,
   puzzle: Puzzle,
   compass: Compass,
+  lightbulb: Lightbulb,
+  book: BookOpen,
+  palette: Palette,
   transport: Bus,
   food: UtensilsCrossed,
   clothes: Shirt,
@@ -1224,6 +1230,10 @@ function CategoryForm({
 }) {
   const [name, setName] = useState(existing?.name ?? '');
   const [color, setColor] = useState(existing?.color ?? categoryColorOptions[0]);
+  const colorOptions =
+    existing?.color && !categoryColorOptions.includes(existing.color)
+      ? [...categoryColorOptions.slice(0, -1), existing.color]
+      : categoryColorOptions;
   const [icon, setIcon] = useState(existing?.icon ?? 'other');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -1277,10 +1287,7 @@ function CategoryForm({
         </label>
         <div className="field-heading">Цвет</div>
         <div className="swatch-list">
-          {(categoryColorOptions.includes(color)
-            ? categoryColorOptions
-            : [color, ...categoryColorOptions]
-          ).map((c) => (
+          {colorOptions.map((c) => (
             <button
               type="button"
               key={c}

@@ -44,6 +44,12 @@ it('executes the real SQL schema and access tests against embedded PostgreSQL', 
     );
     await db.exec(genericIconsMigration);
     await db.exec(genericIconsMigration);
+    const creativeIconsMigration = await readFile(
+      new URL('../../supabase/migrations/20261004_creative_category_icons.sql', import.meta.url),
+      'utf8',
+    );
+    await db.exec(creativeIconsMigration);
+    await db.exec(creativeIconsMigration);
     for (const icon of Object.keys(categoryIconLabels)) {
       await db.query(
         "insert into public.categories(user_id,name,icon) values ('33333333-3333-4333-8333-333333333333',$1,$2)",
