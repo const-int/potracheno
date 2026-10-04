@@ -2882,3 +2882,215 @@ fieldset {
   z-index: 20;
   background: #fbf9fc;
 }
+
+html,
+body,
+.modal {
+  overscroll-behavior: none;
+}
+html.entry-viewport-locked,
+html.entry-viewport-locked body {
+  overflow: hidden;
+}
+html.entry-viewport-locked body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+}
+@media (max-width: 650px) {
+  html.entry-viewport-locked .mobile-entry {
+    position: fixed;
+    top: var(--app-viewport-top, 0px);
+    left: 0;
+    right: 0;
+    height: var(--app-viewport-height, 100dvh);
+  }
+  html.entry-viewport-locked .mobile-entry .main {
+    height: calc(var(--app-viewport-height, 100dvh) - var(--mobile-nav-height));
+  }
+  html.entry-viewport-locked .mobile-nav {
+    position: absolute;
+    bottom: 0;
+  }
+
+  .app-viewport-regular .app-shell {
+    --mobile-nav-height: calc(76px + env(safe-area-inset-bottom));
+  }
+  .app-viewport-regular .mobile-nav {
+    padding-top: 15px;
+    padding-bottom: calc(9px + env(safe-area-inset-bottom));
+  }
+  .app-viewport-regular .mobile-entry .content {
+    padding: 0 16px 14px;
+  }
+  .app-viewport-regular .quick-entry {
+    --quick-category-height: clamp(40px, calc(var(--app-viewport-unit) * 5.6), 50px);
+    --quick-keypad-height: clamp(184px, calc(var(--app-viewport-unit) * 34), 272px);
+    gap: 12px;
+  }
+  .app-viewport-regular .quick-amount-row {
+    min-height: 54px;
+  }
+  .app-viewport-regular .expense-keypad {
+    min-height: 156px;
+    gap: 8px;
+  }
+  .app-viewport-regular .expense-keypad button {
+    font-size: 28px;
+  }
+  .app-viewport-regular .quick-category-grid {
+    gap: 6px;
+  }
+  .app-viewport-regular .quick-entry .quick-category {
+    padding: 6px 8px 6px 10px;
+    gap: 7px;
+  }
+  .app-viewport-regular .quick-category .category-icon {
+    width: 26px;
+    height: 26px;
+  }
+  .app-viewport-regular .quick-category .category-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  .app-viewport-regular .quick-category-name {
+    font-size: 14px;
+  }
+  .app-viewport-regular .quick-category-pages {
+    height: 28px;
+  }
+  .app-viewport-regular .quick-amount output {
+    font-size: clamp(38px, 11vw, 52px);
+    line-height: normal;
+  }
+  .app-viewport-regular .amount-caret {
+    height: 37px;
+  }
+  .app-viewport-regular .quick-currency {
+    font-size: 24px;
+  }
+
+  :is(.app-viewport-short, .app-viewport-tiny) .app-shell {
+    --mobile-nav-height: calc(70px + env(safe-area-inset-bottom));
+  }
+  :is(.app-viewport-short, .app-viewport-tiny) .mobile-nav {
+    padding-top: 13px;
+    padding-bottom: calc(7px + env(safe-area-inset-bottom));
+  }
+  :is(.app-viewport-short, .app-viewport-tiny) .mobile-entry .content {
+    padding: 0 12px 10px;
+  }
+  .app-viewport-short .quick-entry {
+    --quick-category-height: 32px;
+    --quick-keypad-height: 196px;
+    gap: 8px;
+  }
+  .app-viewport-short .quick-entry.has-category-pages {
+    --quick-category-height: 30px;
+  }
+  .app-viewport-short .quick-amount-row {
+    min-height: 54px;
+  }
+  .app-viewport-short .expense-keypad {
+    min-height: 128px;
+    gap: 6px;
+  }
+  .app-viewport-short .expense-keypad button {
+    font-size: 24px;
+    line-height: 1;
+  }
+  .app-viewport-short .quick-category-grid {
+    gap: 5px;
+  }
+  .app-viewport-short .quick-entry .quick-category {
+    padding: 4px 6px 4px 8px;
+    gap: 5px;
+  }
+  .app-viewport-short .quick-entry.has-category-pages .quick-category {
+    padding-top: 3px;
+    padding-bottom: 3px;
+  }
+  .app-viewport-short .quick-category .category-icon {
+    width: 22px;
+    height: 22px;
+  }
+  .app-viewport-short .quick-category .category-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  .app-viewport-short .quick-category-name {
+    font-size: 13px;
+  }
+  .app-viewport-short .quick-category-pages {
+    height: 28px;
+  }
+  .app-viewport-short .quick-amount output {
+    font-size: clamp(38px, 11vw, 52px);
+    line-height: normal;
+  }
+  .app-viewport-short .amount-caret {
+    height: 37px;
+  }
+  .app-viewport-short .quick-currency {
+    font-size: 24px;
+  }
+
+  .app-viewport-tiny .quick-entry {
+    --quick-category-height: 26px;
+    --quick-keypad-height: 160px;
+    gap: 6px;
+  }
+  .app-viewport-tiny .quick-entry.has-category-pages {
+    --quick-category-height: 24px;
+  }
+  .app-viewport-tiny .quick-amount-row {
+    min-height: 40px;
+  }
+  .app-viewport-tiny .expense-keypad {
+    min-height: 128px;
+    gap: 6px;
+  }
+  .app-viewport-tiny .expense-keypad button {
+    font-size: 22px;
+    line-height: 1;
+  }
+  .app-viewport-tiny .quick-category-grid {
+    gap: 4px;
+  }
+  .app-viewport-tiny .quick-entry .quick-category,
+  .app-viewport-tiny .quick-entry.has-category-pages .quick-category {
+    padding: 2px 6px 2px 8px;
+    gap: 5px;
+  }
+  .app-viewport-tiny .quick-category .category-icon {
+    width: 18px;
+    height: 18px;
+  }
+  .app-viewport-tiny .quick-category .category-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+  .app-viewport-tiny .quick-category-name {
+    font-size: 12px;
+  }
+  .app-viewport-tiny .quick-category-pages {
+    height: 20px;
+  }
+  .app-viewport-tiny .quick-category-pages button {
+    padding: 0 8px;
+  }
+  .app-viewport-tiny .quick-amount output {
+    font-size: 32px;
+    line-height: 1.15;
+  }
+  .app-viewport-tiny .amount-caret {
+    height: 28px;
+  }
+  .app-viewport-tiny .quick-currency {
+    font-size: 20px;
+  }
+  :is(.app-viewport-regular, .app-viewport-short, .app-viewport-tiny)
+    .quick-entry.has-no-categories {
+    --quick-category-height: 54px;
+  }
+}

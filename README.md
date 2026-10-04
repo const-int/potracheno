@@ -25,7 +25,9 @@ screen preselects the first available category. The entered amount survives tab 
 and is cleared after a successful save or when leaving the account.
 It fits the viewport without page scrolling or the phone's native keyboard. Categories
 sit directly above the keypad, with no blank rows or unused pager space. The amount
-is centered in the remaining space above them.
+is centered in the remaining space above them. The entry screen locks document
+scrolling and uses the visual viewport height, recalculated on resize and resume.
+Other tabs keep normal scrolling. Overscroll bounce and pull-to-refresh are disabled.
 The expense picker uses two columns and five rows on phones.
 New mobile expenses use today's date and an empty note. More than ten categories
 are displayed on additional pages. Use the edit button in History to change a date or amount. The editor also offers

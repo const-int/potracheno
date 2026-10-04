@@ -31,6 +31,11 @@ test('categories stay immediately above the keypad and the amount fills the uppe
       [430, 932],
     ]) {
       await page.setViewportSize({ width, height });
+      await expect
+        .poll(() =>
+          page.locator('.mobile-entry').evaluate((el) => el.getBoundingClientRect().height),
+        )
+        .toBe(height);
       const geometry = await page.evaluate(() => {
         const entry = document.querySelector('.quick-entry')!;
         const categories = document.querySelector('.quick-categories')!.getBoundingClientRect();

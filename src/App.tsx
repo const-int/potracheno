@@ -1,3 +1,4 @@
+import { useMobileViewport } from './lib/use-mobile-viewport';
 import CategoryTreemap from './CategoryTreemap';
 import SortableCategoryList from './SortableCategoryList';
 import Toast, { type ToastNotice } from './Toast';
@@ -217,6 +218,7 @@ export default function App() {
   const inFlight = useRef<Promise<void> | null>(null);
   const categoryOrderSaving = useRef(false);
   const session = demo ? 'demo' : userId;
+  useMobileViewport(isMobile && !!session, quickEntry && !!session && !!userName.trim());
   useEffect(() => {
     if (tab !== 'add' || !session)
       setNoticeState((current) => (current?.placement === 'expense' ? null : current));
