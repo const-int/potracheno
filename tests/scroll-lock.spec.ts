@@ -5,6 +5,37 @@ const nav = (page: import('@playwright/test').Page, name: string) =>
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name, exact: true });
 
+test('last content clears the bottom navigation with and without an iPhone safe area', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Открыть деморежим' }).click();
+  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  for (const height of [520, 844]) {
+    await page.setViewportSize({ width: 390, height });
+    for (const inset of [0, 34]) {
+      await page.locator('.app-shell').evaluate((el, inset) => {
+        (el as HTMLElement).style.setProperty('--mobile-safe-bottom', `${inset}px`);
+      }, inset);
+      for (const name of ['История', 'Потрачено', 'Категории']) {
+        await nav(page, name).click();
+        await expect(page.locator('html')).not.toHaveClass(/entry-viewport-locked/);
+        await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+        await expect
+          .poll(() =>
+            page.evaluate(() => {
+              const content = document.querySelector('.content')!;
+              const last = content.lastElementChild!.getBoundingClientRect();
+              const toolbar = document.querySelector('.mobile-nav')!.getBoundingClientRect();
+              return toolbar.top - last.bottom;
+            }),
+          )
+          .toBeGreaterThanOrEqual(13);
+      }
+    }
+  }
+});
+
 test('every tab switch resets scroll, including returning to a previously scrolled tab', async ({
   page,
 }) => {

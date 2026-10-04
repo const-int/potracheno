@@ -1318,7 +1318,7 @@ fieldset {
     display: flex;
     justify-content: space-around;
     z-index: 10;
-    padding: 15px 10px calc(9px + env(safe-area-inset-bottom));
+    padding: 15px 10px calc(9px + var(--mobile-safe-bottom));
   }
   .mobile-nav button {
     flex-direction: column;
@@ -1864,7 +1864,8 @@ fieldset {
 }
 @media (max-width: 650px) {
   .app-shell {
-    --mobile-nav-height: calc(76px + env(safe-area-inset-bottom));
+    --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --mobile-nav-height: calc(76px + var(--mobile-safe-bottom));
   }
   .mobile-nav {
     height: var(--mobile-nav-height);
@@ -1881,11 +1882,11 @@ fieldset {
 }
 @media (max-width: 650px) and (max-height: 620px) {
   .app-shell {
-    --mobile-nav-height: calc(70px + env(safe-area-inset-bottom));
+    --mobile-nav-height: calc(70px + var(--mobile-safe-bottom));
   }
   .mobile-nav {
     padding-top: 13px;
-    padding-bottom: calc(7px + env(safe-area-inset-bottom));
+    padding-bottom: calc(7px + var(--mobile-safe-bottom));
   }
   .topbar {
     height: 48px;
@@ -2911,11 +2912,11 @@ html.entry-viewport-locked body {
   }
 
   .app-viewport-regular .app-shell {
-    --mobile-nav-height: calc(76px + env(safe-area-inset-bottom));
+    --mobile-nav-height: calc(76px + var(--mobile-safe-bottom));
   }
   .app-viewport-regular .mobile-nav {
     padding-top: 15px;
-    padding-bottom: calc(9px + env(safe-area-inset-bottom));
+    padding-bottom: calc(9px + var(--mobile-safe-bottom));
   }
   .app-viewport-regular .mobile-entry .content {
     padding: 0 16px 14px;
@@ -2968,11 +2969,11 @@ html.entry-viewport-locked body {
   }
 
   :is(.app-viewport-short, .app-viewport-tiny) .app-shell {
-    --mobile-nav-height: calc(70px + env(safe-area-inset-bottom));
+    --mobile-nav-height: calc(70px + var(--mobile-safe-bottom));
   }
   :is(.app-viewport-short, .app-viewport-tiny) .mobile-nav {
     padding-top: 13px;
-    padding-bottom: calc(7px + env(safe-area-inset-bottom));
+    padding-bottom: calc(7px + var(--mobile-safe-bottom));
   }
   :is(.app-viewport-short, .app-viewport-tiny) .mobile-entry .content {
     padding: 0 12px 10px;
@@ -3089,5 +3090,11 @@ html.entry-viewport-locked body {
   :is(.app-viewport-regular, .app-viewport-short, .app-viewport-tiny)
     .quick-entry.has-no-categories {
     --quick-category-height: 54px;
+  }
+}
+
+@media (max-width: 650px) {
+  .app-shell:not(.mobile-entry) .content {
+    padding-bottom: max(90px, calc(var(--mobile-nav-height) + 14px));
   }
 }
