@@ -146,7 +146,7 @@ test('custom categories can be created and edited', async ({ page }) => {
     .click();
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
   await page.getByLabel('Название', { exact: true }).fill('Путешествия');
-  await expect(page.locator('.icon-picker button')).toHaveCount(21);
+  await expect(page.locator('.icon-picker button')).toHaveCount(28);
   await expect(page.locator('.icon-picker button').last()).toHaveAttribute(
     'aria-label',
     'Значок Другое',
@@ -160,6 +160,13 @@ test('custom categories can be created and edited', async ({ page }) => {
     'Лампочка',
     'Книга',
     'Палитра',
+    'Инструменты',
+    'Геймпад',
+    'Бриллиант',
+    'Искры',
+    'Шестиугольник',
+    'Куб',
+    'Клевер',
   ]) {
     await expect(page.getByRole('button', { name: `Значок ${name}`, exact: true })).toBeVisible();
   }

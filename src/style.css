@@ -1035,6 +1035,17 @@ fieldset {
   .category-edit-form .icon-picker {
     margin-bottom: 10px;
   }
+  .category-edit-form .icon-picker button {
+    height: 28px;
+  }
+}
+@media (max-width: 650px) and (max-height: 550px) {
+  .category-edit-form .icon-picker {
+    margin-bottom: 8px;
+  }
+  .category-edit-form .icon-picker button {
+    height: 24px;
+  }
 }
 .checkbox-label {
   display: flex;

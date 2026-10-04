@@ -128,6 +128,13 @@ export const categoryIconLabels: Record<string, string> = {
   lightbulb: 'Лампочка',
   book: 'Книга',
   palette: 'Палитра',
+  tools: 'Инструменты',
+  gamepad: 'Геймпад',
+  diamond: 'Бриллиант',
+  sparkles: 'Искры',
+  hexagon: 'Шестиугольник',
+  cube: 'Куб',
+  clover: 'Клевер',
 };
 export const categoryIconOptions = [
   'shop',
@@ -150,6 +157,13 @@ export const categoryIconOptions = [
   'lightbulb',
   'book',
   'palette',
+  'tools',
+  'gamepad',
+  'diamond',
+  'sparkles',
+  'hexagon',
+  'cube',
+  'clover',
   'other',
 ];
 export const initialCategories = [
