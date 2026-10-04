@@ -973,6 +973,7 @@ export default function App() {
         <Modal title="Настройки" close={() => setSettings(false)}>
           <NamePrompt
             userName={userName}
+            onLogout={logout}
             onSave={(name) => {
               rememberName(name);
               setNotice('Имя пользователя сохранено');
@@ -1000,10 +1001,6 @@ export default function App() {
               Импорт трат из CSV
             </button>
           </div>
-          <button className="text-button logout-button" onClick={logout}>
-            <LogOut size={17} />
-            {demo ? 'Выйти из деморежима' : 'Выйти на этом устройстве'}
-          </button>
         </Modal>
       )}
     </div>
@@ -1480,7 +1477,15 @@ function CategoryForm({
     </form>
   );
 }
-function NamePrompt({ userName, onSave }: { userName: string; onSave: (name: string) => void }) {
+function NamePrompt({
+  userName,
+  onSave,
+  onLogout,
+}: {
+  userName: string;
+  onSave: (name: string) => void;
+  onLogout?: () => Promise<void>;
+}) {
   const [name, setName] = useState(userName);
   const inputRef = useRef<HTMLInputElement>(null);
   const changed = name !== userName;
@@ -1494,9 +1499,11 @@ function NamePrompt({ userName, onSave }: { userName: string; onSave: (name: str
         }
       }}
     >
-      <p className="muted">
-        Имя видно рядом с добавленными тратами. Укажите свое имя для подписи трат.
-      </p>
+      {!onLogout && (
+        <p className="muted">
+          Имя видно рядом с добавленными тратами. Укажите свое имя для подписи трат.
+        </p>
+      )}
       <div className="name-save-row">
         <div className="name-field">
           <label htmlFor="profile-name">Имя пользователя</label>
@@ -1525,6 +1532,16 @@ function NamePrompt({ userName, onSave }: { userName: string; onSave: (name: str
             )}
           </div>
         </div>
+        {onLogout && !changed && (
+          <button
+            type="button"
+            className="secondary name-logout-button"
+            onClick={() => void onLogout()}
+          >
+            <LogOut size={17} />
+            Выйти
+          </button>
+        )}
         {changed && (
           <button className="primary" disabled={!name.trim()}>
             Сохранить

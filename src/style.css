@@ -2974,6 +2974,16 @@ fieldset {
   min-height: 49px;
   padding: 0 12px;
 }
+.name-save-row:has(.name-logout-button) {
+  flex-wrap: wrap;
+}
+.name-save-row:has(.name-logout-button) > .name-field {
+  flex-basis: 120px;
+  min-width: 120px;
+}
+.name-save-row:has(.name-logout-button) > .primary {
+  margin-left: auto;
+}
 .settings-actions {
   display: flex;
   flex-direction: column;

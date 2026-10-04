@@ -494,7 +494,7 @@ test('expense amount survives tab switches and clears after saving or leaving th
   await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('0');
   await enterAmount(page, '99');
   await page.getByRole('button', { name: 'Настройки', exact: true }).click();
-  await page.getByRole('button', { name: 'Выйти из деморежима', exact: true }).click();
+  await page.getByRole('button', { name: 'Выйти', exact: true }).click();
   await page.getByRole('button', { name: 'Открыть деморежим', exact: true }).click();
   await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('0');
 });

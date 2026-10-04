@@ -93,9 +93,15 @@ test('login keeps the shared credentials and saves a personal name after success
   await page.getByRole('button', { name: 'Настройки', exact: true }).click();
   const nameField = page.getByRole('dialog').getByLabel('Имя пользователя', { exact: true });
   await expect(nameField).toHaveValue('Анна');
+  await expect(
+    page.getByRole('dialog').getByRole('button', { name: 'Выйти', exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Очистить имя', exact: true }).click();
   await expect(nameField).toHaveValue('');
+  await expect(
+    page.getByRole('dialog').getByRole('button', { name: 'Выйти', exact: true }),
+  ).toHaveCount(0);
   await expect(nameField).toBeFocused();
   await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toBeDisabled();
   await nameField.fill('   ');
@@ -103,6 +109,9 @@ test('login keeps the shared credentials and saves a personal name after success
   await nameField.fill('  Мария  ');
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
   await expect(nameField).toHaveValue('Мария');
+  await expect(
+    page.getByRole('dialog').getByRole('button', { name: 'Выйти', exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem('vmeste.device'))).toBe('Мария');
   await page.getByRole('button', { name: 'Закрыть', exact: true }).click();
