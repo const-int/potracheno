@@ -8,6 +8,7 @@ import MobileExpenseEntry from './MobileExpenseEntry';
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type FormEvent,
@@ -219,6 +220,9 @@ export default function App() {
   const categoryOrderSaving = useRef(false);
   const session = demo ? 'demo' : userId;
   useMobileViewport(isMobile && !!session, quickEntry && !!session && !!userName.trim());
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [tab]);
   useEffect(() => {
     if (tab !== 'add' || !session)
       setNoticeState((current) => (current?.placement === 'expense' ? null : current));

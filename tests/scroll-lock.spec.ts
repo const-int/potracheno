@@ -5,6 +5,44 @@ const nav = (page: import('@playwright/test').Page, name: string) =>
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name, exact: true });
 
+test('every tab switch resets scroll, including returning to a previously scrolled tab', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 520 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Открыть деморежим' }).click();
+  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('vmeste.demo.v1')!);
+    for (let i = 0; i < 40; i++)
+      data.expenses.push({ ...data.expenses[0], id: crypto.randomUUID() });
+    for (let i = 0; i < 12; i++)
+      data.categories.push({
+        ...data.categories[0],
+        id: crypto.randomUUID(),
+        name: `Категория ${i}`,
+      });
+    localStorage.setItem('vmeste.demo.v1', JSON.stringify(data));
+  });
+  await page.reload();
+  await page.getByRole('button', { name: 'Открыть деморежим' }).click();
+  await page.getByLabel('Сумма расхода', { exact: true }).waitFor();
+  for (const name of ['История', 'Потрачено', 'Категории', 'История', 'Категории', 'Потрачено']) {
+    await nav(page, name).click();
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+    await expect
+      .poll(() => page.locator('.topbar').evaluate((el) => el.getBoundingClientRect().top))
+      .toBe(0);
+    await page.evaluate(() => scrollTo(0, 200));
+    await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
+  }
+  await nav(page, 'Трата').click();
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+  await expect(page.locator('html')).toHaveClass(/entry-viewport-locked/);
+  await nav(page, 'История').click();
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+});
+
 test('entry locks page scrolling on return from history while history and modals remain scrollable', async ({
   page,
 }) => {
