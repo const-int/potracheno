@@ -1651,11 +1651,7 @@ function Summary({
               <strong className={money(annual.monthlyAverage).length > 10 ? 'is-long' : ''}>
                 {money(annual.monthlyAverage)}
               </strong>
-              <small>
-                {annual.monthCount === 12
-                  ? 'За 12 месяцев'
-                  : `За ${annual.monthCount} мес., включая текущий`}
-              </small>
+              <small>{annual.monthCount ? `За ${annual.monthCount} мес.` : 'Нет трат'}</small>
             </section>
           </>
         )}

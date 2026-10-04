@@ -43,7 +43,8 @@ narrower than 60px.
 Compact cards below show the operation count, average expense, costliest day, and
 largest expense for the selected period. The Month/Year toggle defaults to Month;
 yearly mode adds the costliest month and average monthly total. The average includes
-zero-spend months: January through the current month for this year, all 12 for previous years. Daily totals use the expense date; tied
+zero-spend months between the first and last recorded expense months in the selected year,
+while excluding empty months before and after that range. Daily totals use the expense date; tied
 maximum days use the most recent date. CSV export is available in Settings on mobile.
 
 Categories have one edit button in the list. Category deletion is available in the

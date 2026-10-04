@@ -108,24 +108,31 @@ it('finds the largest daily sum separately from the largest individual expense',
   expect(tied.costliestDay?.date).toBe('2026-02-02');
 });
 
-it('annual highlights count zero-spend months and exclude future calendar months from the current-year average', () => {
+it('annual averages include gaps between recorded months but exclude empty months at both ends', () => {
   const expense = (date: string, amount: number) =>
     ({ spent_on: date, amount_kopecks: amount }) as Expense;
   const expenses = [
-    expense('2026-01-01', 20000),
-    expense('2026-03-01', 30000),
-    expense('2026-03-02', 20000),
+    expense('2026-04-01', 20000),
+    expense('2026-10-01', 30000),
+    expense('2026-10-02', 20000),
     expense('2025-03-01', 900000),
   ];
-  expect(annualHighlights(expenses, '2026', '2026-10')).toEqual({
-    costliestMonth: { month: '2026-03', total: 50000 },
-    monthlyAverage: 7000,
-    monthCount: 10,
+  expect(annualHighlights(expenses, '2026')).toEqual({
+    costliestMonth: { month: '2026-10', total: 50000 },
+    monthlyAverage: 10000,
+    monthCount: 7,
   });
-  expect(annualHighlights(expenses, '2025', '2026-10').monthlyAverage).toBe(75000);
-  expect(annualHighlights([], '2026', '2026-01')).toEqual({
-    costliestMonth: null,
-    monthlyAverage: 0,
+  expect(annualHighlights(expenses, '2025')).toEqual({
+    costliestMonth: { month: '2025-03', total: 900000 },
+    monthlyAverage: 900000,
     monthCount: 1,
   });
+  expect(annualHighlights([], '2026')).toEqual({
+    costliestMonth: null,
+    monthlyAverage: 0,
+    monthCount: 0,
+  });
+  expect(
+    annualHighlights([expense('2024-01-01', 100), expense('2024-12-31', 200)], '2024').monthCount,
+  ).toBe(12);
 });

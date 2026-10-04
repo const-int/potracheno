@@ -14,7 +14,7 @@ test('yearly summary totals, monthly highlights, navigation and compact period t
       archived: false,
     };
     const entries = [
-      ['2026-01-01', 10000],
+      ['2026-04-01', 10000],
       ['2026-06-01', 40000],
       ['2026-06-02', 20000],
       ['2026-10-01', 30000],
@@ -63,7 +63,7 @@ test('yearly summary totals, monthly highlights, navigation and compact period t
   const average = page.getByRole('region', { name: 'Средняя месячная трата', exact: true });
   await expect(costliest.locator('strong')).toHaveText('600 ₽');
   await expect(costliest.locator('small')).toHaveText('июнь');
-  await expect(average.locator('strong')).toHaveText('100 ₽');
+  await expect(average.locator('strong')).toHaveText('143 ₽');
   await expect(page.locator('.compact-summary .stat:visible')).toHaveCount(6);
   await expect(
     page.getByRole('region', { name: 'Самая крупная трата', exact: true }).locator('strong'),
@@ -71,8 +71,8 @@ test('yearly summary totals, monthly highlights, navigation and compact period t
   await expect(page.getByRole('button', { name: 'Следующий год', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Предыдущий год', exact: true }).click();
   await expect(page.locator('.summary-total strong')).toHaveText('1,200 ₽');
-  await expect(average.locator('strong')).toHaveText('100 ₽');
-  await expect(average.locator('small')).toHaveText('За 12 месяцев');
+  await expect(average.locator('strong')).toHaveText('1,200 ₽');
+  await expect(average.locator('small')).toHaveText('За 1 мес.');
   await page.getByRole('button', { name: 'Следующий год', exact: true }).click();
   await expect(page.locator('.summary-total strong')).toHaveText('1,000 ₽');
   await toggle.getByRole('button', { name: 'Месяц', exact: true }).click();

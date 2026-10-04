@@ -239,11 +239,7 @@ export function expenseHighlights(expenses: Expense[]) {
   }
   return { costliestDay, largestExpense };
 }
-export function annualHighlights(
-  expenses: Expense[],
-  year: string,
-  currentMonth = today().slice(0, 7),
-) {
+export function annualHighlights(expenses: Expense[], year: string) {
   const months = new Map<string, number>();
   let total = 0;
   for (const expense of expenses) {
@@ -261,8 +257,13 @@ export function annualHighlights(
     )
       costliestMonth = { month, total };
   }
-  const monthCount = year === currentMonth.slice(0, 4) ? Number(currentMonth.slice(5, 7)) : 12;
-  return { costliestMonth, monthlyAverage: total / monthCount, monthCount };
+  const recordedMonths = [...months.keys()].sort();
+  const monthCount = recordedMonths.length
+    ? Number(recordedMonths[recordedMonths.length - 1].slice(5, 7)) -
+      Number(recordedMonths[0].slice(5, 7)) +
+      1
+    : 0;
+  return { costliestMonth, monthlyAverage: monthCount ? total / monthCount : 0, monthCount };
 }
 export function csv(data: Data) {
   // Prefix formula-like text so opening the export in a spreadsheet is safe.
