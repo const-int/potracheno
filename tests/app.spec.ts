@@ -146,7 +146,11 @@ test('custom categories can be created and edited', async ({ page }) => {
     .click();
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
   await page.getByLabel('Название', { exact: true }).fill('Путешествия');
-  await expect(page.locator('.icon-picker button')).toHaveCount(14);
+  await expect(page.locator('.icon-picker button')).toHaveCount(18);
+  for (const name of ['Звезда', 'Велосипед', 'Молния', 'Пазл', 'Компас']) {
+    await expect(page.getByRole('button', { name: `Значок ${name}`, exact: true })).toBeVisible();
+  }
+  await expect(page.getByRole('button', { name: 'Значок Топливо', exact: true })).toHaveCount(0);
   for (const name of [
     'Супермаркет',
     'Кафе',

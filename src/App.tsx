@@ -23,6 +23,12 @@ import {
   BarChart3,
   Car,
   Fuel,
+  Star,
+  Bike,
+  Zap,
+  Puzzle,
+  Compass,
+  Save,
   Bus,
   UtensilsCrossed,
   Shirt,
@@ -96,6 +102,11 @@ const icons = {
   coffee: Coffee,
   other: MoreHorizontal,
   fuel: Fuel,
+  star: Star,
+  bike: Bike,
+  lightning: Zap,
+  puzzle: Puzzle,
+  compass: Compass,
   transport: Bus,
   food: UtensilsCrossed,
   clothes: Shirt,
@@ -1224,6 +1235,7 @@ function CategoryForm({
   }, [busy, onBusy]);
   return (
     <form
+      className="category-edit-form"
       onSubmit={async (e) => {
         e.preventDefault();
         if (!name.trim() || actionLock.current || confirmDelete) return;
@@ -1278,7 +1290,7 @@ function CategoryForm({
               aria-pressed={c === color}
               onClick={() => setColor(c)}
             >
-              {c === color && <Check size={18} />}
+              {c === color && <Check size={15} />}
             </button>
           ))}
         </div>
@@ -1299,7 +1311,7 @@ function CategoryForm({
                 aria-pressed={icon === id}
                 className={icon === id ? 'selected' : ''}
               >
-                <Icon size={22} />
+                <Icon size={18} />
               </button>
             );
           })}
@@ -1309,61 +1321,69 @@ function CategoryForm({
             {error}
           </p>
         )}
-        <button className="primary full-width" disabled={busy || !name.trim() || confirmDelete}>
-          {busy ? 'Сохраняем…' : 'Сохранить категорию'}
-        </button>
-        {existing &&
-          (confirmDelete ? (
-            <div className="category-delete-confirm">
-              <p className="muted">
-                {hasExpenses
-                  ? `В категории «${existing.name}» есть траты. Сначала удалите их или выберите для них другую категорию.`
-                  : `Удалить категорию «${existing.name}»? Это действие нельзя отменить.`}
-              </p>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="secondary"
-                  disabled={busy}
-                  onClick={() => setConfirmDelete(false)}
-                >
-                  Отмена
-                </button>
-                <button
-                  type="button"
-                  className="danger"
-                  disabled={busy || hasExpenses}
-                  onClick={async () => {
-                    if (actionLock.current) return;
-                    actionLock.current = true;
-                    setBusy(true);
-                    setError('');
-                    try {
-                      await deleteCategory(demo, existing.id);
-                      await onDelete();
-                    } catch (error) {
-                      setError(errorMessage(error));
-                    } finally {
-                      setBusy(false);
-                      actionLock.current = false;
-                    }
-                  }}
-                >
-                  {busy ? 'Удаляем…' : 'Удалить'}
-                </button>
-              </div>
-            </div>
-          ) : (
+        <div className="category-form-actions">
+          {existing && (
             <button
               type="button"
-              className="danger full-width editor-delete-button"
-              disabled={busy}
+              className="danger"
+              aria-label="Удалить категорию"
+              disabled={busy || confirmDelete}
               onClick={() => setConfirmDelete(true)}
             >
-              <Trash2 size={18} />
-              Удалить категорию
+              <Trash2 size={17} />
+              Удалить
             </button>
-          ))}
+          )}
+          <button
+            className="primary"
+            aria-label="Сохранить категорию"
+            disabled={busy || !name.trim() || confirmDelete}
+          >
+            <Save size={17} />
+            {busy ? 'Сохраняем…' : 'Сохранить'}
+          </button>
+        </div>
+        {existing && confirmDelete && (
+          <div className="category-delete-confirm">
+            <p className="muted">
+              {hasExpenses
+                ? `В категории «${existing.name}» есть траты. Сначала удалите их или выберите для них другую категорию.`
+                : `Удалить категорию «${existing.name}»? Это действие нельзя отменить.`}
+            </p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="secondary"
+                disabled={busy}
+                onClick={() => setConfirmDelete(false)}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                className="danger"
+                disabled={busy || hasExpenses}
+                onClick={async () => {
+                  if (actionLock.current) return;
+                  actionLock.current = true;
+                  setBusy(true);
+                  setError('');
+                  try {
+                    await deleteCategory(demo, existing.id);
+                    await onDelete();
+                  } catch (error) {
+                    setError(errorMessage(error));
+                  } finally {
+                    setBusy(false);
+                    actionLock.current = false;
+                  }
+                }}
+              >
+                {busy ? 'Удаляем…' : 'Удалить'}
+              </button>
+            </div>
+          </div>
+        )}
       </fieldset>
     </form>
   );

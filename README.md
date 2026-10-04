@@ -6,12 +6,13 @@ Built with React, TypeScript, and Vite. Supabase handles storage and authenticat
 GitHub Pages hosts the frontend. No custom backend is required.
 
 The application interface is in Russian.
-Categories offer 35 fresh, contrasting colors across the full spectrum, including warm tones, greens, blues, purples, pinks, and neutrals and 14 curated icons: the family's ten categories,
-plus groceries, travel, fuel, and bills. Older icon IDs remain supported.
+Categories offer 35 fresh, contrasting colors across the full spectrum, including warm tones, greens, blues, purples, pinks, and neutrals and 18 curated icons: the family's ten categories,
+plus groceries, travel, bills, star, bicycle, lightning, puzzle, and compass.
+Fuel is no longer offered for new selections; existing fuel icons remain supported.
 Existing category colors are preserved, including previously selected pastel colors.
 Icon strokes use a darker variant when necessary for contrast.
 For an existing Supabase project, run
-`supabase/migrations/20261003_expand_category_icons.sql` once in SQL Editor
+`supabase/migrations/20261004_generic_category_icons.sql` once in SQL Editor
 to allow the expanded icon set. New projects can use the updated `schema.sql`.
 Amounts use commas to group thousands (for example, `1,234 ₽`). Amounts throughout the interface are rounded up to whole rubles.
 Original fractional amounts remain stored exactly, including when editing only the

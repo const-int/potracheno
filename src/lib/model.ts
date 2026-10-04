@@ -115,6 +115,11 @@ export const categoryIconLabels: Record<string, string> = {
   bills: 'Счета',
   phone: 'Телефон',
   work: 'Работа',
+  star: 'Звезда',
+  bike: 'Велосипед',
+  lightning: 'Молния',
+  puzzle: 'Пазл',
+  compass: 'Компас',
 };
 export const categoryIconOptions = [
   'shop',
@@ -129,8 +134,12 @@ export const categoryIconOptions = [
   'other',
   'basket',
   'travel',
-  'fuel',
   'bills',
+  'star',
+  'bike',
+  'lightning',
+  'puzzle',
+  'compass',
 ];
 export const initialCategories = [
   { name: 'Продукты', icon: 'basket' },
