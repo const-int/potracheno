@@ -164,7 +164,7 @@ test('custom categories can be created and edited', async ({ page }) => {
     'Геймпад',
     'Бриллиант',
     'Искры',
-    'Шестиугольник',
+    'Флажок',
     'Куб',
     'Клевер',
   ]) {

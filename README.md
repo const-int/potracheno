@@ -7,7 +7,7 @@ GitHub Pages hosts the frontend. No custom backend is required.
 
 The application interface is in Russian.
 Categories offer 40 fresh, contrasting colors across the full spectrum, including warm tones, greens, blues, purples, pinks, and neutrals and 28 curated icons: the family's ten categories,
-plus groceries, travel, bills, star, bicycle, lightning, puzzle, compass, lightbulb, book, palette, tools, gamepad, diamond, sparkles, hexagon, cube, and clover.
+plus groceries, travel, bills, star, bicycle, lightning, puzzle, compass, lightbulb, book, palette, tools, gamepad, diamond, sparkles, flag, cube, and clover.
 The compact editor presents icons in seven columns, with Other at the bottom right.
 Fuel is no longer offered for new selections; existing fuel icons remain supported.
 Existing category colors are preserved, including previously selected pastel colors.
@@ -41,7 +41,9 @@ bars sorted by amount with totals and percentages. The treemap is a static visua
 Labels use white text directly on the category color, and are hidden on blocks
 narrower than 60px.
 Compact cards below show the operation count, average expense, costliest day, and
-largest expense for the selected month. Daily totals use the expense date; tied
+largest expense for the selected period. The Month/Year toggle defaults to Month;
+yearly mode adds the costliest month and average monthly total. The average includes
+zero-spend months: January through the current month for this year, all 12 for previous years. Daily totals use the expense date; tied
 maximum days use the most recent date. CSV export is available in Settings on mobile.
 
 Categories have one edit button in the list. Category deletion is available in the

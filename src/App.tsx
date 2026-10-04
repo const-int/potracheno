@@ -35,7 +35,7 @@ import {
   Gamepad2,
   Gem,
   Sparkles,
-  Hexagon,
+  Flag,
   Box,
   Clover,
   Save,
@@ -60,7 +60,6 @@ import {
   Leaf,
   List,
   LogOut,
-  MoreHorizontal,
   Cat,
   Pencil,
   Plus,
@@ -88,6 +87,7 @@ import {
   shiftMonth,
   summarize,
   expenseHighlights,
+  annualHighlights,
   today,
 } from './lib/model';
 import {
@@ -110,7 +110,7 @@ const icons = {
   paw: Cat,
   home: Home,
   coffee: Coffee,
-  other: MoreHorizontal,
+  other: LayoutGrid,
   fuel: Fuel,
   star: Star,
   bike: Bike,
@@ -124,7 +124,7 @@ const icons = {
   gamepad: Gamepad2,
   diamond: Gem,
   sparkles: Sparkles,
-  hexagon: Hexagon,
+  hexagon: Flag,
   cube: Box,
   clover: Clover,
   transport: Bus,
@@ -140,7 +140,7 @@ const icons = {
   work: BriefcaseBusiness,
 };
 function CategoryIcon({ category, size = 20 }: { category?: Category; size?: number }) {
-  const Icon = icons[category?.icon as keyof typeof icons] ?? MoreHorizontal;
+  const Icon = icons[category?.icon as keyof typeof icons] ?? icons.other;
   return (
     <span
       className="category-icon"
@@ -226,6 +226,7 @@ export default function App() {
   }, []);
   const quickEntry = isMobile && tab === 'add';
   const [month, setMonth] = useState(today().slice(0, 7));
+  const [summaryPeriod, setSummaryPeriod] = useState<'month' | 'year'>('month');
   const [userName, setUserName] = useState(() => localStorage.getItem('vmeste.device') ?? '');
   const [settings, setSettings] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -344,6 +345,11 @@ export default function App() {
       (a, b) => b.spent_on.localeCompare(a.spent_on) || b.created_at.localeCompare(a.created_at),
     );
   const total = monthExpenses.reduce((sum, e) => sum + e.amount_kopecks, 0);
+  const yearlySummary = tab === 'summary' && summaryPeriod === 'year';
+  const summaryExpenses = yearlySummary
+    ? data.expenses.filter((e) => e.spent_on.startsWith(`${month.slice(0, 4)}-`))
+    : monthExpenses;
+  const summaryTotal = summaryExpenses.reduce((sum, e) => sum + e.amount_kopecks, 0);
   const categoryById = (id: string) => data.categories.find((c) => c.id === id);
   const activeCategories = data.categories;
   async function afterSave(text: string, placement?: 'expense') {
@@ -393,6 +399,7 @@ export default function App() {
   }
   function selectTab(next: Tab) {
     if (next === 'history' || next === 'summary') setMonth(today().slice(0, 7));
+    if (next === 'summary') setSummaryPeriod('month');
     setTab(next);
   }
 
@@ -681,25 +688,29 @@ export default function App() {
               )}
               {(tab === 'history' || tab === 'summary') && (
                 <>
-                  <div className="period-row">
+                  <div className={`period-row ${tab === 'summary' ? 'summary-period-row' : ''}`}>
                     <div className="month-switch">
                       <button
-                        onClick={() => setMonth(shiftMonth(month, -1))}
-                        aria-label="Предыдущий месяц"
+                        onClick={() => setMonth(shiftMonth(month, yearlySummary ? -12 : -1))}
+                        aria-label={yearlySummary ? 'Предыдущий год' : 'Предыдущий месяц'}
                       >
                         <ArrowLeft size={17} />
                       </button>
-                      <span>{monthLabel(month)}</span>
-                      {month < today().slice(0, 7) ? (
+                      <span>{yearlySummary ? month.slice(0, 4) : monthLabel(month)}</span>
+                      {(
+                        yearlySummary
+                          ? month.slice(0, 4) < today().slice(0, 4)
+                          : month < today().slice(0, 7)
+                      ) ? (
                         <button
                           onClick={() =>
                             setMonth((previous) => {
-                              const next = shiftMonth(previous, 1);
+                              const next = shiftMonth(previous, yearlySummary ? 12 : 1);
                               const current = today().slice(0, 7);
                               return next > current ? current : next;
                             })
                           }
-                          aria-label="Следующий месяц"
+                          aria-label={yearlySummary ? 'Следующий год' : 'Следующий месяц'}
                         >
                           <ArrowRight size={17} />
                         </button>
@@ -707,16 +718,37 @@ export default function App() {
                         <div className="month-next-placeholder" aria-hidden="true" />
                       )}
                     </div>
-                    {!isMobile && <span className="muted">{monthExpenses.length} записей</span>}
+                    {tab === 'summary' && (
+                      <div className="period-toggle" role="group" aria-label="Период статистики">
+                        {(['month', 'year'] as const).map((period) => (
+                          <button
+                            key={period}
+                            type="button"
+                            aria-pressed={summaryPeriod === period}
+                            onClick={() => {
+                              setSummaryPeriod(period);
+                              if (period === 'month' && month > today().slice(0, 7))
+                                setMonth(today().slice(0, 7));
+                            }}
+                          >
+                            {period === 'month' ? 'Месяц' : 'Год'}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {!isMobile && tab === 'history' && (
+                      <span className="muted">{monthExpenses.length} записей</span>
+                    )}
                     {isMobile && tab === 'history' && (
                       <strong className="period-total">{money(total)}</strong>
                     )}
                   </div>
                   {tab === 'summary' ? (
                     <Summary
-                      expenses={monthExpenses}
+                      expenses={summaryExpenses}
                       categories={data.categories}
-                      total={total}
+                      total={summaryTotal}
+                      year={yearlySummary ? month.slice(0, 4) : undefined}
                       compact={isMobile}
                     />
                   ) : (
@@ -1321,7 +1353,7 @@ function CategoryForm({
             ? categoryIconOptions
             : [icon, ...categoryIconOptions]
           ).map((id) => {
-            const Icon = icons[id as keyof typeof icons] ?? MoreHorizontal;
+            const Icon = icons[id as keyof typeof icons] ?? icons.other;
             return (
               <button
                 key={id}
@@ -1502,14 +1534,14 @@ function SeedButton({
     </div>
   );
 }
-function Empty({ onClick }: { onClick?: () => void }) {
+function Empty({ onClick, year = false }: { onClick?: () => void; year?: boolean }) {
   return (
     <div className="empty-state">
       <span className="empty-icon">
         <ArrowDownLeft size={30} />
       </span>
       <h3>Здесь пока тихо</h3>
-      <p>В этом месяце еще нет трат.</p>
+      <p>{year ? 'В этом году еще нет трат.' : 'В этом месяце еще нет трат.'}</p>
       {onClick && (
         <button className="secondary" onClick={onClick}>
           Добавить первую трату
@@ -1523,14 +1555,17 @@ function Summary({
   categories,
   total,
   compact = false,
+  year,
 }: {
   expenses: Expense[];
   categories: Category[];
   total: number;
   compact?: boolean;
+  year?: string;
 }) {
   const groups = summarize(expenses, categories);
   const { costliestDay, largestExpense } = expenseHighlights(expenses);
+  const annual = year ? annualHighlights(expenses, year) : null;
   const dayLabel = (date: string, month: 'long' | 'short' = 'long') =>
     new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month }).format(
       new Date(`${date}T12:00:00`),
@@ -1539,14 +1574,14 @@ function Summary({
     <div className={`summary-content ${compact ? 'compact-summary' : ''}`}>
       <div className="stats-grid">
         <section className="panel stat">
-          <span>Всего за месяц</span>
+          <span>{year ? 'Всего за год' : 'Всего за месяц'}</span>
           <strong>{money(total)}</strong>
           <small>Все категории · рубли</small>
         </section>
         <section className="panel stat">
           <span>Всего операций</span>
           <strong>{expenses.length.toLocaleString('en-US')}</strong>
-          <small>Записей за выбранный месяц</small>
+          <small>{year ? 'Записей за выбранный год' : 'Записей за выбранный месяц'}</small>
         </section>
         <section className="panel stat">
           <span>Средняя трата</span>
@@ -1577,6 +1612,38 @@ function Summary({
               : 'Нет трат'}
           </small>
         </section>
+        {annual && (
+          <>
+            <section className="panel stat stat-insight" aria-label="Самый затратный месяц">
+              <span>Самый затратный месяц</span>
+              <strong
+                className={
+                  annual.costliestMonth && money(annual.costliestMonth.total).length > 10
+                    ? 'is-long'
+                    : ''
+                }
+              >
+                {annual.costliestMonth ? money(annual.costliestMonth.total) : '—'}
+              </strong>
+              <small>
+                {annual.costliestMonth
+                  ? monthLabel(annual.costliestMonth.month).split(' ')[0]
+                  : 'Нет трат'}
+              </small>
+            </section>
+            <section className="panel stat stat-insight" aria-label="Средняя месячная трата">
+              <span>Средняя месячная трата</span>
+              <strong className={money(annual.monthlyAverage).length > 10 ? 'is-long' : ''}>
+                {money(annual.monthlyAverage)}
+              </strong>
+              <small>
+                {annual.monthCount === 12
+                  ? 'За 12 месяцев'
+                  : `За ${annual.monthCount} мес., включая текущий`}
+              </small>
+            </section>
+          </>
+        )}
       </div>
       <section className="panel summary-panel" aria-label="Траты по категориям">
         {!compact && (
@@ -1586,12 +1653,12 @@ function Summary({
           </div>
         )}
         {!total ? (
-          <Empty />
+          <Empty year={!!year} />
         ) : (
           <div className="category-breakdown">
             {compact && (
               <div className="summary-total">
-                <span>Траты месяца</span>
+                <span>{year ? 'Траты года' : 'Траты месяца'}</span>
                 <strong>{money(total)}</strong>
               </div>
             )}

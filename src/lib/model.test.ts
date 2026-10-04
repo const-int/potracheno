@@ -3,6 +3,7 @@ import {
   money,
   categoryIconColor,
   expenseHighlights,
+  annualHighlights,
   csv,
   parseAmount,
   shiftMonth,
@@ -105,4 +106,26 @@ it('finds the largest daily sum separately from the largest individual expense',
     { ...expense('food', 100), spent_on: '2026-02-02' },
   ]);
   expect(tied.costliestDay?.date).toBe('2026-02-02');
+});
+
+it('annual highlights count zero-spend months and exclude future calendar months from the current-year average', () => {
+  const expense = (date: string, amount: number) =>
+    ({ spent_on: date, amount_kopecks: amount }) as Expense;
+  const expenses = [
+    expense('2026-01-01', 20000),
+    expense('2026-03-01', 30000),
+    expense('2026-03-02', 20000),
+    expense('2025-03-01', 900000),
+  ];
+  expect(annualHighlights(expenses, '2026', '2026-10')).toEqual({
+    costliestMonth: { month: '2026-03', total: 50000 },
+    monthlyAverage: 7000,
+    monthCount: 10,
+  });
+  expect(annualHighlights(expenses, '2025', '2026-10').monthlyAverage).toBe(75000);
+  expect(annualHighlights([], '2026', '2026-01')).toEqual({
+    costliestMonth: null,
+    monthlyAverage: 0,
+    monthCount: 1,
+  });
 });

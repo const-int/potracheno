@@ -132,7 +132,7 @@ export const categoryIconLabels: Record<string, string> = {
   gamepad: 'Геймпад',
   diamond: 'Бриллиант',
   sparkles: 'Искры',
-  hexagon: 'Шестиугольник',
+  hexagon: 'Флажок',
   cube: 'Куб',
   clover: 'Клевер',
 };
@@ -238,6 +238,31 @@ export function expenseHighlights(expenses: Expense[]) {
       costliestDay = { date, total };
   }
   return { costliestDay, largestExpense };
+}
+export function annualHighlights(
+  expenses: Expense[],
+  year: string,
+  currentMonth = today().slice(0, 7),
+) {
+  const months = new Map<string, number>();
+  let total = 0;
+  for (const expense of expenses) {
+    if (!expense.spent_on.startsWith(`${year}-`)) continue;
+    const month = expense.spent_on.slice(0, 7);
+    months.set(month, (months.get(month) ?? 0) + expense.amount_kopecks);
+    total += expense.amount_kopecks;
+  }
+  let costliestMonth: { month: string; total: number } | null = null;
+  for (const [month, total] of months) {
+    if (
+      !costliestMonth ||
+      total > costliestMonth.total ||
+      (total === costliestMonth.total && month > costliestMonth.month)
+    )
+      costliestMonth = { month, total };
+  }
+  const monthCount = year === currentMonth.slice(0, 4) ? Number(currentMonth.slice(5, 7)) : 12;
+  return { costliestMonth, monthlyAverage: total / monthCount, monthCount };
 }
 export function csv(data: Data) {
   // Prefix formula-like text so opening the export in a spreadsheet is safe.
