@@ -2875,3 +2875,10 @@ fieldset {
     min-height: 100dvh;
   }
 }
+
+.app-shell:not(.mobile-entry) .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fbf9fc;
+}
