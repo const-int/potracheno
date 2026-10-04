@@ -1224,33 +1224,47 @@ function ExpenseForm({
             {error}
           </p>
         )}
-        <button className="primary full-width save-expense" disabled={busy || !categories.length}>
-          <Plus size={19} />
-          {busy ? 'Сохраняем…' : existing ? 'Сохранить изменения' : 'Добавить трату'}
-        </button>
-        {existing && onDelete && (
-          <button
-            type="button"
-            className="danger full-width editor-delete-button"
-            disabled={busy}
-            onClick={async () => {
-              if (submitLock.current) return;
-              submitLock.current = true;
-              setBusy(true);
-              setError('');
-              try {
-                await deleteExpense(demo, existing.id);
-                await onDelete();
-              } catch (error) {
-                setError(errorMessage(error));
-              } finally {
-                setBusy(false);
-                submitLock.current = false;
-              }
-            }}
-          >
-            <Trash2 size={18} />
-            {busy ? 'Подождите…' : 'Удалить трату'}
+        {existing ? (
+          <div className="category-form-actions">
+            {onDelete && (
+              <button
+                type="button"
+                className="danger"
+                aria-label="Удалить трату"
+                disabled={busy}
+                onClick={async () => {
+                  if (submitLock.current) return;
+                  submitLock.current = true;
+                  setBusy(true);
+                  setError('');
+                  try {
+                    await deleteExpense(demo, existing.id);
+                    await onDelete();
+                  } catch (error) {
+                    setError(errorMessage(error));
+                  } finally {
+                    setBusy(false);
+                    submitLock.current = false;
+                  }
+                }}
+              >
+                <Trash2 size={17} />
+                {busy ? 'Подождите…' : 'Удалить'}
+              </button>
+            )}
+            <button
+              className="primary save-expense"
+              aria-label="Сохранить изменения"
+              disabled={busy || !categories.length}
+            >
+              <Save size={17} />
+              {busy ? 'Сохраняем…' : 'Сохранить'}
+            </button>
+          </div>
+        ) : (
+          <button className="primary full-width save-expense" disabled={busy || !categories.length}>
+            <Plus size={19} />
+            {busy ? 'Сохраняем…' : 'Добавить трату'}
           </button>
         )}
       </fieldset>

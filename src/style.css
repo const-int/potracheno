@@ -703,50 +703,32 @@ fieldset {
 .period-toggle {
   display: flex;
   flex-shrink: 0;
+  margin-left: auto;
   overflow: hidden;
   border: 1px solid #ded5e7;
   border-radius: 10px;
   background: #f2edf7;
 }
 .period-toggle button {
-  min-height: 34px;
-  padding: 6px 10px;
+  min-height: 38px;
+  padding: 8px 12px;
   border: 0;
   border-radius: 0;
   background: transparent;
   color: #786987;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 .period-toggle button + button {
   border-left: 1px solid #ded5e7;
 }
 .period-toggle button[aria-pressed='true'] {
-  background: #625079;
-  color: #fff;
+  background: #eee6f5;
+  color: #49365c;
 }
 @media (max-width: 650px) {
-  .period-row.summary-period-row {
-    flex-wrap: nowrap;
-    gap: 8px;
-  }
-  .summary-period-row .month-switch {
-    gap: 4px;
-    font-size: 14px;
-  }
   .summary-period-row .month-switch span {
-    min-width: 0;
     white-space: nowrap;
-  }
-  .summary-period-row .month-switch button,
-  .summary-period-row .month-next-placeholder {
-    width: 28px;
-    height: 32px;
-    flex-shrink: 0;
-  }
-  .period-toggle button {
-    padding-inline: 8px;
-    font-size: 12px;
   }
 }
 .month-switch {

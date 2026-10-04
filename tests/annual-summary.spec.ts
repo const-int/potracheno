@@ -82,13 +82,16 @@ test('yearly summary totals, monthly highlights, navigation and compact period t
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    const row = await page
-      .locator('.summary-period-row')
-      .evaluate((el) => ({
-        switchTop: el.querySelector('.month-switch')!.getBoundingClientRect().top,
-        toggleTop: el.querySelector('.period-toggle')!.getBoundingClientRect().top,
-      }));
-    expect(Math.abs(row.switchTop - row.toggleTop)).toBeLessThanOrEqual(3);
+    const row = await page.locator('.summary-period-row').evaluate((el) => ({
+      fontSize: getComputedStyle(el.querySelector('.month-switch')!).fontSize,
+      buttonWidth: el.querySelector('.month-switch button')!.getBoundingClientRect().width,
+      right:
+        el.getBoundingClientRect().right -
+        el.querySelector('.period-toggle')!.getBoundingClientRect().right,
+    }));
+    expect(row.fontSize).toBe('16px');
+    expect(row.buttonWidth).toBe(33);
+    expect(Math.abs(row.right)).toBeLessThanOrEqual(1);
   }
   await toggle.getByRole('button', { name: 'Год', exact: true }).click();
   await nav('История').click();
