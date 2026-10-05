@@ -795,6 +795,13 @@ export default function App() {
                                     day: 'numeric',
                                     month: 'short',
                                   }).format(new Date(e.spent_on + 'T12:00:00'))}{' '}
+                                  <time dateTime={e.created_at} title="Время добавления записи">
+                                    {new Intl.DateTimeFormat('ru-RU', {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                      hourCycle: 'h23',
+                                    }).format(new Date(e.created_at))}
+                                  </time>{' '}
                                   · {e.device_name}
                                 </span>
                               </div>

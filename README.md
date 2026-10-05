@@ -36,6 +36,9 @@ New mobile expenses use today's date and an empty note. More than ten categories
 are displayed on additional pages. Use the edit button in History to change a date or amount. The editor also offers
 immediate expense deletion without a confirmation step. Expense comments are not used.
 Mobile History shows the month selector, category filter, total, and expense list.
+Rows include the expense date and the record creation time in 24-hour HH:mm format,
+using the device's timezone. Imported records show their import time; CSV imports
+currently preserve the expense date without the original time of day.
 With no categories checked, all expenses are included; selecting one or more categories
 filters both the list and its total for the selected month. Clearing every checkbox restores all categories. The dropdown includes category icons
 and uses the available height above mobile navigation. A reset button appears beside
