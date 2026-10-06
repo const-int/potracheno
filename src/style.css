@@ -936,6 +936,25 @@ fieldset {
 .history-filter-empty p {
   margin: 0 0 12px;
 }
+.history-day-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0 8px;
+  color: #978ca1;
+  font-size: 13px;
+  font-weight: 500;
+}
+.history-day-divider > span {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 10px;
+  background: #f7f5f9;
+  white-space: nowrap;
+}
+.history-day-divider + .expense-row {
+  border-top: 0;
+}
 .expense-row {
   display: flex;
   align-items: center;

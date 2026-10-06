@@ -8,6 +8,7 @@ import CsvImport from './CsvImport';
 import MobileExpenseEntry from './MobileExpenseEntry';
 import {
   useCallback,
+  Fragment,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -785,42 +786,61 @@ export default function App() {
                             <Empty onClick={() => setTab('add')} />
                           ))}
                         <div className="expense-list">
-                          {historyExpenses.map((e) => (
-                            <div className="expense-row" key={e.id}>
-                              <CategoryIcon category={categoryById(e.category_id)} />
-                              <div className="expense-info">
-                                <strong>{categoryById(e.category_id)?.name ?? 'Категория'}</strong>
-                                <span>
-                                  {new Intl.DateTimeFormat('ru-RU', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                  }).format(new Date(e.spent_on + 'T12:00:00'))}{' '}
-                                  <time dateTime={e.created_at} title="Время добавления записи">
-                                    {new Intl.DateTimeFormat('ru-RU', {
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                      hourCycle: 'h23',
-                                    }).format(new Date(e.created_at))}
-                                  </time>{' '}
-                                  · {e.device_name}
-                                </span>
-                              </div>
-                              <b
-                                className={`expense-amount ${money(e.amount_kopecks).length > 9 ? 'is-long' : ''}`}
-                              >
-                                {money(e.amount_kopecks)}
-                              </b>
-                              <div className="row-actions">
-                                <button
-                                  className="icon-button expense-edit-button"
-                                  aria-label={`Редактировать ${categoryById(e.category_id)?.name}`}
-                                  onClick={() => setEditing(e)}
-                                >
-                                  <Pencil size={20} />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                          {historyExpenses.map((e, index) => {
+                            const startsDay =
+                              index > 0 && historyExpenses[index - 1].spent_on !== e.spent_on;
+                            const dateLabel = startsDay
+                              ? new Intl.DateTimeFormat('ru-RU', {
+                                  day: 'numeric',
+                                  month: 'long',
+                                }).format(new Date(e.spent_on + 'T12:00:00'))
+                              : '';
+                            return (
+                              <Fragment key={e.id}>
+                                {startsDay && (
+                                  <div
+                                    className="history-day-divider"
+                                    role="separator"
+                                    aria-label={dateLabel}
+                                  >
+                                    <span>{dateLabel}</span>
+                                  </div>
+                                )}
+                                <div className="expense-row">
+                                  <CategoryIcon category={categoryById(e.category_id)} />
+                                  <div className="expense-info">
+                                    <strong>
+                                      {categoryById(e.category_id)?.name ?? 'Категория'}
+                                    </strong>
+                                    <span>
+                                      <time dateTime={e.created_at} title="Время добавления записи">
+                                        {new Intl.DateTimeFormat('ru-RU', {
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                          hourCycle: 'h23',
+                                        }).format(new Date(e.created_at))}
+                                      </time>{' '}
+                                      · {e.device_name}
+                                    </span>
+                                  </div>
+                                  <b
+                                    className={`expense-amount ${money(e.amount_kopecks).length > 9 ? 'is-long' : ''}`}
+                                  >
+                                    {money(e.amount_kopecks)}
+                                  </b>
+                                  <div className="row-actions">
+                                    <button
+                                      className="icon-button expense-edit-button"
+                                      aria-label={`Редактировать ${categoryById(e.category_id)?.name}`}
+                                      onClick={() => setEditing(e)}
+                                    >
+                                      <Pencil size={20} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </Fragment>
+                            );
+                          })}
                         </div>
                       </section>
                     </>
