@@ -21,8 +21,8 @@ date or category. CSV amounts retain a decimal point without grouping.
 
 On phones, the app opens on the expense tab. Enter an amount using the built-in
 numeric keypad, choose a category, and tap the checkmark key to save. New amounts
-use whole rubles only. Successful entry shows the category icon, saved amount,
-and a trailing checkmark in the toast above the keypad. The keypad has a backspace key instead of a decimal key;
+use whole rubles only. Successful entry shows the category icon and name on the left,
+with the saved amount on the right in the toast above the keypad. The keypad has a backspace key instead of a decimal key;
 there is no separate backspace button next to the amount. The entry
 screen preselects the first available category. The entered amount survives tab switches
 and is cleared after a successful save or when leaving the account.

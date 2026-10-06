@@ -750,10 +750,13 @@ fieldset {
 }
 .month-switch button:disabled {
   background: #f1f1f1;
-  border-color: transparent;
+  border-color: #e2dce7;
   color: #9b9b9b;
   cursor: default;
   opacity: 1;
+}
+.month-switch button:disabled svg {
+  opacity: 0.5;
 }
 .month-switch span {
   min-width: 0;
@@ -2497,7 +2500,7 @@ fieldset {
   color: #fff;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   box-shadow: 0 12px 38px #35254638;
   z-index: 1000;
   pointer-events: none;
@@ -2516,7 +2519,7 @@ fieldset {
 }
 .app-toast-message {
   font-family: 'Manrope', system-ui, sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.5;
   font-weight: 600;
   overflow-wrap: anywhere;
@@ -2524,13 +2527,17 @@ fieldset {
 }
 .app-toast-expense .app-toast-message {
   flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-toast-amount {
+  flex-shrink: 0;
+  margin-left: 4px;
   font-size: 22px;
   line-height: 1.2;
-}
-.app-toast-success-check {
-  flex: 0 0 24px;
-  width: 24px;
-  height: 24px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 .app-toast-error {
   background: #ad493d;

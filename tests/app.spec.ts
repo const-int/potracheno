@@ -25,9 +25,10 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
   await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
   await expect(page.locator('.app-toast-expense .app-toast-message')).toBeVisible();
-  await expect(page.locator('.app-toast-expense .app-toast-message')).toHaveText('1,234 ₽');
+  await expect(page.locator('.app-toast-expense .app-toast-message')).toHaveText('Продукты');
+  await expect(page.locator('.app-toast-amount')).toHaveText('1,234 ₽');
   await expect(page.locator('.app-toast-category-icon .lucide-shopping-basket')).toBeVisible();
-  await expect(page.locator('.app-toast-success-check')).toBeVisible();
+  await expect(page.locator('.app-toast-amount svg')).toHaveCount(0);
   await expect(page.locator('.app-toast-expense .app-toast-icon')).toHaveCount(0);
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })

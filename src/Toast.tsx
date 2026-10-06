@@ -71,8 +71,8 @@ export default function Toast({
       <span className="app-toast-category-icon" aria-hidden="true">
         {notice.expense.icon}
       </span>
-      <span className="app-toast-message">{notice.message}</span>
-      <Check className="app-toast-success-check" size={24} strokeWidth={2.5} aria-hidden="true" />
+      <span className="app-toast-message">{notice.expense.categoryName}</span>
+      <strong className="app-toast-amount">{notice.message}</strong>
     </>
   ) : (
     <>
