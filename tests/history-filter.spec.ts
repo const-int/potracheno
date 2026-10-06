@@ -65,7 +65,7 @@ test('history category multiselect filters monthly rows and total, and clears ba
   );
   const apply = options.getByRole('button', { name: 'Применить', exact: true });
   await expect(apply).toHaveCSS('height', '42px');
-  await expect(apply).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(apply).toHaveCSS('background-color', 'rgb(239, 229, 246)');
   await expect(apply.locator('svg')).toHaveCount(0);
   await apply.click();
   await expect(options).not.toBeVisible();

@@ -909,24 +909,22 @@ fieldset {
 .history-filter-footer {
   position: sticky;
   bottom: 0;
-  margin-top: 6px;
-  padding-top: 8px;
-  border-top: 1px solid #e0d8e7;
+  margin-top: 12px;
   background: #fff;
 }
 .history-filter-apply {
   height: 42px;
   min-height: 42px;
   padding: 8px 14px;
-  border: 1px solid #cfc3db;
+  border: 1px solid #d6bee5;
   border-radius: 12px;
-  background: transparent;
-  color: #625079;
+  background: #efe5f6;
+  color: #76598e;
   font-size: 15px;
   font-weight: 600;
 }
 .history-filter-apply:active {
-  background: #f2edf7;
+  background: #e3d4ed;
 }
 .history-filter-empty {
   padding: 24px 0;
