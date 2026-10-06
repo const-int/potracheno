@@ -289,7 +289,9 @@ test('entry fits small phones and uses only the custom keypad', async ({ page })
     page
       .getByRole('group', { name: 'Цифровая клавиатура' })
       .getByRole('button', { name: 'Удалить цифру' }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole('button', { name: 'Удалить цифру', exact: true }).click();
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('0');
   await enterAmount(page, '2840');
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
   await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('2,840');
