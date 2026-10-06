@@ -199,6 +199,17 @@ export function monthLabel(month: string) {
     .format(new Date(`${month}-01T12:00:00`))
     .replace(' г.', '');
 }
+export function historyDayLabel(date: string, now = new Date()) {
+  const localDay = (value: Date) =>
+    `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+  if (date === localDay(now)) return 'Сегодня';
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date === localDay(yesterday)) return 'Вчера';
+  return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(
+    new Date(`${date}T12:00:00`),
+  );
+}
 export function shiftMonth(month: string, delta: number) {
   const [year, m] = month.split('-').map(Number);
   const date = new Date(year, m - 1 + delta, 1, 12);

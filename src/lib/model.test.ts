@@ -7,6 +7,7 @@ import {
   csv,
   parseAmount,
   shiftMonth,
+  historyDayLabel,
   summarize,
   type Category,
   type Expense,
@@ -135,4 +136,13 @@ it('annual averages include gaps between recorded months but exclude empty month
   expect(
     annualHighlights([expense('2024-01-01', 100), expense('2024-12-31', 200)], '2024').monthCount,
   ).toBe(12);
+});
+
+it('history day labels recognize today and yesterday across calendar boundaries', () => {
+  const now = new Date(2026, 9, 6, 0, 15);
+  expect(historyDayLabel('2026-10-06', now)).toBe('Сегодня');
+  expect(historyDayLabel('2026-10-05', now)).toBe('Вчера');
+  expect(historyDayLabel('2026-10-04', now)).toBe('4 октября');
+  expect(historyDayLabel('2025-12-31', new Date(2026, 0, 1, 1))).toBe('Вчера');
+  expect(historyDayLabel('2024-02-29', new Date(2024, 2, 1, 1))).toBe('Вчера');
 });

@@ -845,7 +845,7 @@ fieldset {
   cursor: pointer;
 }
 .history-filter-options > label:has(input:checked) {
-  background: #eee6f5;
+  background: #f3eef8;
 }
 .history-filter-options > label > .category-icon {
   width: 30px;
@@ -934,23 +934,19 @@ fieldset {
 .history-filter-empty p {
   margin: 0 0 12px;
 }
-.history-day-divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 0 8px;
+.history-days {
+  display: grid;
+  gap: 16px;
+}
+.history-day-label {
+  margin: 0 0 8px;
+  padding: 0 4px;
   color: #978ca1;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
+  line-height: 1.4;
 }
-.history-day-divider > span {
-  flex-shrink: 0;
-  padding: 4px 12px;
-  border-radius: 10px;
-  background: #f7f5f9;
-  white-space: nowrap;
-}
-.history-day-divider + .expense-row {
+.history-panel .expense-row:first-child {
   border-top: 0;
 }
 .expense-row {

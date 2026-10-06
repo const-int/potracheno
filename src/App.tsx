@@ -8,7 +8,6 @@ import CsvImport from './CsvImport';
 import MobileExpenseEntry from './MobileExpenseEntry';
 import {
   useCallback,
-  Fragment,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -86,6 +85,7 @@ import {
   csv,
   money,
   monthLabel,
+  historyDayLabel,
   parseAmount,
   shiftMonth,
   summarize,
@@ -355,6 +355,13 @@ export default function App() {
     ? monthExpenses.filter((expense) => selectedHistoryCategories.includes(expense.category_id))
     : monthExpenses;
   const historyTotal = historyExpenses.reduce((sum, expense) => sum + expense.amount_kopecks, 0);
+  const historyDayGroups: { date: string; expenses: Expense[] }[] = [];
+  for (const expense of historyExpenses) {
+    const group = historyDayGroups[historyDayGroups.length - 1];
+    if (group?.date === expense.spent_on) group.expenses.push(expense);
+    else historyDayGroups.push({ date: expense.spent_on, expenses: [expense] });
+  }
+
   const yearlySummary = tab === 'summary' && summaryPeriod === 'year';
   const summaryExpenses = yearlySummary
     ? data.expenses.filter((e) => e.spent_on.startsWith(`${month.slice(0, 4)}-`))
@@ -770,77 +777,75 @@ export default function App() {
                         onChange={setHistoryCategoryIds}
                         renderIcon={(category) => <CategoryIcon category={category} size={19} />}
                       />
-                      <section className="panel history-panel" aria-label="История трат">
+                      <section className="history-content" aria-label="История трат">
                         {!isMobile && (
                           <div className="section-heading">
                             <h2>Траты за месяц</h2>
                             <strong className="history-total">{money(historyTotal)}</strong>
                           </div>
                         )}
-                        {!historyExpenses.length &&
-                          (selectedHistoryCategories.length ? (
-                            <div className="history-filter-empty">
-                              <p>Нет трат в выбранных категориях за этот месяц.</p>
-                            </div>
-                          ) : (
-                            <Empty onClick={() => setTab('add')} />
-                          ))}
-                        <div className="expense-list">
-                          {historyExpenses.map((e, index) => {
-                            const startsDay =
-                              index > 0 && historyExpenses[index - 1].spent_on !== e.spent_on;
-                            const dateLabel = startsDay
-                              ? new Intl.DateTimeFormat('ru-RU', {
-                                  day: 'numeric',
-                                  month: 'long',
-                                }).format(new Date(e.spent_on + 'T12:00:00'))
-                              : '';
-                            return (
-                              <Fragment key={e.id}>
-                                {startsDay && (
-                                  <div
-                                    className="history-day-divider"
-                                    role="separator"
-                                    aria-label={dateLabel}
-                                  >
-                                    <span>{dateLabel}</span>
-                                  </div>
-                                )}
-                                <div className="expense-row">
-                                  <CategoryIcon category={categoryById(e.category_id)} />
-                                  <div className="expense-info">
-                                    <strong>
-                                      {categoryById(e.category_id)?.name ?? 'Категория'}
-                                    </strong>
-                                    <span>
-                                      <time dateTime={e.created_at} title="Время добавления записи">
-                                        {new Intl.DateTimeFormat('ru-RU', {
-                                          hour: '2-digit',
-                                          minute: '2-digit',
-                                          hourCycle: 'h23',
-                                        }).format(new Date(e.created_at))}
-                                      </time>{' '}
-                                      · {e.device_name}
-                                    </span>
-                                  </div>
-                                  <b
-                                    className={`expense-amount ${money(e.amount_kopecks).length > 9 ? 'is-long' : ''}`}
-                                  >
-                                    {money(e.amount_kopecks)}
-                                  </b>
-                                  <div className="row-actions">
-                                    <button
-                                      className="icon-button expense-edit-button"
-                                      aria-label={`Редактировать ${categoryById(e.category_id)?.name}`}
-                                      onClick={() => setEditing(e)}
-                                    >
-                                      <Pencil size={20} />
-                                    </button>
-                                  </div>
+                        {!historyExpenses.length && (
+                          <div className="panel history-panel">
+                            {selectedHistoryCategories.length ? (
+                              <div className="history-filter-empty">
+                                <p>Нет трат в выбранных категориях за этот месяц.</p>
+                              </div>
+                            ) : (
+                              <Empty onClick={() => setTab('add')} />
+                            )}
+                          </div>
+                        )}
+                        <div className="history-days">
+                          {historyDayGroups.map((group) => (
+                            <section
+                              className="history-day-group"
+                              key={group.date}
+                              aria-label={historyDayLabel(group.date)}
+                            >
+                              <h3 className="history-day-label">{historyDayLabel(group.date)}</h3>
+                              <div className="panel history-panel">
+                                <div className="expense-list">
+                                  {group.expenses.map((e) => (
+                                    <div className="expense-row" key={e.id}>
+                                      <CategoryIcon category={categoryById(e.category_id)} />
+                                      <div className="expense-info">
+                                        <strong>
+                                          {categoryById(e.category_id)?.name ?? 'Категория'}
+                                        </strong>
+                                        <span>
+                                          <time
+                                            dateTime={e.created_at}
+                                            title="Время добавления записи"
+                                          >
+                                            {new Intl.DateTimeFormat('ru-RU', {
+                                              hour: '2-digit',
+                                              minute: '2-digit',
+                                              hourCycle: 'h23',
+                                            }).format(new Date(e.created_at))}
+                                          </time>{' '}
+                                          · {e.device_name}
+                                        </span>
+                                      </div>
+                                      <b
+                                        className={`expense-amount ${money(e.amount_kopecks).length > 9 ? 'is-long' : ''}`}
+                                      >
+                                        {money(e.amount_kopecks)}
+                                      </b>
+                                      <div className="row-actions">
+                                        <button
+                                          className="icon-button expense-edit-button"
+                                          aria-label={`Редактировать ${categoryById(e.category_id)?.name}`}
+                                          onClick={() => setEditing(e)}
+                                        >
+                                          <Pencil size={20} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
-                              </Fragment>
-                            );
-                          })}
+                              </div>
+                            </section>
+                          ))}
                         </div>
                       </section>
                     </>
