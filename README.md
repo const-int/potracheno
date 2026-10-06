@@ -29,6 +29,8 @@ It fits the viewport without page scrolling or the phone's native keyboard. Cate
 sit directly above the keypad, with no blank rows or unused pager space. The amount
 is centered in the remaining space above them. The entry screen locks document
 scrolling and uses the visual viewport height, recalculated on resize and resume.
+Period navigation stops at the first month (or year) with any recorded expense;
+empty months inside the recorded range remain accessible, and category filters do not change this boundary.
 Other tabs keep normal scrolling. Switching tabs always opens the destination at the top.
 Overscroll bounce and pull-to-refresh are disabled.
 The expense picker uses two columns and five rows on phones.
@@ -44,8 +46,8 @@ Date labels sit outside and above each daily card, including the first. Today's 
 groups use relative labels; older groups show the date. Dates are not repeated in individual rows.
 With no categories checked, all expenses are included; selecting one or more categories
 filters both the list and its total for the selected month. Clearing every checkbox restores all categories. The dropdown includes category icons
-and uses the available height above mobile navigation. A reset button appears beside
-the trigger when any categories are selected. Summary places
+and uses the available height above mobile navigation. A text reset action appears inside
+the trigger beside its chevron when any categories are selected. Summary places
 a treemap of soft rounded blocks sized by category shares, separated by small gaps, followed by horizontal
 bars sorted by amount with totals and percentages. The treemap is a static visualization without hover or click actions.
 Labels use white text directly on the category color, and are hidden on blocks

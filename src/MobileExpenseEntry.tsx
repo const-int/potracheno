@@ -93,11 +93,7 @@ export default function MobileExpenseEntry({
     >
       <div className="quick-amount-row">
         <div className="quick-amount" data-length={display.length > 11 ? 'long' : 'short'}>
-          <output
-            aria-label="Сумма траты"
-            aria-live="polite"
-            className={amount ? '' : 'is-empty'}
-          >
+          <output aria-label="Сумма траты" aria-live="polite" className={amount ? '' : 'is-empty'}>
             {display}
           </output>
           <span className="amount-caret" aria-hidden="true" />
@@ -112,6 +108,12 @@ export default function MobileExpenseEntry({
             <button
               key={category.id}
               className={`quick-category ${selectedCategoryId === category.id ? 'selected' : ''}`}
+              style={
+                {
+                  '--quick-category-selected-bg': `${category.color}18`,
+                  '--quick-category-selected-border': `${category.color}40`,
+                } as CSSProperties
+              }
               aria-pressed={selectedCategoryId === category.id}
               disabled={busy}
               onClick={() => {
@@ -166,7 +168,7 @@ export default function MobileExpenseEntry({
         {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'erase', '0'].map((key) => (
           <button
             key={key}
-            disabled={busy || (key === 'erase' && !amount)}
+            disabled={busy}
             aria-label={key === 'erase' ? 'Удалить цифру' : key}
             onClick={() => press(key)}
           >

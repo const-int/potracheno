@@ -58,6 +58,7 @@ import {
   HeartPulse,
   Home,
   LayoutGrid,
+  createLucideIcon,
   Asterisk,
   Leaf,
   List,
@@ -105,6 +106,12 @@ import {
   supabase,
 } from './lib/store';
 
+const RoundedLayoutGrid = createLucideIcon('RoundedLayoutGrid', [
+  ['rect', { width: '7', height: '7', x: '3', y: '3', rx: '2.5', key: 'top-left' }],
+  ['rect', { width: '7', height: '7', x: '14', y: '3', rx: '2.5', key: 'top-right' }],
+  ['rect', { width: '7', height: '7', x: '14', y: '14', rx: '2.5', key: 'bottom-right' }],
+  ['rect', { width: '7', height: '7', x: '3', y: '14', rx: '2.5', key: 'bottom-left' }],
+]);
 const icons = {
   basket: ShoppingBasket,
   shop: ShoppingCart,
@@ -363,6 +370,23 @@ export default function App() {
   }
 
   const yearlySummary = tab === 'summary' && summaryPeriod === 'year';
+  const firstExpenseMonth = data.expenses.reduce(
+    (first, expense) => {
+      const expenseMonth = expense.spent_on.slice(0, 7);
+      return expenseMonth < first ? expenseMonth : first;
+    },
+    today().slice(0, 7),
+  );
+  const canGoBack = yearlySummary
+    ? month.slice(0, 4) > firstExpenseMonth.slice(0, 4)
+    : month > firstExpenseMonth;
+  useEffect(() => {
+    if (!loaded || (tab !== 'history' && tab !== 'summary')) return;
+    if (
+      yearlySummary ? month.slice(0, 4) < firstExpenseMonth.slice(0, 4) : month < firstExpenseMonth
+    )
+      setMonth(firstExpenseMonth);
+  }, [loaded, tab, yearlySummary, month, firstExpenseMonth]);
   const summaryExpenses = yearlySummary
     ? data.expenses.filter((e) => e.spent_on.startsWith(`${month.slice(0, 4)}-`))
     : monthExpenses;
@@ -709,7 +733,17 @@ export default function App() {
                   <div className={`period-row ${tab === 'summary' ? 'summary-period-row' : ''}`}>
                     <div className="month-switch">
                       <button
-                        onClick={() => setMonth(shiftMonth(month, yearlySummary ? -12 : -1))}
+                        type="button"
+                        disabled={!canGoBack}
+                        onClick={() =>
+                          setMonth((previous) => {
+                            const next = shiftMonth(previous, yearlySummary ? -12 : -1);
+                            const withinRange = yearlySummary
+                              ? next.slice(0, 4) >= firstExpenseMonth.slice(0, 4)
+                              : next >= firstExpenseMonth;
+                            return withinRange ? next : firstExpenseMonth;
+                          })
+                        }
                         aria-label={yearlySummary ? 'Предыдущий год' : 'Предыдущий месяц'}
                       >
                         <ArrowLeft size={17} />
@@ -745,8 +779,14 @@ export default function App() {
                             aria-pressed={summaryPeriod === period}
                             onClick={() => {
                               setSummaryPeriod(period);
-                              if (period === 'month' && month > today().slice(0, 7))
-                                setMonth(today().slice(0, 7));
+                              if (period === 'month')
+                                setMonth((previous) =>
+                                  previous < firstExpenseMonth
+                                    ? firstExpenseMonth
+                                    : previous > today().slice(0, 7)
+                                      ? today().slice(0, 7)
+                                      : previous,
+                                );
                             }}
                           >
                             {period === 'month' ? 'Месяц' : 'Год'}
@@ -912,7 +952,7 @@ export default function App() {
             ['add', Plus, 'Трата'],
             ['history', List, 'История'],
             ['summary', BarChart3, 'Потрачено'],
-            ['categories', LayoutGrid, 'Категории'],
+            ['categories', RoundedLayoutGrid, 'Категории'],
           ] as const
         ).map(([id, Icon, label]) => (
           <button
@@ -921,7 +961,7 @@ export default function App() {
             aria-current={tab === id ? 'page' : undefined}
             onClick={() => selectTab(id)}
           >
-            <Icon size={21} />
+            <Icon size={21} strokeWidth={id === 'categories' ? 1.75 : 2} />
             <span>{label}</span>
           </button>
         ))}

@@ -712,28 +712,25 @@ fieldset {
   display: flex;
   flex-shrink: 0;
   margin-left: auto;
-  overflow: hidden;
-  border: 1px solid #ded5e7;
-  border-radius: 10px;
+  gap: 4px;
   background: transparent;
   height: 33px;
 }
 .period-toggle button {
+  height: 33px;
   min-height: 0;
   padding: 4px 10px;
   border: 0;
-  border-radius: 0;
+  border-radius: 12px;
   background: transparent;
   color: #786987;
   font-size: 14px;
   font-weight: 600;
 }
-.period-toggle button + button {
-  border-left: 1px solid #ded5e7;
-}
 .period-toggle button[aria-pressed='true'] {
   background: #eee6f5;
   color: #49365c;
+  box-shadow: inset 0 0 0 1px #d7cae3;
 }
 .month-switch {
   display: flex;
@@ -750,6 +747,13 @@ fieldset {
   border-radius: 8px;
   background: white;
   color: #7e708d;
+}
+.month-switch button:disabled {
+  background: #f1ecf6;
+  border-color: #ded4e7;
+  color: #9b88ab;
+  cursor: default;
+  opacity: 1;
 }
 .month-switch span {
   min-width: 0;
@@ -804,10 +808,14 @@ fieldset {
   display: none;
 }
 .history-category-filter > summary > span {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.history-filter-row:has(.history-filter-reset) .history-category-filter > summary > span {
+  padding-right: 104px;
 }
 .history-category-filter > summary > svg {
   flex-shrink: 0;
@@ -836,8 +844,8 @@ fieldset {
   justify-content: space-between;
   gap: 12px;
   min-height: 44px;
-  margin: 0;
-  padding: 8px;
+  margin: 4px 0;
+  padding: 4px 8px;
   border-radius: 8px;
   color: #503d63;
   font-size: 15px;
@@ -892,19 +900,24 @@ fieldset {
   opacity: 1;
 }
 .history-filter-reset {
-  flex-shrink: 0;
-  min-height: 44px;
-  padding: 10px;
-  gap: 6px;
-  border: 1px solid #e2b8b4;
-  border-radius: 12px;
-  background: #f7e4e1;
+  position: absolute;
+  right: 44px;
+  top: 1px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0 6px;
+  gap: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: #a25750;
   font-size: 13px;
   font-weight: 600;
+  text-decoration: none;
 }
+.history-filter-reset:hover,
 .history-filter-reset:active {
-  background: #efd2cd;
+  color: #8f4942;
 }
 .history-filter-footer {
   position: sticky;
@@ -1638,7 +1651,9 @@ fieldset {
   }
   .mobile-nav button.active svg {
     background: #eee6f5;
-    box-shadow: 0 0 0 6px #eee6f5;
+    box-shadow:
+      0 0 0 5px #eee6f5,
+      0 0 0 6px #d7cae3;
     border-radius: 4px;
   }
   .content-footer {
@@ -1903,9 +1918,10 @@ fieldset {
     white-space: nowrap;
   }
   .quick-category.selected {
-    background: #eee6f5;
-    border-color: #aa93bd;
+    background: var(--quick-category-selected-bg, #eee6f5);
+    border-color: var(--quick-category-selected-border, #d7cae3);
     color: #644b7b;
+    font-weight: 500;
   }
   .quick-category-pages {
     height: 24px;

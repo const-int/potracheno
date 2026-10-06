@@ -91,6 +91,21 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
 });
 
 test('validation, persistence, month navigation and mobile layout', async ({ page }) => {
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('vmeste.demo.v1')!);
+    const date = new Date();
+    date.setMonth(date.getMonth() - 2, 1);
+    data.expenses.push({
+      ...data.expenses[0],
+      id: crypto.randomUUID(),
+      amount_kopecks: 100,
+      spent_on: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`,
+    });
+    localStorage.setItem('vmeste.demo.v1', JSON.stringify(data));
+  });
+  await page.reload();
+  await page.getByRole('button', { name: 'Открыть деморежим' }).click();
+
   await enterAmount(page, '0');
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Сохранить трату', exact: true })).toBeDisabled();
@@ -334,7 +349,7 @@ test('history and summary keep the mobile interface compact', async ({ page }) =
   await expect(page.locator('.page-heading')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Экспорт CSV', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Траты за месяц' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Предыдущий месяц' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Предыдущий месяц' })).toBeDisabled();
   await navigation.getByRole('button', { name: 'Потрачено' }).click();
   await expect(page.locator('.page-heading')).toHaveCount(0);
   await expect(page.locator('.compact-summary .stat:visible')).toHaveCount(4);

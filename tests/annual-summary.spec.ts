@@ -103,8 +103,8 @@ test('yearly summary totals, monthly highlights, navigation and compact period t
   );
   await toggle.getByRole('button', { name: 'Год', exact: true }).click();
   await page.getByRole('button', { name: 'Предыдущий год', exact: true }).click();
-  await page.getByRole('button', { name: 'Предыдущий год', exact: true }).click();
-  await expect(page.getByText('В этом году еще нет трат.', { exact: true })).toBeVisible();
-  await expect(average.locator('strong')).toHaveText('0 ₽');
-  await expect(costliest.locator('strong')).toHaveText('—');
+  await expect(page.getByRole('button', { name: 'Предыдущий год', exact: true })).toBeDisabled();
+  await toggle.getByRole('button', { name: 'Месяц', exact: true }).click();
+  await expect(page.locator('.month-switch span')).toHaveText('декабрь 2025');
+  await expect(page.getByRole('button', { name: 'Предыдущий месяц', exact: true })).toBeDisabled();
 });

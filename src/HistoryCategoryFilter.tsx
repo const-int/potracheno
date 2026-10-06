@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { ChevronDown, Check, RotateCcw } from 'lucide-react';
+import { ChevronDown, Check, X } from 'lucide-react';
 import type { Category } from './lib/model';
 
 export default function HistoryCategoryFilter({
@@ -41,7 +41,7 @@ export default function HistoryCategoryFilter({
   }, [open]);
   useEffect(() => {
     const closeOutside = (event: PointerEvent) => {
-      if (details.current && !details.current.contains(event.target as Node))
+      if (details.current && !row.current?.contains(event.target as Node))
         details.current.open = false;
     };
     document.addEventListener('pointerdown', closeOutside);
@@ -118,9 +118,12 @@ export default function HistoryCategoryFilter({
           type="button"
           className="history-filter-reset"
           aria-label="Сбросить фильтр"
-          onClick={() => onChange([])}
+          onClick={() => {
+            onChange([]);
+            details.current?.querySelector('summary')?.focus();
+          }}
         >
-          <RotateCcw size={16} aria-hidden="true" />
+          <X size={16} aria-hidden="true" />
           Сбросить
         </button>
       )}

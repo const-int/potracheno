@@ -94,7 +94,7 @@ test('history category multiselect filters monthly rows and total, and clears ba
   ).toBeVisible();
   await page.getByRole('button', { name: 'Сбросить фильтр', exact: true }).click();
   await expect(page.locator('.expense-row')).toHaveCount(3);
-  await filter.click();
+  await expect(options).toBeVisible();
   await options.getByRole('checkbox', { name: 'Продукты', exact: true }).check();
   await page.keyboard.press('Escape');
   await expect(options).not.toBeVisible();
