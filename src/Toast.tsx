@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, CircleAlert } from 'lucide-react';
 
@@ -7,6 +7,7 @@ export type ToastNotice = {
   message: string;
   kind: 'success' | 'error';
   placement?: 'expense';
+  expense?: { categoryName: string; icon: ReactNode };
 };
 
 function expenseAnchor(placement?: 'expense') {
@@ -65,19 +66,30 @@ export default function Toast({
     };
   }, [notice.id, onClose]);
   const Icon = notice.kind === 'success' ? Check : CircleAlert;
-  const content = (
+  const content = notice.expense ? (
+    <>
+      <span className="app-toast-category-icon" aria-hidden="true">
+        {notice.expense.icon}
+      </span>
+      <span className="app-toast-message">{notice.message}</span>
+      <Check className="app-toast-success-check" size={24} strokeWidth={2.5} aria-hidden="true" />
+    </>
+  ) : (
     <>
       <span className="app-toast-icon" aria-hidden="true">
-        <Icon size={24} strokeWidth={2.5} />
+        <Icon size={19} strokeWidth={2.5} />
       </span>
       <span className="app-toast-message">{notice.message}</span>
     </>
   );
-  const className = `app-toast app-toast-${notice.kind} ${leaving ? 'is-leaving' : ''}`;
+  const className = `app-toast app-toast-${notice.kind} ${notice.expense ? 'app-toast-expense' : ''} ${leaving ? 'is-leaving' : ''}`;
+  const accessibleLabel = notice.expense
+    ? `${notice.expense.categoryName}: ${notice.message}`
+    : undefined;
   if (anchor)
     return createPortal(
       <div ref={ref} popover="manual" className="expense-toast-zone" style={anchor}>
-        <div className={className} role="status" aria-atomic="true">
+        <div className={className} role="status" aria-atomic="true" aria-label={accessibleLabel}>
           {content}
         </div>
       </div>,
@@ -90,6 +102,7 @@ export default function Toast({
       className={className}
       role={notice.kind === 'error' ? 'alert' : 'status'}
       aria-atomic="true"
+      aria-label={accessibleLabel}
     >
       {content}
     </div>,

@@ -119,7 +119,7 @@ test('login keeps the shared credentials and saves a personal name after success
   await keypad.getByRole('button', { name: '1', exact: true }).click();
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
   await keypad.getByRole('button', { name: 'Сохранить трату' }).click();
-  await expect(page.getByText('Трата сохранена', { exact: true })).toBeVisible();
+  await expect(page.locator('.app-toast-expense .app-toast-message')).toBeVisible();
   expect(expenses).toHaveLength(2);
   expect(expenses[0].device_name).toBe('Анна');
   expect(expenses[1]).toMatchObject({ user_id: userId, device_name: 'Мария', amount_kopecks: 100 });

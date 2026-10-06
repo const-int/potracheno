@@ -1,6 +1,6 @@
 import { useRef, useState, type Dispatch, type SetStateAction, type CSSProperties } from 'react';
 import { Check, ChevronLeft, ChevronRight, Delete, LoaderCircle } from 'lucide-react';
-import { type Category, parseAmount, today } from './lib/model';
+import { type Category, type Expense, parseAmount, today } from './lib/model';
 import { errorMessage, saveExpense } from './lib/store';
 
 const categoriesPerPage = 10;
@@ -22,7 +22,7 @@ export default function MobileExpenseEntry({
   userName: string;
   demo: boolean;
   renderCategoryIcon: (category: Category) => React.ReactNode;
-  onSave: () => Promise<void>;
+  onSave: (expense: Expense) => Promise<void>;
 }) {
   const [categoryId, setCategoryId] = useState(() => categories[0]?.id ?? '');
   const [page, setPage] = useState(0);
@@ -62,22 +62,19 @@ export default function MobileExpenseEntry({
     setBusy(true);
     setError('');
     try {
-      await saveExpense(
-        demo,
-        {
-          id: crypto.randomUUID(),
-          user_id: userId,
-          category_id: selectedCategoryId,
-          amount_kopecks: kopecks,
-          spent_on: today(),
-          note: '',
-          device_name: userName,
-          created_at: new Date().toISOString(),
-        },
-        false,
-      );
+      const expense: Expense = {
+        id: crypto.randomUUID(),
+        user_id: userId,
+        category_id: selectedCategoryId,
+        amount_kopecks: kopecks,
+        spent_on: today(),
+        note: '',
+        device_name: userName,
+        created_at: new Date().toISOString(),
+      };
+      await saveExpense(demo, expense, false);
       setAmount((current) => (current === amount ? '' : current));
-      await onSave();
+      await onSave(expense);
     } catch (e) {
       setError(errorMessage(e));
     } finally {

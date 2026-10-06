@@ -749,9 +749,9 @@ fieldset {
   color: #7e708d;
 }
 .month-switch button:disabled {
-  background: #f1ecf6;
-  border-color: #ded4e7;
-  color: #9b88ab;
+  background: #f1f1f1;
+  border-color: transparent;
+  color: #9b9b9b;
   cursor: default;
   opacity: 1;
 }
@@ -1786,8 +1786,12 @@ fieldset {
       color 0.15s;
   }
   .panel,
-  .monthly-card {
+  .monthly-card,
+  .history-day-group {
     animation: appear 0.25s ease-out;
+  }
+  .history-day-group > .history-panel {
+    animation: none;
   }
   @keyframes appear {
     from {
@@ -2500,10 +2504,11 @@ fieldset {
   overflow: visible;
   animation: app-toast-enter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.app-toast-icon {
+.app-toast-icon,
+.app-toast-category-icon {
   flex: 0 0 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: 10px;
   background: #ffffff26;
   display: flex;
   align-items: center;
@@ -2516,6 +2521,16 @@ fieldset {
   font-weight: 600;
   overflow-wrap: anywhere;
   min-width: 0;
+}
+.app-toast-expense .app-toast-message {
+  flex: 1;
+  font-size: 22px;
+  line-height: 1.2;
+}
+.app-toast-success-check {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
 }
 .app-toast-error {
   background: #ad493d;
@@ -2844,12 +2859,6 @@ fieldset {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background-image: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0.22) 0%,
-    rgba(255, 255, 255, 0) 55%,
-    rgba(0, 0, 0, 0.06) 100%
-  );
 }
 @media (max-width: 650px) {
   .category-bars {
@@ -2910,14 +2919,7 @@ fieldset {
   position: absolute;
   inset: var(--tile-gap);
   border-radius: 24px;
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.22) 0%,
-      rgba(255, 255, 255, 0) 55%,
-      rgba(0, 0, 0, 0.06) 100%
-    ),
-    var(--tile-color);
+  background: var(--tile-color);
   pointer-events: none;
 }
 .treemap-tile > span {

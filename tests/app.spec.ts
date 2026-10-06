@@ -24,7 +24,11 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
   await enterAmount(page, '1234');
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
   await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
-  await expect(page.getByText('Трата сохранена', { exact: true })).toBeVisible();
+  await expect(page.locator('.app-toast-expense .app-toast-message')).toBeVisible();
+  await expect(page.locator('.app-toast-expense .app-toast-message')).toHaveText('1,234 ₽');
+  await expect(page.locator('.app-toast-category-icon .lucide-shopping-basket')).toBeVisible();
+  await expect(page.locator('.app-toast-success-check')).toBeVisible();
+  await expect(page.locator('.app-toast-expense .app-toast-icon')).toHaveCount(0);
   await page
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'История' })
@@ -111,7 +115,7 @@ test('validation, persistence, month navigation and mobile layout', async ({ pag
   await expect(page.getByRole('button', { name: 'Сохранить трату', exact: true })).toBeDisabled();
   await enterAmount(page, '2029');
   await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
-  await expect(page.getByText('Трата сохранена', { exact: true })).toBeVisible();
+  await expect(page.locator('.app-toast-expense .app-toast-message')).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: 'Открыть деморежим' }).click();
   await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveText('0');
@@ -327,7 +331,7 @@ test('extra categories are paged without scrolling, and new expenses get today a
     () => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses.length,
   );
   await page.getByRole('button', { name: 'Сохранить трату' }).dblclick();
-  await expect(page.getByText('Трата сохранена', { exact: true })).toBeVisible();
+  await expect(page.locator('.app-toast-expense .app-toast-message')).toBeVisible();
   const result = await page.evaluate(() => {
     const data = JSON.parse(localStorage.getItem('vmeste.demo.v1')!);
     const date = new Date();
@@ -372,7 +376,7 @@ test('first category is selected automatically and used when saving', async ({ p
   await enterAmount(page, '1');
   await expect(page.getByRole('button', { name: 'Сохранить трату', exact: true })).toBeEnabled();
   await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
-  await expect(page.getByText('Трата сохранена', { exact: true })).toBeVisible();
+  await expect(page.locator('.app-toast-expense .app-toast-message')).toBeVisible();
   expect(
     await page.evaluate(
       () => JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses[0].category_id,
@@ -419,7 +423,7 @@ test('success toasts expire after two seconds and repeat notifications restart t
   await page.clock.install();
   await enterAmount(page, '1');
   await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
-  await expect(page.locator('.app-toast')).toContainText('Трата сохранена');
+  await expect(page.locator('.app-toast')).toContainText(' ₽');
   const position = await page.evaluate(() => ({
     toastAreaBottom: document.querySelector('.expense-toast-zone')!.getBoundingClientRect().bottom,
     keypadTop: document.querySelector('.expense-keypad')!.getBoundingClientRect().top,
@@ -429,12 +433,12 @@ test('success toasts expire after two seconds and repeat notifications restart t
   await enterAmount(page, '2');
   await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
   await page.clock.fastForward(600);
-  await expect(page.locator('.app-toast')).toContainText('Трата сохранена');
+  await expect(page.locator('.app-toast')).toContainText(' ₽');
   await page.clock.fastForward(1500);
   await expect(page.locator('.app-toast')).toHaveCount(0);
   await enterAmount(page, '3');
   await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
-  await expect(page.locator('.app-toast')).toContainText('Трата сохранена');
+  await expect(page.locator('.app-toast')).toContainText(' ₽');
   const navigation = page.getByRole('navigation', { name: 'Мобильная навигация' });
   await navigation.getByRole('button', { name: 'История', exact: true }).click();
   await expect(page.locator('.app-toast')).toHaveCount(0);

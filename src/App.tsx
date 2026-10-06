@@ -248,8 +248,11 @@ export default function App() {
     message: string,
     kind: ToastNotice['kind'] = 'success',
     placement?: 'expense',
+    expense?: ToastNotice['expense'],
   ) {
-    setNoticeState(message ? { id: ++noticeSequence.current, message, kind, placement } : null);
+    setNoticeState(
+      message ? { id: ++noticeSequence.current, message, kind, placement, expense } : null,
+    );
   }
   const closeNotice = useCallback((id: number) => {
     setNoticeState((current) => (current?.id === id ? null : current));
@@ -396,6 +399,15 @@ export default function App() {
   async function afterSave(text: string, placement?: 'expense') {
     await refresh();
     setNotice(text, 'success', placement);
+  }
+  async function afterExpenseAdded(expense: Expense) {
+    const category = categoryById(expense.category_id);
+    const Icon = icons[category?.icon as keyof typeof icons] ?? icons.other;
+    await refresh();
+    setNotice(money(expense.amount_kopecks), 'success', 'expense', {
+      categoryName: category?.name ?? 'Категория',
+      icon: <Icon size={19} />,
+    });
   }
   async function exportData() {
     setExportBusy(true);
@@ -638,7 +650,7 @@ export default function App() {
                   userName={userName}
                   demo={demo}
                   renderCategoryIcon={(category) => <CategoryIcon category={category} size={19} />}
-                  onSave={() => afterSave('Трата сохранена', 'expense')}
+                  onSave={afterExpenseAdded}
                 />
               )}
               {tab === 'add' && !isMobile && (
@@ -660,7 +672,7 @@ export default function App() {
                       userId={session!}
                       demo={demo}
                       userName={userName}
-                      onSave={() => afterSave('Трата сохранена', 'expense')}
+                      onSave={afterExpenseAdded}
                     />
                   </section>
                   <aside className="entry-aside">
@@ -1183,7 +1195,7 @@ function ExpenseForm({
   demo: boolean;
   userName: string;
   existing?: Expense;
-  onSave: () => Promise<void>;
+  onSave: (expense: Expense) => Promise<void>;
   onDelete?: () => Promise<void>;
   onBusy?: (busy: boolean) => void;
   draftAmount?: string;
@@ -1224,25 +1236,22 @@ function ExpenseForm({
     submitLock.current = true;
     setBusy(true);
     try {
-      await saveExpense(
-        demo,
-        {
-          id: existing?.id ?? crypto.randomUUID(),
-          user_id: userId,
-          amount_kopecks: kopecks,
-          category_id: categoryId,
-          spent_on: date,
-          note: existing?.note ?? '',
-          device_name: existing?.device_name ?? userName,
-          created_at: existing?.created_at ?? new Date().toISOString(),
-        },
-        !!existing,
-      );
+      const expense: Expense = {
+        id: existing?.id ?? crypto.randomUUID(),
+        user_id: userId,
+        amount_kopecks: kopecks,
+        category_id: categoryId,
+        spent_on: date,
+        note: existing?.note ?? '',
+        device_name: existing?.device_name ?? userName,
+        created_at: existing?.created_at ?? new Date().toISOString(),
+      };
+      await saveExpense(demo, expense, !!existing);
       if (!existing) {
         setAmount((current) => (current === amount ? '' : current));
         setDate(today());
       }
-      await onSave();
+      await onSave(expense);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
