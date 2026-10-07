@@ -1151,6 +1151,10 @@ fieldset {
   line-height: 1.7;
   margin: 12px 0;
 }
+.auth-check-error .form-error {
+  font-size: 14px;
+  line-height: 1.5;
+}
 .swatch-list {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));

@@ -222,6 +222,7 @@ export default function App() {
   const [userId, setUserId] = useState<string | null>(null);
   const [demo, setDemo] = useState(false);
   const [authLoading, setAuthLoading] = useState(!!supabase);
+  const [authCheckError, setAuthCheckError] = useState('');
   const [data, setData] = useState<Data>(empty);
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -279,26 +280,40 @@ export default function App() {
   useEffect(() => {
     if (!supabase) return;
     let active = true;
+    let authEventVersion = 0;
+    const timeout = window.setTimeout(() => {
+      if (!active) return;
+      setAuthLoading(false);
+      setAuthCheckError('Не удалось проверить вход. Проверьте интернет и повторите проверку.');
+    }, 5000);
     supabase.auth
       .getSession()
       .then(({ data, error }) => {
-        if (active) {
+        if (active && authEventVersion === 0) {
+          clearTimeout(timeout);
           setUserId(data.session?.user.id ?? null);
           setAuthLoading(false);
-          if (error) setNotice(errorMessage(error), 'error');
+          setAuthCheckError(error ? errorMessage(error) : '');
         }
       })
       .catch((e) => {
-        if (active) {
+        if (active && authEventVersion === 0) {
+          clearTimeout(timeout);
           setAuthLoading(false);
-          setNotice(errorMessage(e), 'error');
+          setAuthCheckError(errorMessage(e));
         }
       });
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      authEventVersion += 1;
+      clearTimeout(timeout);
       setUserId(session?.user.id ?? null);
+      setAuthLoading(false);
+      setAuthCheckError('');
     });
     return () => {
       active = false;
+      clearTimeout(timeout);
       subscription.subscription.unsubscribe();
     };
   }, []);
@@ -477,6 +492,19 @@ export default function App() {
         <section className="login-card" aria-label="Вход в приложение">
           {authLoading ? (
             <p role="status">Проверяем вход…</p>
+          ) : authCheckError ? (
+            <div className="auth-check-error">
+              <p className="form-error" role="alert">
+                {authCheckError}
+              </p>
+              <button
+                type="button"
+                className="primary full-width"
+                onClick={() => window.location.reload()}
+              >
+                Повторить проверку
+              </button>
+            </div>
           ) : supabase ? (
             <Login
               userName={userName}

@@ -92,7 +92,10 @@ browser and do not sync between devices. Demo storage is separate from the
 shared database. The third sign-in field asks for your name. Each person enters
 their own name while using the same shared email and password. Your name stays in
 your browser and is recorded as the author of new expenses. You can change it in
-Settings or enter a different name when signing in again. Existing expense authors
+Settings or enter a different name when signing in again. Startup session checks have
+a 5-second UI deadline and show a retry action if restoration stalls. Retrying reloads
+the client without deleting the saved session; a delayed successful response can still
+open the account automatically. Existing expense authors
 are preserved.
 
 ## Connect Supabase
