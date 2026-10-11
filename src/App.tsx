@@ -1,6 +1,7 @@
 import { useMobileViewport } from './lib/use-mobile-viewport';
 import CategoryTreemap from './CategoryTreemap';
 import HistoryCategoryFilter from './HistoryCategoryFilter';
+import StartupScreen from './StartupScreen';
 import SortableCategoryList from './SortableCategoryList';
 import Toast, { type ToastNotice } from './Toast';
 import { useRegisterSW } from 'virtual:pwa-register/react';
@@ -225,6 +226,7 @@ export default function App() {
   const [authCheckError, setAuthCheckError] = useState('');
   const [data, setData] = useState<Data>(empty);
   const [loaded, setLoaded] = useState(false);
+  const [loadedSession, setLoadedSession] = useState<string | null>(null);
   const [loadError, setLoadError] = useState('');
   const [tab, setTab] = useState<Tab>('add');
   const [expenseDraft, setExpenseDraft] = useState('');
@@ -331,6 +333,7 @@ export default function App() {
         if (current === generation.current && !categoryOrderSaving.current) {
           setData(result);
           setLoaded(true);
+          setLoadedSession(session);
           setLoadError('');
         }
       } catch (e) {
@@ -347,6 +350,7 @@ export default function App() {
     setExpenseDraft('');
     setData(empty);
     setLoaded(false);
+    setLoadedSession(null);
     setLoadError('');
     void refresh();
     const timer = window.setInterval(() => {
@@ -472,6 +476,23 @@ export default function App() {
     setTab(next);
   }
 
+  if ((authLoading && !session) || (session && (!loaded || loadedSession !== session)))
+    return (
+      <>
+        <StartupScreen
+          error={session ? loadError : undefined}
+          onRetry={() => {
+            setLoadError('');
+            void refresh();
+          }}
+          onLogout={session ? () => void logout() : undefined}
+        />
+        {notice && notice.placement !== 'expense' && (
+          <Toast key={notice.id} notice={notice} onClose={closeNotice} />
+        )}
+      </>
+    );
+
   if (session && !userName.trim())
     return (
       <div className="login-page">
@@ -490,9 +511,7 @@ export default function App() {
           <Brand />
         </div>
         <section className="login-card" aria-label="Вход в приложение">
-          {authLoading ? (
-            <p role="status">Проверяем вход…</p>
-          ) : authCheckError ? (
+          {authCheckError ? (
             <div className="auth-check-error">
               <p className="form-error" role="alert">
                 {authCheckError}

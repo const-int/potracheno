@@ -30,6 +30,52 @@
 body {
   margin: 0;
 }
+.startup-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: var(--app-viewport-height, 100dvh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px;
+  background: #f7f5f9;
+}
+.startup-logo {
+  display: block;
+  width: 80px;
+  height: 80px;
+}
+.startup-progress {
+  position: absolute;
+  top: calc(50% + 60px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  color: #9d8aad;
+}
+.startup-error {
+  width: min(360px, 100%);
+  text-align: center;
+}
+.startup-error .form-error {
+  font-size: 14px;
+}
+.startup-error .text-button {
+  margin-top: 12px;
+  font-size: 14px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .startup-spinner {
+    animation: startup-spin 1s linear infinite;
+  }
+  @keyframes startup-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
 button,
 input {
   font: inherit;

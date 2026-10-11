@@ -48,10 +48,15 @@ test('stalled session restoration leaves a recoverable error and a late response
     await route.fulfill({ json: session(Math.floor(Date.now() / 1000) + 3600) });
   });
   await page.goto('/');
-  await expect(page.getByText('Проверяем вход…', { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('status', { name: 'Загружаем приложение', exact: true }),
+  ).toBeVisible();
   await expect.poll(() => requested).toBe(true);
+  await expect(page.locator('.startup-progress')).toBeVisible();
   await page.clock.fastForward(5001);
-  await expect(page.getByText('Проверяем вход…', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('status', { name: 'Загружаем приложение', exact: true })).toHaveCount(
+    0,
+  );
   await expect(page.getByRole('alert')).toContainText('Не удалось проверить вход');
   await expect(page.getByRole('button', { name: 'Повторить проверку', exact: true })).toBeVisible();
   expect(
@@ -76,6 +81,7 @@ test('retry reloads a stalled client and restores the saved account without aski
   });
   await page.goto('/');
   await expect.poll(() => requests).toBe(1);
+  await expect(page.locator('.startup-progress')).toBeVisible();
   await page.clock.fastForward(5001);
   await page.getByRole('button', { name: 'Повторить проверку', exact: true }).click();
   await expect(page.getByRole('group', { name: 'Цифровая клавиатура' })).toBeVisible();

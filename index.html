@@ -13,7 +13,24 @@
     <title>potracheno — семейные траты</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div
+        class="startup-screen"
+        role="status"
+        aria-label="Загружаем приложение"
+        aria-busy="true"
+        style="
+          min-height: 100vh;
+          min-height: 100dvh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f7f5f9;
+        "
+      >
+        <img src="./icon.svg" width="80" height="80" alt="potracheno" />
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
