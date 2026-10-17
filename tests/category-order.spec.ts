@@ -8,11 +8,22 @@ const names = (page: Page) => page.locator('.category-list .category-info strong
 
 async function moveWithKeyboard(page: Page, name: string, direction: 'ArrowDown' | 'ArrowUp') {
   const handle = page.getByRole('button', { name: `Переместить категорию ${name}`, exact: true });
+  // Keyboard sorting measures card positions; wait until the panel stops moving on entry.
+  await page
+    .locator('.categories-panel')
+    .evaluate((panel) => Promise.all(panel.getAnimations().map((animation) => animation.finished)));
   await handle.focus();
   const index = (await names(page).allTextContents()).indexOf(name);
   await page.keyboard.press('Space');
   await expect(handle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('[id^="DndLiveRegion-"]')).toContainText(`Позиция ${index + 1}.`);
+  // The keyboard sensor registers its key listener and measures rows after activation.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
   await page.keyboard.press(direction);
   await expect(page.locator('[id^="DndLiveRegion-"]')).toContainText(
     `Позиция ${index + (direction === 'ArrowDown' ? 2 : 0)}.`,

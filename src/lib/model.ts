@@ -16,8 +16,20 @@ export type Expense = {
   note: string;
   device_name: string;
   created_at: string;
+  deleted_at?: string | null;
 };
-export type Data = { categories: Category[]; expenses: Expense[] };
+export type Data = { categories: Category[]; expenses: Expense[]; deletedExpenses?: Expense[] };
+export const trashRetentionMs = 30 * 24 * 60 * 60 * 1000;
+export function isRestorable(expense: Expense, now = Date.now()) {
+  return !!expense.deleted_at && new Date(expense.deleted_at).getTime() > now - trashRetentionMs;
+}
+export function partitionExpenses(data: Data, now = Date.now()): Data {
+  return {
+    categories: data.categories,
+    expenses: data.expenses.filter((expense) => !expense.deleted_at),
+    deletedExpenses: data.expenses.filter((expense) => isRestorable(expense, now)),
+  };
+}
 // A complete spectrum arranged from warm tones through cool tones to neutrals.
 export const colors = [
   '#d94f5c',
@@ -282,13 +294,16 @@ export function csv(data: Data) {
   return (
     '\uFEFF' +
     [
-      ['Дата', 'Сумма, ₽', 'Категория', 'Автор'],
-      ...data.expenses.map((e) => [
-        e.spent_on,
-        (e.amount_kopecks / 100).toFixed(2),
-        data.categories.find((c) => c.id === e.category_id)?.name ?? 'Категория',
-        e.device_name,
-      ]),
+      ['Дата', 'Сумма, ₽', 'Категория', 'Автор', 'Комментарий'],
+      ...data.expenses
+        .filter((e) => !e.deleted_at)
+        .map((e) => [
+          e.spent_on,
+          (e.amount_kopecks / 100).toFixed(2),
+          data.categories.find((c) => c.id === e.category_id)?.name ?? 'Категория',
+          e.device_name,
+          e.note,
+        ]),
     ]
       .map((row) => row.map(cell).join(';'))
       .join('\r\n')

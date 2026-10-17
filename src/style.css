@@ -12,6 +12,8 @@
   --muted: #89848d;
   --line: #e5e1e9;
   --paper: #fff;
+  --field-focus-border: #b8a2cb;
+  --field-focus-ring: 0 0 0 3px #eee6f5;
   --radius: 19px;
 }
 * {
@@ -54,6 +56,15 @@ body {
   transform: translateX(-50%);
   display: flex;
   color: #9d8aad;
+  align-items: center;
+  gap: 7px;
+  height: 20px;
+}
+.startup-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
 }
 .startup-error {
   width: min(360px, 100%);
@@ -67,15 +78,29 @@ body {
   font-size: 14px;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .startup-spinner {
-    animation: startup-spin 1s linear infinite;
+  .startup-dot {
+    animation: startup-dot-pulse 1200ms ease-in-out infinite;
   }
-  @keyframes startup-spin {
-    to {
-      transform: rotate(360deg);
+  .startup-dot:nth-child(2) {
+    animation-delay: 160ms;
+  }
+  .startup-dot:nth-child(3) {
+    animation-delay: 320ms;
+  }
+  @keyframes startup-dot-pulse {
+    0%,
+    60%,
+    100% {
+      transform: scale(0.75);
+      opacity: 0.45;
+    }
+    30% {
+      transform: scale(1.25);
+      opacity: 1;
     }
   }
 }
+
 button,
 input {
   font: inherit;
@@ -100,10 +125,6 @@ input {
 }
 button:focus-visible {
   outline: 2px solid #806697;
-}
-input:focus {
-  outline: 2px solid #9b84ad;
-  border-color: transparent;
 }
 h1,
 h2,
@@ -515,12 +536,6 @@ fieldset {
   letter-spacing: -1px;
   color: #3e314c;
   min-width: 0;
-}
-.amount-input input:focus {
-  outline: none;
-}
-.amount-input:focus-within {
-  outline: 2px solid #9b84ad;
 }
 .amount-input span {
   font-size: 27px;
@@ -1171,6 +1186,9 @@ fieldset {
 }
 .modal .amount-input {
   height: 73px;
+}
+.modal .expense-edit-form .amount-input {
+  height: 48px;
 }
 .modal .amount-input input {
   font-size: 31px;
@@ -3114,16 +3132,16 @@ fieldset {
   flex: 0 0 auto;
   width: auto;
   max-width: 100%;
-  min-height: 40px;
-  height: auto;
-  padding: 4px 12px;
+  min-height: 32px;
+  height: 32px;
+  padding: 3px 10px;
   justify-content: flex-start;
   text-align: left;
   flex-direction: row;
   gap: 0;
   font-size: 12px;
   line-height: 1.2;
-  border-radius: 9px;
+  border-radius: 8px;
 }
 .expense-edit-form .category-choice > span {
   display: block;
@@ -3497,4 +3515,334 @@ html.entry-viewport-locked body {
   .app-shell:not(.mobile-entry) .content {
     padding-bottom: max(90px, calc(var(--mobile-nav-height) + 14px));
   }
+}
+
+/* Comments can be selected and edited without enabling selection in the rest of the app. */
+.modal .expense-comment-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e2dce7;
+  border-radius: 12px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-size: 16px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.app-toast {
+  pointer-events: auto;
+  touch-action: none;
+}
+.app-toast-expense .app-toast-amount {
+  font-size: 22px;
+  margin-left: 0;
+}
+.app-toast-comment {
+  flex-shrink: 0;
+  border: 1px solid #ffffff55;
+  border-radius: 10px;
+  padding: 8px;
+  color: inherit;
+  background: #ffffff15;
+  font-size: 14px;
+  font-weight: 500;
+}
+.app-toast-comment-saved {
+  flex-shrink: 0;
+}
+.expense-info > span {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.comment-modal .expense-comment-input {
+  margin-bottom: 20px;
+}
+
+.expense-comment-field {
+  margin-bottom: 20px;
+}
+.expense-comment-field > label {
+  margin-bottom: 6px;
+}
+.expense-comment-control {
+  position: relative;
+}
+.modal .expense-edit-form .expense-comment-input {
+  font-weight: 700;
+  padding-right: 40px;
+}
+
+.app-toast-comment-action {
+  position: relative;
+  width: 120px;
+  height: 36px;
+  flex-shrink: 0;
+  transition: width 800ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.app-toast-comment-action .app-toast-comment {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 1;
+  transition:
+    background-color 800ms ease,
+    border-color 800ms ease;
+}
+.app-toast-comment-action .app-toast-comment > span {
+  display: block;
+  transition:
+    opacity 280ms ease,
+    transform 400ms ease;
+}
+.app-toast-comment-action.is-saved {
+  width: 36px;
+}
+.app-toast-comment-action.is-saved .app-toast-comment {
+  background-color: transparent;
+  border-color: transparent;
+  pointer-events: none;
+}
+.app-toast-comment-action.is-saved .app-toast-comment > span {
+  opacity: 0;
+  transform: scale(0.8);
+}
+.app-toast-comment-action .app-toast-comment-saved {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  pointer-events: none;
+  animation: comment-saved-enter 480ms 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.app-toast-comment-saved path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+  animation: comment-saved-draw 440ms 440ms ease-out both;
+}
+@keyframes comment-saved-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.65);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes comment-saved-draw {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-toast-comment-action,
+  .app-toast-comment-action .app-toast-comment,
+  .app-toast-comment-action .app-toast-comment > span {
+    transition: none;
+  }
+  .app-toast-comment-action .app-toast-comment-saved,
+  .app-toast-comment-saved path {
+    animation: none;
+  }
+}
+
+.modal .expense-edit-form input[type='date'] {
+  height: 48px;
+  min-height: 48px;
+  padding-block: 10px;
+  border-radius: 12px;
+}
+.modal .expense-edit-form .amount-input,
+.modal .expense-edit-form input[type='date'] {
+  border: 1px solid #e2dce7;
+}
+
+/* The amount is one composite field: highlight its frame rather than the inner input. */
+.amount-input input:not([type='checkbox']):not([type='radio']):focus {
+  border: 0;
+  outline: none;
+  box-shadow: none;
+}
+.csv-import input[type='checkbox']:focus-visible {
+  outline: none;
+  box-shadow: var(--field-focus-ring);
+}
+
+/* Gesture motion must not restart the toast's entrance animation. */
+.app-toast {
+  transition:
+    translate 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 240ms ease;
+}
+.app-toast.is-dragging {
+  transition: none;
+}
+.app-toast.is-swiping-out {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-toast {
+    transition: none;
+  }
+}
+
+.modal .expense-edit-form .expense-comment-input {
+  height: 48px;
+}
+.expense-date-control {
+  position: relative;
+  margin-top: 9px;
+}
+.modal .expense-edit-form .expense-date-control input {
+  margin-top: 0;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  caret-color: transparent;
+  cursor: pointer;
+}
+.expense-date-control input::-webkit-datetime-edit,
+.expense-date-control input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+.expense-date-display {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 14px;
+  pointer-events: none;
+  color: #35303b;
+  font-size: 16px;
+  font-weight: 500;
+}
+.expense-date-display svg {
+  color: #988ea2;
+  flex-shrink: 0;
+}
+
+/* Match the category name field: compact controls and regular-weight input text. */
+.expense-edit-form {
+  --expense-field-font-size: 14px;
+}
+@media (max-width: 650px) {
+  .expense-edit-form {
+    --expense-field-font-size: 16px;
+  }
+}
+.modal
+  .expense-edit-form
+  :is(.amount-input, .expense-comment-input, .expense-category-select, input[type='date']) {
+  height: 44px;
+  min-height: 44px;
+  padding: 14px 15px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e1dde5;
+  font-size: var(--expense-field-font-size);
+  font-weight: 500;
+  line-height: normal;
+}
+.modal .expense-edit-form .amount-input input {
+  height: 22px;
+  padding: 0;
+  font-size: var(--expense-field-font-size);
+  font-weight: 500;
+  line-height: normal;
+  letter-spacing: normal;
+  color: #35303b;
+}
+.modal .expense-edit-form .amount-input span {
+  font-size: var(--expense-field-font-size);
+  font-weight: 500;
+  line-height: normal;
+  color: #988ea2;
+}
+.modal .expense-edit-form input.expense-comment-input {
+  padding-right: 40px;
+}
+.expense-date-display {
+  padding: 0 15px;
+  font-size: var(--expense-field-font-size);
+  font-weight: 500;
+  line-height: normal;
+}
+
+/* Keep field labels compact, with a little more space between field groups. */
+.modal .expense-edit-form > fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.modal .expense-edit-form .amount-input,
+.modal .expense-edit-form .category-picker,
+.modal .expense-edit-form .field-heading,
+.modal .expense-edit-form .expense-editor-field,
+.modal .expense-edit-form .expense-comment-field,
+.modal .expense-edit-form .expense-comment-field > label,
+.modal .expense-edit-form .expense-editor-field > label,
+.modal .expense-edit-form .expense-date-control {
+  margin: 0;
+}
+.modal .expense-edit-form .expense-editor-field,
+.modal .expense-edit-form .expense-comment-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal .expense-edit-form select.expense-category-select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #e1dde5;
+  color: #35303b;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 40px;
+  padding-block: 0;
+}
+
+@media (max-width: 650px) and (max-height: 620px) {
+  .modal .expense-edit-form > fieldset {
+    gap: 10px;
+  }
+}
+
+/* Shared focus treatment for every editable field, including the CSV file input. */
+input:not([type='checkbox']):not([type='radio']):focus,
+textarea:focus,
+select:focus,
+.modal .expense-edit-form .expense-category-select:focus,
+.modal .expense-edit-form input[type='date']:focus,
+.modal .expense-edit-form .amount-input:focus-within,
+.amount-input:focus-within {
+  outline: none;
+  border-color: var(--field-focus-border);
+  box-shadow: var(--field-focus-ring);
+}
+
+.expense-category-control {
+  position: relative;
+}
+.expense-category-chevron {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  color: #988ea2;
+  pointer-events: none;
+}
+
+.modal:has(.expense-edit-form) .modal-heading {
+  margin-bottom: 16px;
+}
+.modal .expense-edit-form .category-form-actions {
+  margin-top: 8px;
 }

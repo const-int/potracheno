@@ -109,7 +109,9 @@ test('history category multiselect filters monthly rows and total, and clears ba
   await expect(page.locator('.expense-row')).toHaveCount(2);
   await page.locator('.expense-edit-button').first().click();
   const dialog = page.getByRole('dialog');
-  await dialog.getByRole('button', { name: 'Кафе', exact: true }).click();
+  await dialog
+    .getByRole('combobox', { name: 'Категория', exact: true })
+    .selectOption({ label: 'Кафе' });
   await dialog.getByRole('button', { name: 'Сохранить изменения', exact: true }).click();
   await expect(page.locator('.expense-row')).toHaveCount(1);
   await expect(page.locator('.period-total')).toHaveText('100 ₽');

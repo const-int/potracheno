@@ -34,7 +34,7 @@ describe('CSV import', () => {
       category: category.name,
       author: expense.device_name,
     });
-    expect(result.rows[0]).not.toHaveProperty('note');
+    expect(result.rows[0].note).toBe(expense.note);
     expect(planImport(result.rows, data).skipped).toBe(1);
   });
   it('reads Russian Excel-style dates and optional fields', () => {
@@ -55,7 +55,7 @@ describe('CSV import', () => {
       'Анна',
     );
     expect(result.issues).toEqual([]);
-    expect(result.rows[0]).toMatchObject({ amount: 123450, author: 'Phone' });
+    expect(result.rows[0]).toMatchObject({ amount: 123450, author: 'Phone', note: 'A, B' });
   });
   it('reports impossible dates, zero amounts and missing categories with row numbers', () => {
     const result = parseImport(
@@ -73,6 +73,12 @@ describe('CSV import', () => {
     expect(
       parseImport('Date;Дата;Amount;Category\n2024-01-01;2024-01-01;1;Home', 'Анна').issues,
     ).toHaveLength(1);
+  });
+  it('rejects comments over the database limit', () => {
+    expect(
+      parseImport('Date;Amount;Category;Comment\n2026-01-01;100;Food;' + 'x'.repeat(501), 'Анна')
+        .issues[0].message,
+    ).toContain('500');
   });
   it('preserves legitimate identical purchases and skips existing ones by count', () => {
     const original = parseImport(csv(data), 'Иван').rows[0];

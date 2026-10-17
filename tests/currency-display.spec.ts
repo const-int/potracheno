@@ -20,7 +20,7 @@ test('fractional expenses display rounded rubles and retain precision when editi
     .filter({ has: page.locator('.expense-amount', { hasText: '2,841 ₽' }) });
   await expect(row).toHaveCount(1);
   await row.getByRole('button', { name: 'Редактировать Продукты', exact: true }).click();
-  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveValue('2841');
+  await expect(page.getByLabel('Сумма траты', { exact: true })).toHaveValue('2,841');
   await page.getByLabel('Дата траты', { exact: true }).fill(original.spent_on.slice(0, 8) + '01');
   await page.getByRole('button', { name: 'Сохранить изменения' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -52,4 +52,45 @@ test('fractional expenses display rounded rubles and retain precision when editi
   await expect(
     page.locator('.stat').filter({ hasText: 'Средняя трата' }).locator('strong'),
   ).toHaveText(expected.average);
+});
+
+test('editing grouped amounts preserves the caret and saves whole rubles correctly', async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem('vmeste.device', 'Тест'));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Открыть деморежим' }).click();
+  await page
+    .getByRole('navigation', { name: 'Мобильная навигация' })
+    .getByRole('button', { name: 'История', exact: true })
+    .click();
+  const row = page.locator('.expense-row').first();
+  await row.getByRole('button').click();
+  const amount = page.getByLabel('Сумма траты', { exact: true });
+  await amount.fill('1234567');
+  await expect(amount).toHaveValue('1,234,567');
+  await amount.evaluate((input: HTMLInputElement) => input.setSelectionRange(3, 3));
+  await amount.pressSequentially('9');
+  await expect(amount).toHaveValue('12,934,567');
+  expect(await amount.evaluate((input: HTMLInputElement) => input.selectionStart)).toBe(4);
+  await amount.fill('1,234,567');
+  await amount.evaluate((input: HTMLInputElement) => input.setSelectionRange(2, 2));
+  await amount.press('Backspace');
+  await expect(amount).toHaveValue('234,567');
+  await amount.fill('1,234,567');
+  await amount.evaluate((input: HTMLInputElement) => input.setSelectionRange(1, 1));
+  await amount.press('Delete');
+  await expect(amount).toHaveValue('134,567');
+  await amount.fill('');
+  await expect(amount).toHaveValue('');
+  await amount.fill('12,345');
+  await page.getByRole('button', { name: 'Сохранить изменения' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('.expense-row').filter({ hasText: '12,345 ₽' })).toHaveCount(1);
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('vmeste.demo.v1')!).expenses.filter(
+      (e: { amount_kopecks: number }) => e.amount_kopecks === 1234500,
+    ),
+  );
+  expect(saved).toHaveLength(1);
 });

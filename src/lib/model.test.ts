@@ -66,8 +66,8 @@ it('exports exact kopecks and escapes quotes, newlines and spreadsheet formulas'
   const result = csv({ expenses: [e], categories });
   expect(result.startsWith('\uFEFF')).toBe(true);
   expect(result).toContain('"1.29"');
-  expect(result).not.toContain('Скрытая старая заметка');
-  expect(result).not.toContain('Комментарий');
+  expect(result).toContain('Скрытая старая заметка');
+  expect(result).toContain('Комментарий');
   expect(result).toContain('"\'+Телефон ""тест""\nновая строка"');
 });
 

@@ -8,6 +8,8 @@ import {
   initialCategories,
   colors,
   defaultCategoryColors,
+  partitionExpenses,
+  isRestorable,
 } from './model';
 
 const url = import.meta.env.VITE_SUPABASE_URL;
@@ -20,6 +22,13 @@ export function readDemo(): Data {
     if (saved) {
       const data = JSON.parse(saved) as Data;
       data.categories = sortCategories(data.categories);
+      const retained = data.expenses.filter(
+        (expense) => !expense.deleted_at || isRestorable(expense),
+      );
+      if (retained.length !== data.expenses.length) {
+        data.expenses = retained;
+        localStorage.setItem(demoKey, JSON.stringify(data));
+      }
       return data;
     }
   } catch {
@@ -44,12 +53,12 @@ async function allRows<T>(table: string): Promise<T[]> {
   }
 }
 export async function loadData(demo: boolean): Promise<Data> {
-  if (demo) return readDemo();
+  if (demo) return partitionExpenses(readDemo());
   const [categories, expenses] = await Promise.all([
     allRows<Category>('categories'),
     allRows<Expense>('expenses'),
   ]);
-  return { categories: sortCategories(categories), expenses };
+  return partitionExpenses({ categories: sortCategories(categories), expenses });
 }
 function sortCategories(categories: Category[]): Category[] {
   return [...categories].sort(
@@ -80,6 +89,8 @@ export async function reorderCategories(demo: boolean, orderedIds: string[]) {
 export async function saveExpense(demo: boolean, expense: Expense, editing: boolean) {
   if (demo) {
     const data = readDemo();
+    if (editing && !data.expenses.some((e) => e.id === expense.id && !e.deleted_at))
+      throw new Error('Трата уже удалена или недоступна.');
     data.expenses = editing
       ? data.expenses.map((e) => (e.id === expense.id ? expense : e))
       : [expense, ...data.expenses];
@@ -93,23 +104,60 @@ export async function saveExpense(demo: boolean, expense: Expense, editing: bool
           amount_kopecks: expense.amount_kopecks,
           category_id: expense.category_id,
           spent_on: expense.spent_on,
+          note: expense.note,
         })
         .eq('id', expense.id)
+        .is('deleted_at', null)
         .select()
         .single()
     : await supabase!.from('expenses').insert(expense);
   if (error) throw error;
 }
-export async function deleteExpense(demo: boolean, id: string) {
+// Update only the comment; another device may have changed other expense fields.
+export async function saveExpenseComment(demo: boolean, id: string, note: string) {
+  if (note.length > 500) throw new Error('Комментарий не должен превышать 500 символов.');
   if (demo) {
     const data = readDemo();
-    data.expenses = data.expenses.filter((e) => e.id !== id);
+    const expense = data.expenses.find((item) => item.id === id);
+    if (!expense || expense.deleted_at) throw new Error('Трата больше не найдена.');
+    expense.note = note;
     localStorage.setItem(demoKey, JSON.stringify(data));
     return;
   }
-  const { error } = await supabase!.from('expenses').delete().eq('id', id).select().single();
+  const { error } = await supabase!
+    .from('expenses')
+    .update({ note })
+    .eq('id', id)
+    .is('deleted_at', null)
+    .select('id')
+    .single();
   if (error) throw error;
 }
+async function changeTrashState(demo: boolean, id: string, restore: boolean) {
+  if (demo) {
+    const data = readDemo();
+    const expense = data.expenses.find((expense) => expense.id === id);
+    if (!expense || (restore ? !isRestorable(expense) : !!expense.deleted_at))
+      throw new Error(
+        restore
+          ? 'Трата недоступна или срок восстановления истёк.'
+          : 'Трата уже удалена или недоступна.',
+      );
+    expense.deleted_at = restore ? null : new Date().toISOString();
+    localStorage.setItem(demoKey, JSON.stringify(data));
+    return;
+  }
+  const { error } = await supabase!.rpc(restore ? 'restore_expense' : 'trash_expense', {
+    expense_id: id,
+  });
+  if (error?.code === 'PGRST202')
+    throw new Error(
+      'Корзина пока не включена в базе. Выполните SQL-файл 20261017_recently_deleted в Supabase.',
+    );
+  if (error) throw error;
+}
+export const deleteExpense = (demo: boolean, id: string) => changeTrashState(demo, id, false);
+export const restoreExpense = (demo: boolean, id: string) => changeTrashState(demo, id, true);
 export async function saveCategory(demo: boolean, category: Category, editing: boolean) {
   if (demo) {
     const data = readDemo();
@@ -144,7 +192,7 @@ export async function saveCategory(demo: boolean, category: Category, editing: b
 }
 export async function deleteCategory(demo: boolean, id: string) {
   const inUse =
-    'В категории есть траты. Сначала удалите их или выберите для них другую категорию.';
+    'В категории есть траты. Сначала выберите для них другую категорию. Траты в корзине тоже сохраняют свою категорию в течение 30 дней.';
   if (demo) {
     const data = readDemo();
     if (data.expenses.some((expense) => expense.category_id === id)) throw new Error(inUse);
@@ -201,7 +249,7 @@ export async function importExpenses(
       category_id: categoryId,
       amount_kopecks: row.amount,
       spent_on: row.date,
-      note: '',
+      note: row.note ?? '',
       device_name: row.author,
       created_at: createdAt,
     };
@@ -209,7 +257,10 @@ export async function importExpenses(
   if (demo) {
     localStorage.setItem(
       demoKey,
-      JSON.stringify({ categories, expenses: [...expenses, ...data.expenses] }),
+      JSON.stringify({
+        categories,
+        expenses: [...expenses, ...data.expenses, ...(data.deletedExpenses ?? [])],
+      }),
     );
   } else {
     // One request keeps expense insertion transactional. Stable row IDs make retries safe.

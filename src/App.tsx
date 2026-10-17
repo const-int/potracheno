@@ -38,6 +38,8 @@ import {
   Gem,
   Sparkles,
   Flag,
+  CalendarDays,
+  ChevronDown,
   Box,
   Clover,
   Save,
@@ -103,6 +105,8 @@ import {
   loadData,
   saveCategory,
   saveExpense,
+  saveExpenseComment,
+  restoreExpense,
   seedCategories,
   supabase,
 } from './lib/store';
@@ -112,6 +116,16 @@ const RoundedLayoutGrid = createLucideIcon('RoundedLayoutGrid', [
   ['rect', { width: '7', height: '7', x: '14', y: '3', rx: '2.5', key: 'top-right' }],
   ['rect', { width: '7', height: '7', x: '14', y: '14', rx: '2.5', key: 'bottom-right' }],
   ['rect', { width: '7', height: '7', x: '3', y: '14', rx: '2.5', key: 'bottom-left' }],
+]);
+const FramedList = createLucideIcon('FramedList', [
+  ['rect', { x: '3', y: '3', width: '18', height: '18', rx: '3', key: 'frame' }],
+  ['path', { d: 'M10 8h7M10 12h7M10 16h7', key: 'lines' }],
+  ['path', { d: 'M7 8h.01M7 12h.01M7 16h.01', key: 'bullets' }],
+]);
+const TrashRestore = createLucideIcon('TrashRestore', [
+  ['path', { d: 'M5 10l1 10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1l1-10', key: 'bin' }],
+  ['path', { d: 'M3 7h5M16 7h5', key: 'rim' }],
+  ['path', { d: 'M12 15V2m-3 3 3-3 3 3', key: 'outward-arrow' }],
 ]);
 const icons = {
   basket: ShoppingBasket,
@@ -229,6 +243,9 @@ export default function App() {
   const [loadedSession, setLoadedSession] = useState<string | null>(null);
   const [loadError, setLoadError] = useState('');
   const [tab, setTab] = useState<Tab>('add');
+  const [trashOpen, setTrashOpen] = useState(false);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+  const restoreLock = useRef(false);
   const [expenseDraft, setExpenseDraft] = useState('');
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 650px)').matches);
   useEffect(() => {
@@ -271,7 +288,7 @@ export default function App() {
   useMobileViewport(isMobile && !!session, quickEntry && !!session && !!userName.trim());
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [tab]);
+  }, [tab, trashOpen]);
   useEffect(() => {
     if (tab !== 'add' || !session)
       setNoticeState((current) => (current?.placement === 'expense' ? null : current));
@@ -348,6 +365,7 @@ export default function App() {
   useEffect(() => {
     generation.current += 1;
     setExpenseDraft('');
+    setTrashOpen(false);
     setData(empty);
     setLoaded(false);
     setLoadedSession(null);
@@ -384,8 +402,12 @@ export default function App() {
     ? monthExpenses.filter((expense) => selectedHistoryCategories.includes(expense.category_id))
     : monthExpenses;
   const historyTotal = historyExpenses.reduce((sum, expense) => sum + expense.amount_kopecks, 0);
+  const trashedExpenses = [...(data.deletedExpenses ?? [])].sort(
+    (a, b) => b.spent_on.localeCompare(a.spent_on) || b.created_at.localeCompare(a.created_at),
+  );
+  const visibleHistoryExpenses = trashOpen ? trashedExpenses : historyExpenses;
   const historyDayGroups: { date: string; expenses: Expense[] }[] = [];
-  for (const expense of historyExpenses) {
+  for (const expense of visibleHistoryExpenses) {
     const group = historyDayGroups[historyDayGroups.length - 1];
     if (group?.date === expense.spent_on) group.expenses.push(expense);
     else historyDayGroups.push({ date: expense.spent_on, expenses: [expense] });
@@ -425,8 +447,30 @@ export default function App() {
     await refresh();
     setNotice(money(expense.amount_kopecks), 'success', 'expense', {
       categoryName: category?.name ?? 'Категория',
+      saveComment: async (note) => {
+        await saveExpenseComment(demo, expense.id, note);
+        await refresh();
+      },
       icon: <Icon size={19} />,
     });
+  }
+  async function restoreDeletedExpense(expense: Expense) {
+    if (restoreLock.current) return;
+    restoreLock.current = true;
+    setRestoringId(expense.id);
+    const owner = session;
+    try {
+      await restoreExpense(demo, expense.id);
+      if (activeSession.current === owner) {
+        await refresh();
+        setNotice('Трата восстановлена');
+      }
+    } catch (error) {
+      if (activeSession.current === owner) setNotice(errorMessage(error), 'error');
+    } finally {
+      restoreLock.current = false;
+      setRestoringId(null);
+    }
   }
   async function exportData() {
     setExportBusy(true);
@@ -471,6 +515,7 @@ export default function App() {
     setUserName(value);
   }
   function selectTab(next: Tab) {
+    setTrashOpen(false);
     if (next === 'history' || next === 'summary') setMonth(today().slice(0, 7));
     if (next === 'summary') setSummaryPeriod('month');
     setTab(next);
@@ -611,7 +656,7 @@ export default function App() {
             {
               {
                 add: 'Добавить трату',
-                history: 'История трат',
+                history: trashOpen ? 'Недавно удаленные' : 'История трат',
                 summary: 'Общие траты',
                 categories: 'Категории трат',
               }[tab]
@@ -619,10 +664,24 @@ export default function App() {
           </h1>
           <button
             className="icon-button settings-button"
-            aria-label="Настройки"
-            onClick={() => setSettings(true)}
+            aria-label={
+              tab === 'history'
+                ? trashOpen
+                  ? 'Вернуться к истории'
+                  : 'Недавно удаленные'
+                : 'Настройки'
+            }
+            onClick={() => (tab === 'history' ? setTrashOpen((open) => !open) : setSettings(true))}
           >
-            <Settings size={19} />
+            {tab === 'history' ? (
+              trashOpen ? (
+                <FramedList size={19} />
+              ) : (
+                <Trash2 size={19} />
+              )
+            ) : (
+              <Settings size={19} />
+            )}
           </button>
         </header>
         <div className="content">
@@ -653,7 +712,7 @@ export default function App() {
                   {
                     {
                       add: 'Каждая трата на своем месте',
-                      history: 'История трат',
+                      history: trashOpen ? 'Недавно удаленные' : 'История трат',
                       summary: 'Общие траты',
                       categories: 'Ваши категории',
                     }[tab]
@@ -789,77 +848,79 @@ export default function App() {
               )}
               {(tab === 'history' || tab === 'summary') && (
                 <>
-                  <div className={`period-row ${tab === 'summary' ? 'summary-period-row' : ''}`}>
-                    <div className="month-switch">
-                      <button
-                        type="button"
-                        disabled={!canGoBack}
-                        onClick={() =>
-                          setMonth((previous) => {
-                            const next = shiftMonth(previous, yearlySummary ? -12 : -1);
-                            const withinRange = yearlySummary
-                              ? next.slice(0, 4) >= firstExpenseMonth.slice(0, 4)
-                              : next >= firstExpenseMonth;
-                            return withinRange ? next : firstExpenseMonth;
-                          })
-                        }
-                        aria-label={yearlySummary ? 'Предыдущий год' : 'Предыдущий месяц'}
-                      >
-                        <ArrowLeft size={17} />
-                      </button>
-                      <span>{yearlySummary ? month.slice(0, 4) : monthLabel(month)}</span>
-                      {(
-                        yearlySummary
-                          ? month.slice(0, 4) < today().slice(0, 4)
-                          : month < today().slice(0, 7)
-                      ) ? (
+                  {!trashOpen && (
+                    <div className={`period-row ${tab === 'summary' ? 'summary-period-row' : ''}`}>
+                      <div className="month-switch">
                         <button
+                          type="button"
+                          disabled={!canGoBack}
                           onClick={() =>
                             setMonth((previous) => {
-                              const next = shiftMonth(previous, yearlySummary ? 12 : 1);
-                              const current = today().slice(0, 7);
-                              return next > current ? current : next;
+                              const next = shiftMonth(previous, yearlySummary ? -12 : -1);
+                              const withinRange = yearlySummary
+                                ? next.slice(0, 4) >= firstExpenseMonth.slice(0, 4)
+                                : next >= firstExpenseMonth;
+                              return withinRange ? next : firstExpenseMonth;
                             })
                           }
-                          aria-label={yearlySummary ? 'Следующий год' : 'Следующий месяц'}
+                          aria-label={yearlySummary ? 'Предыдущий год' : 'Предыдущий месяц'}
                         >
-                          <ArrowRight size={17} />
+                          <ArrowLeft size={17} />
                         </button>
-                      ) : (
-                        <div className="month-next-placeholder" aria-hidden="true" />
+                        <span>{yearlySummary ? month.slice(0, 4) : monthLabel(month)}</span>
+                        {(
+                          yearlySummary
+                            ? month.slice(0, 4) < today().slice(0, 4)
+                            : month < today().slice(0, 7)
+                        ) ? (
+                          <button
+                            onClick={() =>
+                              setMonth((previous) => {
+                                const next = shiftMonth(previous, yearlySummary ? 12 : 1);
+                                const current = today().slice(0, 7);
+                                return next > current ? current : next;
+                              })
+                            }
+                            aria-label={yearlySummary ? 'Следующий год' : 'Следующий месяц'}
+                          >
+                            <ArrowRight size={17} />
+                          </button>
+                        ) : (
+                          <div className="month-next-placeholder" aria-hidden="true" />
+                        )}
+                      </div>
+                      {tab === 'summary' && (
+                        <div className="period-toggle" role="group" aria-label="Период статистики">
+                          {(['month', 'year'] as const).map((period) => (
+                            <button
+                              key={period}
+                              type="button"
+                              aria-pressed={summaryPeriod === period}
+                              onClick={() => {
+                                setSummaryPeriod(period);
+                                if (period === 'month')
+                                  setMonth((previous) =>
+                                    previous < firstExpenseMonth
+                                      ? firstExpenseMonth
+                                      : previous > today().slice(0, 7)
+                                        ? today().slice(0, 7)
+                                        : previous,
+                                  );
+                              }}
+                            >
+                              {period === 'month' ? 'Месяц' : 'Год'}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {!isMobile && tab === 'history' && (
+                        <span className="muted">{historyExpenses.length} записей</span>
+                      )}
+                      {isMobile && tab === 'history' && (
+                        <strong className="period-total">{money(historyTotal)}</strong>
                       )}
                     </div>
-                    {tab === 'summary' && (
-                      <div className="period-toggle" role="group" aria-label="Период статистики">
-                        {(['month', 'year'] as const).map((period) => (
-                          <button
-                            key={period}
-                            type="button"
-                            aria-pressed={summaryPeriod === period}
-                            onClick={() => {
-                              setSummaryPeriod(period);
-                              if (period === 'month')
-                                setMonth((previous) =>
-                                  previous < firstExpenseMonth
-                                    ? firstExpenseMonth
-                                    : previous > today().slice(0, 7)
-                                      ? today().slice(0, 7)
-                                      : previous,
-                                );
-                            }}
-                          >
-                            {period === 'month' ? 'Месяц' : 'Год'}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {!isMobile && tab === 'history' && (
-                      <span className="muted">{historyExpenses.length} записей</span>
-                    )}
-                    {isMobile && tab === 'history' && (
-                      <strong className="period-total">{money(historyTotal)}</strong>
-                    )}
-                  </div>
+                  )}
                   {tab === 'summary' ? (
                     <Summary
                       expenses={summaryExpenses}
@@ -870,22 +931,31 @@ export default function App() {
                     />
                   ) : (
                     <>
-                      <HistoryCategoryFilter
-                        categories={data.categories}
-                        selected={selectedHistoryCategories}
-                        onChange={setHistoryCategoryIds}
-                        renderIcon={(category) => <CategoryIcon category={category} size={19} />}
-                      />
-                      <section className="history-content" aria-label="История трат">
-                        {!isMobile && (
+                      {!trashOpen && (
+                        <HistoryCategoryFilter
+                          categories={data.categories}
+                          selected={selectedHistoryCategories}
+                          onChange={setHistoryCategoryIds}
+                          renderIcon={(category) => <CategoryIcon category={category} size={19} />}
+                        />
+                      )}
+                      <section
+                        className="history-content"
+                        aria-label={trashOpen ? 'Недавно удаленные' : 'История трат'}
+                      >
+                        {!isMobile && !trashOpen && (
                           <div className="section-heading">
                             <h2>Траты за месяц</h2>
                             <strong className="history-total">{money(historyTotal)}</strong>
                           </div>
                         )}
-                        {!historyExpenses.length && (
+                        {!visibleHistoryExpenses.length && (
                           <div className="panel history-panel">
-                            {selectedHistoryCategories.length ? (
+                            {trashOpen ? (
+                              <div className="history-filter-empty">
+                                <p>Недавно удаленных трат нет.</p>
+                              </div>
+                            ) : selectedHistoryCategories.length ? (
                               <div className="history-filter-empty">
                                 <p>Нет трат в выбранных категориях за этот месяц.</p>
                               </div>
@@ -923,6 +993,7 @@ export default function App() {
                                             }).format(new Date(e.created_at))}
                                           </time>{' '}
                                           · {e.device_name}
+                                          {e.note && <> · {e.note}</>}
                                         </span>
                                       </div>
                                       <b
@@ -933,10 +1004,20 @@ export default function App() {
                                       <div className="row-actions">
                                         <button
                                           className="icon-button expense-edit-button"
-                                          aria-label={`Редактировать ${categoryById(e.category_id)?.name}`}
-                                          onClick={() => setEditing(e)}
+                                          aria-label={`${trashOpen ? 'Восстановить трату' : 'Редактировать'} ${categoryById(e.category_id)?.name}`}
+                                          disabled={trashOpen && !!restoringId}
+                                          aria-busy={trashOpen && restoringId === e.id}
+                                          onClick={() =>
+                                            trashOpen
+                                              ? void restoreDeletedExpense(e)
+                                              : setEditing(e)
+                                          }
                                         >
-                                          <Pencil size={20} />
+                                          {trashOpen ? (
+                                            <TrashRestore size={20} />
+                                          ) : (
+                                            <Pencil size={20} />
+                                          )}
                                         </button>
                                       </div>
                                     </div>
@@ -1067,7 +1148,9 @@ export default function App() {
             onBusy={setEditorBusy}
             hasExpenses={
               editingCategory !== 'new' &&
-              data.expenses.some((expense) => expense.category_id === editingCategory.id)
+              [...data.expenses, ...(data.deletedExpenses ?? [])].some(
+                (expense) => expense.category_id === editingCategory.id,
+              )
             }
             onDelete={async () => {
               setEditingCategory(null);
@@ -1253,9 +1336,26 @@ function ExpenseForm({
   );
   const amount = existing ? localAmount : (draftAmount ?? localAmount);
   const setAmount = !existing && onDraftAmountChange ? onDraftAmountChange : setLocalAmount;
+  const amountInput = useRef<HTMLInputElement>(null);
+  const amountCaret = useRef<number | null>(null);
+  const displayedAmount = existing ? amount.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : amount;
+  useLayoutEffect(() => {
+    if (amountCaret.current === null || !amountInput.current) return;
+    const input = amountInput.current;
+    let position = 0,
+      digits = 0;
+    while (position < input.value.length && digits < amountCaret.current) {
+      if (/\d/.test(input.value[position])) digits++;
+      position++;
+    }
+    input.setSelectionRange(position, position);
+    amountCaret.current = null;
+  }, [amount]);
   const [amountEdited, setAmountEdited] = useState(false);
   const [categoryId, setCategoryId] = useState(existing?.category_id ?? categories[0]?.id ?? '');
   const [date, setDate] = useState(existing?.spent_on ?? today());
+  const [note, setNote] = useState(existing?.note ?? '');
+  const commentInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const submitLock = useRef(false);
@@ -1289,7 +1389,7 @@ function ExpenseForm({
         amount_kopecks: kopecks,
         category_id: categoryId,
         spent_on: date,
-        note: existing?.note ?? '',
+        note: note.trim(),
         device_name: existing?.device_name ?? userName,
         created_at: existing?.created_at ?? new Date().toISOString(),
       };
@@ -1314,55 +1414,161 @@ function ExpenseForm({
             Сумма траты
           </label>
         )}
-        <div className="amount-input">
-          <input
-            id="amount"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="0"
-            aria-label="Сумма траты"
-            value={amount}
-            onChange={(e) => {
-              setAmount(e.target.value);
-              setAmountEdited(true);
-            }}
-            required
-          />
-          <span>₽</span>
+        <div className={existing ? 'expense-editor-field' : undefined}>
+          {existing && <label htmlFor="amount">Сумма</label>}
+          <div className="amount-input">
+            <input
+              ref={amountInput}
+              id="amount"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="0"
+              aria-label="Сумма траты"
+              value={displayedAmount}
+              onChange={(e) => {
+                if (!existing) {
+                  setAmount(e.target.value);
+                } else {
+                  let digits = e.target.value.replace(/[,\s]/g, '');
+                  if (!/^\d*$/.test(digits)) return;
+                  let before = e.target.value
+                    .slice(0, e.target.selectionStart ?? 0)
+                    .replace(/\D/g, '').length;
+                  const inputType = (e.nativeEvent as InputEvent).inputType;
+                  // Deleting a formatting comma should still remove a digit naturally.
+                  if (digits === amount && inputType?.startsWith('delete')) {
+                    const index = inputType === 'deleteContentBackward' ? before - 1 : before;
+                    if (index >= 0) digits = digits.slice(0, index) + digits.slice(index + 1);
+                    if (inputType === 'deleteContentBackward') before = Math.max(0, before - 1);
+                  }
+                  amountCaret.current = before;
+                  setAmount(digits);
+                }
+                setAmountEdited(true);
+              }}
+              required
+            />
+            <span>₽</span>
+          </div>
         </div>
-        <div className="field-heading">
-          Категория <span>Выберите одну</span>
-        </div>
-        <div className="category-picker">
-          {categories.map((c) => (
-            <button
-              type="button"
-              key={c.id}
-              className={`category-choice ${categoryId === c.id ? 'selected' : ''}`}
-              onClick={() => setCategoryId(c.id)}
-              aria-pressed={categoryId === c.id}
-            >
-              {!existing && <CategoryIcon category={c} size={22} />}
-              <span>{c.name}</span>
-              {!existing && categoryId === c.id && <Check className="category-check" size={13} />}
-            </button>
-          ))}
-        </div>
+        {existing ? (
+          <label className="expense-editor-field">
+            Категория
+            <div className="expense-category-control">
+              <select
+                className="expense-category-select"
+                aria-label="Категория"
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                required
+              >
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                className="expense-category-chevron"
+                size={16}
+                strokeWidth={2}
+                aria-hidden="true"
+              />
+            </div>
+          </label>
+        ) : (
+          <div>
+            <div className="field-heading">
+              Категория <span>Выберите одну</span>
+            </div>
+            <div className="category-picker">
+              {categories.map((c) => (
+                <button
+                  type="button"
+                  key={c.id}
+                  className={`category-choice ${categoryId === c.id ? 'selected' : ''}`}
+                  onClick={() => setCategoryId(c.id)}
+                  aria-pressed={categoryId === c.id}
+                >
+                  {!existing && <CategoryIcon category={c} size={22} />}
+                  <span>{c.name}</span>
+                  {!existing && categoryId === c.id && (
+                    <Check className="category-check" size={13} />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {!categories.length && (
           <p className="form-error">Сначала добавьте категории на вкладке «Категории».</p>
         )}
-        <label>
+        <label className={existing ? 'expense-editor-field' : undefined}>
           Дата траты
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            min="1900-01-01"
-            max="2100-12-31"
-          />
+          <div className={existing ? 'expense-date-control' : undefined}>
+            <input
+              type="date"
+              aria-label="Дата траты"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              onClick={(e) => {
+                if (existing && e.currentTarget.showPicker) {
+                  try {
+                    e.currentTarget.showPicker();
+                  } catch {
+                    /* Native picker remains available. */
+                  }
+                }
+              }}
+              required
+              min="1900-01-01"
+              max="2100-12-31"
+            />
+            {existing && (
+              <span className="expense-date-display" aria-hidden="true">
+                {date &&
+                  new Intl.DateTimeFormat('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })
+                    .format(new Date(`${date}T12:00:00`))
+                    .replace(' г.', '')}
+                <CalendarDays size={18} />
+              </span>
+            )}
+          </div>
         </label>
 
+        {existing && (
+          <div className="expense-comment-field">
+            <label htmlFor="expense-comment">Комментарий</label>
+            <div className="expense-comment-control">
+              <input
+                ref={commentInput}
+                id="expense-comment"
+                className="expense-comment-input"
+                aria-label="Комментарий"
+                value={note}
+                maxLength={500}
+                onChange={(e) => setNote(e.target.value)}
+              />
+              {note && (
+                <button
+                  type="button"
+                  className="name-clear-button"
+                  aria-label="Очистить комментарий"
+                  onClick={() => {
+                    setNote('');
+                    commentInput.current?.focus();
+                  }}
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         {!existing && (
           <div className="form-author">
             <UserRound size={15} />
@@ -1564,7 +1770,7 @@ function CategoryForm({
           <div className="category-delete-confirm">
             <p className="muted">
               {hasExpenses
-                ? `В категории «${existing.name}» есть траты. Сначала удалите их или выберите для них другую категорию.`
+                ? `В категории «${existing.name}» есть траты. Выберите для них другую категорию. Записи в корзине тоже сохраняют категорию в течение 30 дней.`
                 : `Удалить категорию «${existing.name}»? Это действие нельзя отменить.`}
             </p>
             <div className="modal-actions">

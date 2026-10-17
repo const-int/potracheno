@@ -1,5 +1,3 @@
-import { LoaderCircle } from 'lucide-react';
-
 export default function StartupScreen({
   error,
   onRetry,
@@ -34,7 +32,9 @@ export default function StartupScreen({
         </div>
       ) : (
         <span className="startup-progress" role="status" aria-label="Загружаем приложение">
-          <LoaderCircle size={20} className="startup-spinner" aria-hidden="true" />
+          <span className="startup-dot" aria-hidden="true" />
+          <span className="startup-dot" aria-hidden="true" />
+          <span className="startup-dot" aria-hidden="true" />
         </span>
       )}
     </div>

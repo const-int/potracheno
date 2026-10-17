@@ -21,8 +21,11 @@ date or category. CSV amounts retain a decimal point without grouping.
 
 On phones, the app opens on the expense tab. Enter an amount using the built-in
 numeric keypad, choose a category, and tap the checkmark key to save. New amounts
-use whole rubles only. Successful entry shows the category icon and name on the left,
-with the saved amount on the right in the toast above the keypad. The keypad has a backspace key instead of a decimal key;
+use whole rubles only. Successful entry shows the category icon and saved amount on the left,
+with a Comment action on the right in the toast above the keypad. Toasts last about three seconds
+and can be swiped away. Opening the comment dialog pauses the remaining lifetime and focuses
+the text field immediately. Saving replaces the action with a checkmark; cancelling keeps the action.
+Both resume the timer. Comments support up to 500 characters. The keypad has a backspace key instead of a decimal key;
 there is no separate backspace button next to the amount. The entry
 screen preselects the first available category. The entered amount survives tab switches
 and is cleared after a successful save or when leaving the account.
@@ -37,14 +40,14 @@ Overscroll bounce and pull-to-refresh are disabled.
 The expense picker uses two columns and five rows on phones.
 New mobile expenses use today's date and an empty note. More than ten categories
 are displayed on additional pages. Use the edit button in History to change a date or amount. The editor also offers
-immediate expense deletion without a confirmation step. Expense comments are not used.
+immediate expense deletion without a confirmation step, with restoration available for 30 days. The editor also allows adding, changing, or clearing a comment.
 Mobile History shows the month selector, category filter, total, and expense list.
 History groups expenses in separate daily cards, with the record creation time in each row
 in 24-hour HH:mm format,
 using the device's timezone. Imported records show their import time; CSV imports
 currently preserve the expense date without the original time of day.
 Date labels sit outside and above each daily card, including the first. Today's and yesterday's
-groups use relative labels; older groups show the date. Dates are not repeated in individual rows.
+groups use relative labels; older groups show the date. Dates are not repeated in individual rows. Comments, when present, follow the author separated by a dot.
 With no categories checked, all expenses are included; selecting one or more categories
 filters both the list and its total for the selected month. Clearing every checkbox restores all categories. The dropdown includes category icons
 and uses the available height above mobile navigation. A text reset action appears inside
@@ -63,7 +66,7 @@ maximum days use the most recent date. CSV export is available in Settings on mo
 Categories have one edit button in the list. Category deletion is available in the
 editor and requires confirmation.
 There is no category archive. Deletion requires confirmation; categories with expenses
-remain protected until those expenses are moved to another category or deleted. For an existing Supabase
+remain protected while active or retained deleted expenses reference them. For an existing Supabase
 project, run `supabase/migrations/20261003_enable_category_deletion.sql` in SQL Editor
 to enable owner-only deletion. The foreign key protects categories used by expenses.
 
@@ -118,7 +121,7 @@ are preserved.
 Row Level Security (RLS) restricts each request to the record's owner (`auth.uid()`).
 A composite foreign key prevents expenses from referencing another user's category.
 The publishable key is intended for browser use; access protection relies on the
-session and RLS. Categories used by expenses cannot be deleted until those expenses are moved or removed.
+session and RLS. Categories referenced by active or retained deleted expenses cannot be deleted.
 
 To check the connection, sign in on two devices, add an expense on the first,
 and return to the app on the second to confirm that it appears. Data refreshes
@@ -171,7 +174,7 @@ Testing real sign-in, authentication, and shared access requires a Supabase proj
 ## Data preservation
 
 CSV export includes **the entire expense history**, not just the selected month,
-along with author names. Save exports periodically. CSV import is available in Settings.
+along with author names and comments. Save exports periodically. CSV import is available in Settings.
 User names are stored in localStorage and must be set again after clearing
 browser data. Editing an expense preserves the name of its original author.
 For compatibility, names still use the existing `vmeste.device` storage key and
@@ -188,7 +191,7 @@ https://supabase.com/docs/guides/platform/free-project-pausing.
 
 Save a copy of your sheet as CSV UTF-8. Use one header row and one expense per row.
 Required columns: `Дата` / `Date`, `Сумма` / `Amount`, and `Категория` / `Category`.
-Optional column: `Автор` / `Author`. Comment columns in older files are ignored. Legacy `Устройство`
+Optional columns: `Автор` / `Author` and `Комментарий` / `Comment` (up to 500 characters). Legacy `Устройство`
 and `Device` headers are also supported. Dates can use `YYYY-MM-DD` or `DD.MM.YYYY`.
 Amounts are in rubles; imported fractional values are preserved without rounding.
 An omitted or empty author uses the name you entered at sign-in.
@@ -201,7 +204,7 @@ Any invalid row blocks import until the file is corrected. A template is availab
 in the import dialog, and the app's own CSV exports can be imported as well.
 
 By default, import skips existing expenses matching the date, amount, category,
-and author. Identical rows are counted: two identical purchases in a file
+author, and comment. Identical rows are counted: two identical purchases in a file
 remain two purchases, and reimporting that file skips both. You can disable
 this comparison if the coinciding rows represent additional expenses.
 Stable row IDs also prevent duplicate writes when retrying an interrupted import
@@ -245,5 +248,34 @@ the repository subpath. Physical Android installation must be checked after
 publishing the HTTPS site; an ordinary HTTP address on a local network does not
 provide the required secure context.
 
-Legacy database comment values are retained for compatibility but are not shown,
-edited, exported, or used for duplicate matching. New imports save an empty comment.
+Comments use the existing `expenses.note` field; no database migration is required.
+
+## Recently deleted expenses
+
+Run `supabase/migrations/20261017_recently_deleted.sql` in the existing project's
+SQL Editor, then `supabase/migrations/20261017_trash_cleanup.sql`. The second file
+enables Supabase Cron and schedules one daily cleanup job at 02:00 UTC; running it
+again updates the same job. See the official [Supabase Cron quickstart](https://supabase.com/docs/guides/cron/quickstart).
+New projects use `schema.sql` followed by the cleanup file. The browser cannot apply
+these administrator changes. Apply them before using the new deletion feature.
+
+The History header's trash icon opens Recently deleted. Rows use the same daily
+cards and original expense dates, times, authors, and comments. The trash icon with an outward arrow
+restores a record in one tap. The framed list icon returns to History; selecting
+another navigation tab closes the trash screen. Settings remain available on the
+other tabs.
+
+Deletion records server-generated `deleted_at` instead of physically deleting the
+expense. Active history, summaries, totals, category operation counts, period
+boundaries, and CSV exports exclude these rows. CSV reimport compares retained
+trash as well, so importing the same purchase does not silently recreate it.
+Restoration preserves the original ID, exact amount, category, date, author,
+comment, and creation time. Categories referenced by retained trash remain
+protected by the existing foreign key.
+
+Owner-only SQL functions use the existing RLS policies. A database trigger enforces
+the 30-day restoration deadline, including direct API updates, and prevents clients
+from extending the retention timestamp. Expired records disappear from the app
+at the deadline and are physically removed by the next successful daily job.
+Records permanently deleted before this migration cannot be recovered. In demo
+mode, equivalent expiry cleanup runs when local data is accessed.

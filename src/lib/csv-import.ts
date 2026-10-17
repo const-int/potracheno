@@ -7,6 +7,7 @@ export type ImportRow = {
   amount: number;
   category: string;
   author: string;
+  note?: string;
 };
 export type ImportIssue = { row: number; message: string };
 export type ParsedImport = { rows: ImportRow[]; issues: ImportIssue[] };
@@ -19,6 +20,7 @@ const normalizeHeader = (name: string) =>
     .replace(/[\s_,().₽:]+/g, ' ')
     .trim();
 const aliases = {
+  note: ['комментарий', 'заметка', 'comment', 'note'],
   date: ['дата', 'дата расхода', 'дата траты', 'date', 'spent on', 'expense date'],
   amount: [
     'сумма',
@@ -102,7 +104,9 @@ export function parseImport(source: string, defaultAuthor: string): ParsedImport
     const amount = parseAmount(get('amount'));
     const category = textValue(get('category')).trim();
     const author = textValue(get('author')).trim() || defaultAuthor.trim();
+    const note = textValue(get('note')).trim();
     const problems: string[] = [];
+    if (note.length > 500) problems.push('комментарий не должен превышать 500 символов');
     if (record.length > header.length)
       problems.push('лишние колонки: проверьте кавычки и разделители');
     if (!date) problems.push('дата должна быть в формате YYYY-MM-DD или DD.MM.YYYY');
@@ -113,22 +117,25 @@ export function parseImport(source: string, defaultAuthor: string): ParsedImport
     if (!author || author.length > 40)
       problems.push('имя автора должно содержать от 1 до 40 символов');
     if (problems.length) issues.push({ row, message: problems.join('; ') });
-    else rows.push({ id: crypto.randomUUID(), date: date!, amount: amount!, category, author });
+    else
+      rows.push({ id: crypto.randomUUID(), date: date!, amount: amount!, category, author, note });
   });
   return { rows, issues };
 }
 const fingerprint = (row: Omit<ImportRow, 'id'>) =>
-  JSON.stringify([row.date, row.amount, categoryKey(row.category), row.author]);
+  JSON.stringify([row.date, row.amount, categoryKey(row.category), row.author, row.note ?? '']);
 export function planImport(rows: ImportRow[], data: Data, skipDuplicates = true) {
   const counts = new Map<string, number>();
   const categoryNames = new Map(data.categories.map((category) => [category.id, category.name]));
-  const existingIds = new Set(data.expenses.map((expense) => expense.id));
-  for (const expense of data.expenses) {
+  const existingExpenses = [...data.expenses, ...(data.deletedExpenses ?? [])];
+  const existingIds = new Set(existingExpenses.map((expense) => expense.id));
+  for (const expense of existingExpenses) {
     const key = fingerprint({
       date: expense.spent_on,
       amount: expense.amount_kopecks,
       category: categoryNames.get(expense.category_id) ?? '',
       author: expense.device_name,
+      note: expense.note,
     });
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }

@@ -25,7 +25,7 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
   await page.getByRole('button', { name: 'Продукты', exact: true }).click();
   await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
   await expect(page.locator('.app-toast-expense .app-toast-message')).toBeVisible();
-  await expect(page.locator('.app-toast-expense .app-toast-message')).toHaveText('Продукты');
+  await expect(page.locator('.app-toast-expense .app-toast-message')).toHaveText('1,234 ₽');
   await expect(page.locator('.app-toast-amount')).toHaveText('1,234 ₽');
   await expect(page.locator('.app-toast-category-icon .lucide-shopping-basket')).toBeVisible();
   await expect(page.locator('.app-toast-amount svg')).toHaveCount(0);
@@ -37,7 +37,7 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
   const newRow = page.locator('.expense-row').filter({ hasText: 'Алексей' });
   await expect(newRow).toContainText('1,234 ₽');
   await newRow.getByRole('button', { name: 'Редактировать Продукты' }).click();
-  await expect(page.getByRole('dialog').getByLabel('Комментарий')).toHaveCount(0);
+  await expect(page.getByRole('dialog').getByLabel('Комментарий')).toBeVisible();
   await expect(
     page.getByRole('heading', { name: 'Редактировать трату', exact: true }),
   ).toBeVisible();
@@ -71,6 +71,10 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
     .getByRole('navigation', { name: 'Мобильная навигация' })
     .getByRole('button', { name: 'История' })
     .click();
+  await page
+    .getByRole('navigation', { name: 'Мобильная навигация' })
+    .getByRole('button', { name: 'Трата', exact: true })
+    .click();
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Настройки', exact: true }).click();
   await page.getByRole('button', { name: 'Экспорт трат в CSV' }).click();
@@ -79,11 +83,15 @@ test('complete mobile flow: create, edit category, summary, export and delete', 
   const stream = await download.createReadStream();
   let contents = '';
   for await (const chunk of stream!) contents += chunk.toString();
-  expect(contents).not.toContain('Комментарий');
+  expect(contents).toContain('Комментарий');
   expect(contents).toContain('"Автор"');
   expect(contents).toContain('"Алексей"');
   expect(contents).toContain('"1500.00";"Еда"');
   await page.getByRole('button', { name: 'Закрыть', exact: true }).click();
+  await page
+    .getByRole('navigation', { name: 'Мобильная навигация' })
+    .getByRole('button', { name: 'История', exact: true })
+    .click();
   await expect(newRow.locator('.row-actions button')).toHaveCount(1);
   await expect(newRow.locator('.expense-delete-button')).toHaveCount(0);
   await newRow.getByRole('button', { name: 'Редактировать Еда', exact: true }).click();
@@ -418,7 +426,7 @@ test('mobile toolbar height stays fixed across tabs, with titles and no tap high
   }
 });
 
-test('success toasts expire after two seconds and repeat notifications restart their lifetime', async ({
+test('success toasts expire after three seconds and repeat notifications restart their lifetime', async ({
   page,
 }) => {
   await page.clock.install();
@@ -435,7 +443,7 @@ test('success toasts expire after two seconds and repeat notifications restart t
   await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
   await page.clock.fastForward(600);
   await expect(page.locator('.app-toast')).toContainText(' ₽');
-  await page.clock.fastForward(1500);
+  await page.clock.fastForward(2500);
   await expect(page.locator('.app-toast')).toHaveCount(0);
   await enterAmount(page, '3');
   await page.getByRole('button', { name: 'Сохранить трату', exact: true }).click();
