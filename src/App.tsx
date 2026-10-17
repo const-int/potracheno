@@ -188,8 +188,11 @@ function Modal({
   children: ReactNode;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
+  const heading = useRef<HTMLHeadingElement>(null);
+  useLayoutEffect(() => {
     dialog.current?.showModal();
+    // Give the dialog a neutral initial focus; keyboard users can still Tab to Close.
+    heading.current?.focus({ preventScroll: true });
   }, []);
   return (
     <dialog
@@ -204,7 +207,9 @@ function Modal({
       }}
     >
       <div className="modal-heading">
-        <h2>{title}</h2>
+        <h2 ref={heading} tabIndex={-1}>
+          {title}
+        </h2>
         <button className="icon-button" onClick={close} aria-label="Закрыть">
           <X size={22} />
         </button>
@@ -1533,7 +1538,7 @@ function ExpenseForm({
                   })
                     .format(new Date(`${date}T12:00:00`))
                     .replace(' г.', '')}
-                <CalendarDays size={18} />
+                <CalendarDays size={18} strokeWidth={1.5} />
               </span>
             )}
           </div>

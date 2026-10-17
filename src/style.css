@@ -3875,3 +3875,48 @@ select:focus,
   flex: 0 0 30px;
   padding: 5px;
 }
+
+/* Normalize iOS date controls: native intrinsic sizes must not stretch the modal. */
+.modal .expense-edit-form .expense-editor-field,
+.modal .expense-edit-form .expense-date-control {
+  min-width: 0;
+  max-width: 100%;
+}
+.modal .expense-edit-form .expense-date-control input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding-block: 0;
+}
+.expense-date-control input::-webkit-date-and-time-value {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+/* A noninteractive heading is the dialog's initial focus target, without a focus ring. */
+.modal-heading h2[tabindex='-1']:focus {
+  outline: none;
+}
+
+@media (max-width: 650px) {
+  /* iOS can open its keyboard without shrinking the layout viewport used by dialog. */
+  .comment-modal {
+    position: fixed;
+    top: calc(var(--app-viewport-top, 0px) + var(--app-viewport-height, 100dvh) / 2);
+    right: 0;
+    bottom: auto;
+    left: 0;
+    margin: 0 auto;
+    transform: translateY(-50%);
+    max-height: calc(var(--app-viewport-height, 100dvh) - 24px);
+  }
+}
