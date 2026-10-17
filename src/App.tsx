@@ -1041,8 +1041,7 @@ export default function App() {
                   )}
                   <SortableCategoryList
                     categories={data.categories}
-                    expenses={data.expenses}
-                    renderIcon={(category) => <CategoryIcon category={category} />}
+                    renderIcon={(category) => <CategoryIcon category={category} size={18} />}
                     onEdit={setEditingCategory}
                     onReorder={async (categories) => {
                       const previous = data.categories;

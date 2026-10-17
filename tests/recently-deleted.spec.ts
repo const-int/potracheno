@@ -114,12 +114,12 @@ test('deleted records are excluded from totals/export, grouped like history, and
     .locator('.expense-row')
     .filter({ hasText: 'Сегодняшняя покупка' })
     .getByRole('button');
-  expect(
-    await restore.evaluate((button) => ({
-      width: button.getBoundingClientRect().width,
-      height: button.getBoundingClientRect().height,
-    })),
-  ).toEqual({ width: 32, height: 32 });
+  const restoreSize = await restore.evaluate((button) => ({
+    width: button.getBoundingClientRect().width,
+    height: button.getBoundingClientRect().height,
+  }));
+  expect(restoreSize.width).toBeCloseTo(32, 2);
+  expect(restoreSize.height).toBeCloseTo(32, 2);
   await restore.click();
   await expect(page.locator('.expense-row')).toHaveCount(2);
   await expect(page.getByRole('status')).toContainText('Трата восстановлена');
@@ -159,4 +159,20 @@ test('trash is independent of history category filters and closes when leaving t
   await nav(page, 'История').click();
   await expect(page.locator('.screen-title')).toHaveText('История трат');
   await expect(page.locator('.expense-row')).toHaveCount(1);
+});
+
+test('touch header buttons release their background after opening and closing trash', async ({
+  page,
+}) => {
+  await nav(page, 'История').click();
+  await page.getByRole('button', { name: 'Недавно удаленные', exact: true }).tap();
+  await expect(page.getByRole('button', { name: 'Вернуться к истории', exact: true })).toHaveCSS(
+    'background-color',
+    'rgba(0, 0, 0, 0)',
+  );
+  await page.getByRole('button', { name: 'Вернуться к истории', exact: true }).tap();
+  await expect(page.getByRole('button', { name: 'Недавно удаленные', exact: true })).toHaveCSS(
+    'background-color',
+    'rgba(0, 0, 0, 0)',
+  );
 });

@@ -232,9 +232,15 @@ fieldset {
   border-radius: 8px;
   color: #837d89;
 }
-.icon-button:hover {
+.icon-button:active {
   background: #f0edf3;
   color: var(--accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .icon-button:hover {
+    background: #f0edf3;
+    color: var(--accent);
+  }
 }
 .pill {
   font-size: 10px;
@@ -1124,12 +1130,7 @@ fieldset {
   font-size: 12px;
   overflow-wrap: anywhere;
 }
-.category-manage span:not(.category-icon) {
-  display: block;
-  font-size: 10px;
-  color: #988ea1;
-  margin-top: 5px;
-}
+
 .category-manage > svg {
   color: #9b8da8;
   flex-shrink: 0;
@@ -3845,4 +3846,32 @@ select:focus,
 }
 .modal .expense-edit-form .category-form-actions {
   margin-top: 8px;
+}
+
+.category-manage,
+.mobile-compact .category-manage {
+  padding-block: 8px;
+}
+.category-manage > .category-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+.category-manage .category-drag-handle {
+  height: 30px;
+}
+.category-manage .category-info strong {
+  line-height: 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-manage .row-actions .icon-button {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  min-height: 30px;
+  flex: 0 0 30px;
+  padding: 5px;
 }

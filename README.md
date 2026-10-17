@@ -63,7 +63,8 @@ zero-spend months between the first and last recorded expense months in the sele
 while excluding empty months before and after that range. Daily totals use the expense date; tied
 maximum days use the most recent date. CSV export is available in Settings on mobile.
 
-Categories have one edit button in the list. Category deletion is available in the
+Categories use compact rows with a name, a 30px category icon and edit button, and a drag handle.
+Operation counts are omitted; rows use 8px vertical padding. Category deletion is available in the
 editor and requires confirmation.
 There is no category archive. Deletion requires confirmation; categories with expenses
 remain protected while active or retained deleted expenses reference them. For an existing Supabase

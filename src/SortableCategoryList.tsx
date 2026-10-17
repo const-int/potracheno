@@ -19,11 +19,10 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Pencil } from 'lucide-react';
-import type { Category, Expense } from './lib/model';
+import type { Category } from './lib/model';
 
 type Props = {
   categories: Category[];
-  expenses: Expense[];
   renderIcon: (category: Category) => ReactNode;
   onEdit: (category: Category) => void;
   onReorder: (categories: Category[]) => Promise<void>;
@@ -139,20 +138,14 @@ function SortableRow({
 function RowContent({
   category,
   disabled,
-  expenses,
   renderIcon,
   onEdit,
 }: Props & { category: Category; disabled: boolean }) {
-  const count = expenses.filter((expense) => expense.category_id === category.id).length;
-  const label = new Intl.PluralRules('ru').select(count);
   return (
     <>
       {renderIcon(category)}
       <div className="category-info">
         <strong>{category.name}</strong>
-        <span>
-          {count} {label === 'one' ? 'операция' : label === 'few' ? 'операции' : 'операций'}
-        </span>
       </div>
       <div className="row-actions">
         <button
@@ -161,7 +154,7 @@ function RowContent({
           disabled={disabled}
           onClick={() => onEdit(category)}
         >
-          <Pencil size={20} />
+          <Pencil size={16} />
         </button>
       </div>
     </>
